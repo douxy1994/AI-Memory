@@ -5,58 +5,257 @@
     <Grid Padding="32" RowSpacing="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
+
         <Grid>
-            <StackPanel>
+            <StackPanel Spacing="4">
                 <TextBlock Text="历史" Style="{StaticResource PageTitleStyle}" />
-                <TextBlock Text="对话、记忆、检查点、交接、运行与产出的统一资料库。" Opacity="0.65" />
+                <TextBlock Text="对话、记忆、检查点、交接、运行、产物与经历的统一资料库。"
+                           TextWrapping="Wrap"
+                           Opacity="0.65" />
             </StackPanel>
-            <Button HorizontalAlignment="Right" Content="刷新" Click="Refresh_Click" />
+            <Button HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Content="刷新"
+                    Click="Refresh_Click" />
         </Grid>
-        <TextBox x:Name="SearchBox"
-                 Grid.Row="1"
-                 Margin="0,0,130,0"
-                 PlaceholderText="搜索本地历史"
-                 TextChanged="SearchBox_TextChanged" />
-        <Button Grid.Row="1"
-                Content="移到回收站"
-                HorizontalAlignment="Right"
-                Margin="0,0,8,0"
-                Click="TrashSelected_Click" />
-        <ListView x:Name="ConversationList"
-                  Grid.Row="2"
-                  SelectionMode="Single"
-                  IsItemClickEnabled="True"
-                  ItemClick="ConversationList_ItemClick">
-            <ListView.ItemTemplate>
-                <DataTemplate>
-                    <Grid Padding="10" ColumnSpacing="12">
+
+        <TabView Grid.Row="1">
+            <TabViewItem Header="对话" IsClosable="False">
+                <Grid RowSpacing="12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Grid ColumnSpacing="10">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="8" />
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <Border Background="{StaticResource AIMemoryGreenBrush}" CornerRadius="4" />
-                        <StackPanel Grid.Column="1" Spacing="3">
-                            <TextBlock Text="{Binding Summary}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <TextBlock Text="{Binding SourceAgent}" Opacity="0.65" />
-                                <TextBlock Text="{Binding RepoId}" Opacity="0.65" TextTrimming="CharacterEllipsis" />
-                            </StackPanel>
-                        </StackPanel>
-                        <TextBlock Grid.Column="2" Text="{Binding UpdatedAt}" Opacity="0.55" />
+                        <TextBox x:Name="SearchBox"
+                                 PlaceholderText="搜索本地历史"
+                                 TextChanged="SearchBox_TextChanged" />
+                        <Button Grid.Column="1"
+                                Content="移到回收站"
+                                Click="TrashSelected_Click" />
                     </Grid>
-                </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
-        <TextBlock x:Name="EmptyText"
-                   Grid.Row="2"
-                   Text="还没有可显示的历史。"
-                   HorizontalAlignment="Center"
-                   VerticalAlignment="Center"
-                   Opacity="0.6"
-                   Visibility="Collapsed" />
+                    <ListView x:Name="ConversationList"
+                              Grid.Row="1"
+                              SelectionMode="Single"
+                              IsItemClickEnabled="True"
+                              ItemClick="ConversationList_ItemClick">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Padding="10" ColumnSpacing="12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="8" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border Background="{StaticResource AIMemoryGreenBrush}"
+                                            CornerRadius="4" />
+                                    <StackPanel Grid.Column="1" Spacing="3">
+                                        <TextBlock Text="{Binding Summary}"
+                                                   FontWeight="SemiBold"
+                                                   TextTrimming="CharacterEllipsis" />
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <TextBlock Text="{Binding SourceAgent}"
+                                                       Opacity="0.65" />
+                                            <TextBlock Text="{Binding RepoId}"
+                                                       Opacity="0.65"
+                                                       TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="2"
+                                               Text="{Binding UpdatedAt}"
+                                               Opacity="0.55" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                    <TextBlock x:Name="EmptyText"
+                               Grid.Row="1"
+                               Text="还没有可显示的对话。"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Opacity="0.6"
+                               Visibility="Collapsed" />
+                </Grid>
+            </TabViewItem>
+
+            <TabViewItem Header="记忆" IsClosable="False">
+                <ListView x:Name="MemoryList"
+                          IsItemClickEnabled="True"
+                          ItemClick="MemoryList_ItemClick">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource CardStyle}" Margin="0,4">
+                                <StackPanel Spacing="5">
+                                    <TextBlock Text="{Binding Title}"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding Value}"
+                                               TextWrapping="Wrap"
+                                               MaxLines="3" />
+                                    <TextBlock Text="打开记忆管理"
+                                               Foreground="{StaticResource AIMemoryGreenBrush}" />
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </TabViewItem>
+
+            <TabViewItem Header="检查点" IsClosable="False">
+                <ListView x:Name="CheckpointList"
+                          IsItemClickEnabled="True"
+                          ItemClick="CheckpointList_ItemClick">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource CardStyle}" Margin="0,4">
+                                <StackPanel Spacing="5">
+                                    <TextBlock Text="{Binding Summary}"
+                                               FontWeight="SemiBold"
+                                               TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding SourceAgent}"
+                                               Opacity="0.6" />
+                                    <TextBlock Text="{Binding CreatedAt}"
+                                               Opacity="0.55" />
+                                    <TextBlock Text="打开来源对话"
+                                               Foreground="{StaticResource AIMemoryGreenBrush}" />
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </TabViewItem>
+
+            <TabViewItem Header="交接" IsClosable="False">
+                <ListView x:Name="HandoffList"
+                          IsItemClickEnabled="True"
+                          ItemClick="HandoffList_ItemClick">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource CardStyle}" Margin="0,4">
+                                <StackPanel Spacing="5">
+                                    <TextBlock Text="{Binding CurrentGoal}"
+                                               FontWeight="SemiBold"
+                                               TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding FromAgent}"
+                                               Opacity="0.6" />
+                                    <TextBlock Text="{Binding ToAgent}"
+                                               Opacity="0.6" />
+                                    <TextBlock Text="打开来源对话"
+                                               Foreground="{StaticResource AIMemoryGreenBrush}" />
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </TabViewItem>
+
+            <TabViewItem Header="运行" IsClosable="False">
+                <ListView x:Name="RunList"
+                          IsItemClickEnabled="True"
+                          ItemClick="RunList_ItemClick">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource CardStyle}" Margin="0,4">
+                                <StackPanel Spacing="5">
+                                    <TextBlock Text="{Binding DisplayTitle}"
+                                               FontWeight="SemiBold"
+                                               TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding Summary}"
+                                               TextWrapping="Wrap"
+                                               MaxLines="3" />
+                                    <TextBlock Text="{Binding Status}"
+                                               Opacity="0.6" />
+                                    <TextBlock Text="打开来源对话"
+                                               Foreground="{StaticResource AIMemoryGreenBrush}" />
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </TabViewItem>
+
+            <TabViewItem Header="产物" IsClosable="False">
+                <ListView x:Name="ArtifactList"
+                          IsItemClickEnabled="True"
+                          ItemClick="ArtifactList_ItemClick">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource CardStyle}" Margin="0,4">
+                                <StackPanel Spacing="5">
+                                    <TextBlock Text="{Binding Title}"
+                                               FontWeight="SemiBold"
+                                               TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding Summary}"
+                                               TextWrapping="Wrap"
+                                               MaxLines="3" />
+                                    <TextBlock Text="{Binding TrustState}"
+                                               Opacity="0.6" />
+                                    <TextBlock Text="查看产生该产物的对话"
+                                               Foreground="{StaticResource AIMemoryGreenBrush}" />
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </TabViewItem>
+
+            <TabViewItem Header="经历" IsClosable="False">
+                <ListView x:Name="EpisodeList"
+                          IsItemClickEnabled="True"
+                          ItemClick="EpisodeList_ItemClick">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource CardStyle}" Margin="0,4">
+                                <StackPanel Spacing="5">
+                                    <TextBlock Text="{Binding Title}"
+                                               FontWeight="SemiBold"
+                                               TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding Summary}"
+                                               TextWrapping="Wrap"
+                                               MaxLines="3" />
+                                    <TextBlock Text="{Binding Outcome}"
+                                               Opacity="0.6" />
+                                    <TextBlock Text="打开来源对话"
+                                               Foreground="{StaticResource AIMemoryGreenBrush}" />
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </TabViewItem>
+
+            <TabViewItem Header="Wiki" IsClosable="False">
+                <ListView x:Name="WikiList"
+                          IsItemClickEnabled="True"
+                          ItemClick="WikiList_ItemClick">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource CardStyle}" Margin="0,4">
+                                <StackPanel Spacing="5">
+                                    <TextBlock Text="{Binding Title}"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding Body}"
+                                               TextWrapping="Wrap"
+                                               MaxLines="4" />
+                                    <TextBlock Text="查看完整页面"
+                                               Foreground="{StaticResource AIMemoryGreenBrush}" />
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </TabViewItem>
+        </TabView>
+
+        <InfoBar x:Name="Feedback"
+                 Grid.RowSpan="2"
+                 VerticalAlignment="Bottom"
+                 IsOpen="False"
+                 IsClosable="True" />
     </Grid>
 </Page>

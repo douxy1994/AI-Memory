@@ -149,17 +149,23 @@ public sealed partial class FavoritesPage : Page
             severity);
 }
 
-public sealed class FavoriteRow(FavoriteConversationSnapshot value)
+public sealed class FavoriteRow
 {
-    public FavoriteConversationSnapshot Value { get; } = value;
-    public string Title => value.Title;
-    public string SourceAndProject =>
-        $"{value.SourceAgent} · {(string.IsNullOrWhiteSpace(value.ProjectPath) ? "未知项目" : value.ProjectPath)}";
-    public string PinLabel => value.Pinned ? "已置顶" : "";
-    public string PinActionLabel => value.Pinned ? "取消置顶" : "置顶";
-    public string Note { get; set; } = value.Note;
-    public string TagsText { get; set; } =
-        value.Tags is { Count: > 0 }
+    public FavoriteRow(FavoriteConversationSnapshot value)
+    {
+        Value = value;
+        Note = value.Note;
+        TagsText = value.Tags is { Count: > 0 }
             ? string.Join(", ", value.Tags)
             : "";
+    }
+
+    public FavoriteConversationSnapshot Value { get; }
+    public string Title => Value.Title;
+    public string SourceAndProject =>
+        $"{Value.SourceAgent} · {(string.IsNullOrWhiteSpace(Value.ProjectPath) ? "未知项目" : Value.ProjectPath)}";
+    public string PinLabel => Value.Pinned ? "已置顶" : "";
+    public string PinActionLabel => Value.Pinned ? "取消置顶" : "置顶";
+    public string Note { get; set; }
+    public string TagsText { get; set; }
 }

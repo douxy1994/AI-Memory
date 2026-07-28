@@ -94,6 +94,43 @@ public sealed class CoreTests : IDisposable
     }
 
     [Fact]
+    public async Task HistoryProjectionsRetainClickableConversationLinks()
+    {
+        var database = new AIMemoryDatabase(Path.Combine(_root, "history.db"));
+        await database.InitializeAsync();
+        await using (var connection = database.OpenConnection())
+        {
+            var insert = connection.CreateCommand();
+            insert.CommandText = """
+                INSERT INTO agent_runs VALUES(
+                  'run:c1','repo','codex','task','complete','summary',
+                  '2026-07-28T01:00:00Z','2026-07-28T02:00:00Z');
+                INSERT INTO artifacts VALUES(
+                  'a1','run:c1','patch','Changed files','artifact summary',
+                  NULL,NULL,'verified','2026-07-28T02:00:00Z');
+                INSERT INTO episodes VALUES(
+                  'e1','repo','Fixed sync','episode summary','success',
+                  '2026-07-28T02:00:00Z','c1');
+                INSERT INTO wiki_pages VALUES(
+                  'w1','repo','sync','Sync notes','wiki body','active',
+                  '[]','[]','2026-07-28T02:00:00Z',NULL,
+                  '2026-07-28T01:00:00Z','2026-07-28T02:00:00Z');
+                """;
+            await insert.ExecuteNonQueryAsync();
+        }
+
+        var history = new HistoryProjectionService(database);
+        var run = Assert.Single(await history.ListRunsAsync());
+        var artifact = Assert.Single(await history.ListArtifactsAsync());
+        var episode = Assert.Single(await history.ListEpisodesAsync());
+        Assert.Single(await history.ListWikiAsync());
+        Assert.Equal("c1", HistoryProjectionService.ConversationIdForRun(run.Id));
+        Assert.Equal("c1", HistoryProjectionService.ConversationIdForRun(
+            artifact.RunId));
+        Assert.Equal("c1", episode.SourceConversationId);
+    }
+
+    [Fact]
     public void AgentCatalogKeepsDetectedEntriesBeforeMissingAndNeverEnablesMissing()
     {
         var bin = Path.Combine(_root, "bin");
