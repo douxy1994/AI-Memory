@@ -19,12 +19,12 @@ public static class Program
             return;
         }
 
-        Application.Start(_ =>
+        Application.Start(_initialization =>
         {
             var queue = DispatcherQueue.GetForCurrentThread();
             SynchronizationContext.SetSynchronizationContext(
                 new DispatcherQueueSynchronizationContext(queue));
-            _ = new App(main);
+            new App(main);
         });
     }
 }

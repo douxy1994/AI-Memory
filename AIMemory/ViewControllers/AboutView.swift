@@ -156,9 +156,10 @@ struct AboutView: View {
             Text("关于本软件")
                 .font(Theme.appFont(size: 15, weight: .semibold))
             Text(
-                "AI Memory 以本机数据为中心，把不同 AI 编程工具产生的历史、记忆规则、检查点和交接信息集中到一个原生工作台。它使用 Swift、SwiftUI、AppKit、SQLite、Keychain 与 Apple 官方 Framework 构建，并与 ChatMem 的数据目录和设置保持完全独立。"
+                "AI Memory 是一款本地优先的 AI 工作记忆工具。它把不同 AI Agent 与命令行工具产生的对话历史、记忆规则、检查点和交接信息集中到一个原生工作台，帮助你快速找回上下文、检索过去的工作，并从上次中断的位置继续。所有核心数据均由本机管理，兼顾隐私、可靠性与长期可用性。"
             )
-            .font(Theme.appFont(size: 12))
+            .font(Theme.appFont(size: 13))
+            .lineSpacing(6)
             .foregroundStyle(Theme.secondaryText)
             .fixedSize(horizontal: false, vertical: true)
         }

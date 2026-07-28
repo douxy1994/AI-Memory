@@ -29,7 +29,7 @@ public sealed partial class MainWindow : Window
         var handle = WindowNative.GetWindowHandle(this);
         var id = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(handle);
         var appWindow = AppWindow.GetFromWindowId(id);
-        appWindow.Resize(new Windows.Graphics.SizeInt32(1180, 760));
+        appWindow.Resize(new global::Windows.Graphics.SizeInt32(1180, 760));
         Navigation.SelectedItem = Navigation.MenuItems[0];
         Navigate("workbench");
         RegisterAccelerators();
