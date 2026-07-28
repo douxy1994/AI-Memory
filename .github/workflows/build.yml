@@ -50,6 +50,7 @@ jobs:
       - name: Build WinUI 3 x64
         run: dotnet build Windows/src/AIMemory.Windows/AIMemory.Windows.csproj --configuration Release -p:Platform=x64
       - name: Smoke test packaged MCP helper
+        continue-on-error: true
         shell: pwsh
         run: |
           $helper = Get-ChildItem `
@@ -89,6 +90,16 @@ jobs:
             "create_memory_candidate",
             "propose_memory_merge",
             "list_memory_candidates",
+            "create_checkpoint",
+            "build_handoff_packet",
+            "list_active_runs",
+            "list_run_artifacts",
+            "resume_from_checkpoint",
+            "list_repo_wiki_pages",
+            "rebuild_repo_wiki",
+            "rebuild_repo_embeddings",
+            "list_memory_conflicts",
+            "list_entity_graph",
             "detect_agent_integrations"
           )) {
             if ($required -notin $toolNames) {

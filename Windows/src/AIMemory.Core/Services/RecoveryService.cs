@@ -89,15 +89,39 @@ public sealed class RecoveryService(AIMemoryDatabase database)
         ConversationSummary conversation,
         int messageCount,
         CancellationToken cancellationToken = default)
+        => await CreateCheckpointAsync(
+            conversation,
+            messageCount,
+            summary: null,
+            resumeCommand: null,
+            metadataJson: null,
+            cancellationToken: cancellationToken);
+
+    public async Task<CheckpointRecord> CreateCheckpointAsync(
+        ConversationSummary conversation,
+        int messageCount,
+        string? summary,
+        string? resumeCommand,
+        string? metadataJson,
+        CancellationToken cancellationToken = default)
     {
         var id = Guid.NewGuid().ToString();
         var now = DateTimeOffset.UtcNow.ToString("O");
-        var resume = ResumeCommand(conversation.SourceAgent, conversation.Id);
-        var metadata = JsonSerializer.Serialize(new
-        {
-            message_count = messageCount,
-            capture = "manual",
-        });
+        var checkpointSummary = string.IsNullOrWhiteSpace(summary)
+            ? (string.IsNullOrWhiteSpace(conversation.Summary)
+                ? conversation.Id
+                : conversation.Summary)
+            : summary.Trim();
+        var resume = string.IsNullOrWhiteSpace(resumeCommand)
+            ? ResumeCommand(conversation.SourceAgent, conversation.Id)
+            : resumeCommand.Trim();
+        var metadata = string.IsNullOrWhiteSpace(metadataJson)
+            ? JsonSerializer.Serialize(new
+            {
+                message_count = messageCount,
+                capture = "manual",
+            })
+            : ValidateJsonObject(metadataJson);
         await using var connection = database.OpenConnection();
         var command = connection.CreateCommand();
         command.CommandText = """
@@ -111,18 +135,19 @@ public sealed class RecoveryService(AIMemoryDatabase database)
         command.Parameters.AddWithValue("$repo", conversation.RepoId);
         command.Parameters.AddWithValue("$conversation", conversation.Id);
         command.Parameters.AddWithValue("$agent", conversation.SourceAgent);
-        command.Parameters.AddWithValue(
-            "$summary",
-            string.IsNullOrWhiteSpace(conversation.Summary)
-                ? conversation.Id
-                : conversation.Summary);
+        command.Parameters.AddWithValue("$summary", checkpointSummary);
         command.Parameters.AddWithValue("$resume", (object?)resume ?? DBNull.Value);
         command.Parameters.AddWithValue("$metadata", metadata);
         command.Parameters.AddWithValue("$now", now);
         await command.ExecuteNonQueryAsync(cancellationToken);
         return new CheckpointRecord(
             id, conversation.RepoId, conversation.Id, conversation.SourceAgent,
-            "active", conversation.Summary, resume, metadata, null, now);
+            "active",
+            checkpointSummary,
+            resume,
+            metadata,
+            null,
+            now);
     }
 
     public async Task<HandoffRecord> CreateHandoffAsync(
@@ -238,4 +263,14 @@ public sealed class RecoveryService(AIMemoryDatabase database)
             "kimi" => $"kimi --resume {conversationId}",
             _ => null,
         };
+
+    private static string ValidateJsonObject(string value)
+    {
+        using var document = JsonDocument.Parse(value);
+        if (document.RootElement.ValueKind != JsonValueKind.Object)
+        {
+            throw new ArgumentException("metadata_json 必须是 JSON 对象。");
+        }
+        return document.RootElement.GetRawText();
+    }
 }

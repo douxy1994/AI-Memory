@@ -31,6 +31,11 @@ public static class Program
         var history = new NativeHistoryImportService(conversations);
         var diagnostics = new DiagnosticsService(database);
         var governance = new RepositoryGovernanceService(database);
+        var continuation = new ContinuationToolService(
+            database,
+            conversations,
+            governance);
+        var knowledge = new KnowledgeProjectionService(database, governance);
 
         string? line;
         while ((line = await Console.In.ReadLineAsync()) is not null)
@@ -46,7 +51,9 @@ public static class Program
                     conversations,
                     history,
                     diagnostics,
-                    governance);
+                    governance,
+                    continuation,
+                    knowledge);
             }
             catch (Exception exception)
             {
@@ -65,7 +72,9 @@ public static class Program
         ConversationRepository conversations,
         NativeHistoryImportService history,
         DiagnosticsService diagnostics,
-        RepositoryGovernanceService governance)
+        RepositoryGovernanceService governance,
+        ContinuationToolService continuation,
+        KnowledgeProjectionService knowledge)
     {
         var hasId = request.TryGetProperty("id", out var idValue);
         var id = hasId
@@ -126,6 +135,46 @@ public static class Program
             "list_memory_candidates" => await ListCandidatesAsync(
                 governance,
                 arguments),
+            "create_checkpoint" => await CreateCheckpointAsync(
+                continuation,
+                arguments),
+            "build_handoff_packet" => await BuildHandoffAsync(
+                continuation,
+                arguments),
+            "list_active_runs" => new
+            {
+                runs = await continuation.ListRunsAsync(
+                    Required(arguments, "repo_root")),
+            },
+            "list_run_artifacts" => new
+            {
+                artifacts = await continuation.ListArtifactsAsync(
+                    Required(arguments, "repo_root")),
+            },
+            "resume_from_checkpoint" => await ResumeCheckpointAsync(
+                continuation,
+                arguments),
+            "list_repo_wiki_pages" => new
+            {
+                pages = await continuation.ListWikiAsync(
+                    Required(arguments, "repo_root")),
+            },
+            "rebuild_repo_wiki" => new
+            {
+                pages = await knowledge.RebuildWikiAsync(
+                    Required(arguments, "repo_root")),
+            },
+            "rebuild_repo_embeddings" => await knowledge.RebuildSearchIndexAsync(
+                Required(arguments, "repo_root")),
+            "list_memory_conflicts" => new
+            {
+                conflicts = await knowledge.ListConflictsAsync(
+                    Required(arguments, "repo_root"),
+                    Optional(arguments, "status")),
+            },
+            "list_entity_graph" => await knowledge.ListEntityGraphAsync(
+                Required(arguments, "repo_root"),
+                OptionalInt(arguments, "limit", 25)),
             "detect_agent_integrations" => new AgentCatalog().Detect(),
             _ => throw new InvalidOperationException($"Unknown tool: {name}"),
         };
@@ -268,6 +317,35 @@ public static class Program
                 Optional(arguments, "status")),
         };
 
+    private static async Task<object> CreateCheckpointAsync(
+        ContinuationToolService continuation,
+        JsonElement arguments) =>
+        await continuation.CreateCheckpointAsync(
+            Required(arguments, "repo_root"),
+            Required(arguments, "conversation_id"),
+            Required(arguments, "source_agent"),
+            Required(arguments, "summary"),
+            Optional(arguments, "resume_command"),
+            Optional(arguments, "metadata_json"));
+
+    private static async Task<object> BuildHandoffAsync(
+        ContinuationToolService continuation,
+        JsonElement arguments) =>
+        await continuation.BuildHandoffAsync(
+            Required(arguments, "repo_root"),
+            Required(arguments, "from_agent"),
+            Required(arguments, "to_agent"),
+            Optional(arguments, "goal_hint"),
+            Optional(arguments, "target_profile"));
+
+    private static async Task<object> ResumeCheckpointAsync(
+        ContinuationToolService continuation,
+        JsonElement arguments) =>
+        await continuation.ResumeFromCheckpointAsync(
+            Required(arguments, "checkpoint_id"),
+            Required(arguments, "to_agent"),
+            Optional(arguments, "target_profile"));
+
     private static async Task<object> ReadAsync(
         ConversationRepository repository,
         JsonElement arguments)
@@ -404,6 +482,84 @@ public static class Program
             {
                 repo_root = StringSchema(),
                 status = StringSchema(),
+            },
+            ["repo_root"]),
+        Tool(
+            "create_checkpoint",
+            "Create a durable repository checkpoint.",
+            new
+            {
+                repo_root = StringSchema(),
+                conversation_id = StringSchema(),
+                source_agent = StringSchema(),
+                summary = StringSchema(),
+                resume_command = StringSchema(),
+                metadata_json = StringSchema(),
+            },
+            ["repo_root", "conversation_id", "source_agent", "summary"]),
+        Tool(
+            "build_handoff_packet",
+            "Build and save an Agent handoff packet.",
+            new
+            {
+                repo_root = StringSchema(),
+                from_agent = StringSchema(),
+                to_agent = StringSchema(),
+                goal_hint = StringSchema(),
+                target_profile = StringSchema(),
+            },
+            ["repo_root", "from_agent", "to_agent"]),
+        Tool(
+            "list_active_runs",
+            "List repository runs that still need attention.",
+            new { repo_root = StringSchema() },
+            ["repo_root"]),
+        Tool(
+            "list_run_artifacts",
+            "List artifacts produced by repository runs.",
+            new { repo_root = StringSchema() },
+            ["repo_root"]),
+        Tool(
+            "resume_from_checkpoint",
+            "Promote a checkpoint into an Agent handoff packet.",
+            new
+            {
+                checkpoint_id = StringSchema(),
+                to_agent = StringSchema(),
+                target_profile = StringSchema(),
+            },
+            ["checkpoint_id", "to_agent"]),
+        Tool(
+            "list_repo_wiki_pages",
+            "List generated repository Wiki pages.",
+            new { repo_root = StringSchema() },
+            ["repo_root"]),
+        Tool(
+            "rebuild_repo_wiki",
+            "Rebuild Wiki projections from approved repository memory.",
+            new { repo_root = StringSchema() },
+            ["repo_root"]),
+        Tool(
+            "rebuild_repo_embeddings",
+            "Rebuild the local repository search index and embeddings.",
+            new { repo_root = StringSchema() },
+            ["repo_root"]),
+        Tool(
+            "list_memory_conflicts",
+            "List repository memory conflicts that need review.",
+            new
+            {
+                repo_root = StringSchema(),
+                status = StringSchema(),
+            },
+            ["repo_root"]),
+        Tool(
+            "list_entity_graph",
+            "List repository memory entities and their source links.",
+            new
+            {
+                repo_root = StringSchema(),
+                limit = IntSchema(),
             },
             ["repo_root"]),
         Tool(

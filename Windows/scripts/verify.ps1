@@ -45,6 +45,16 @@ try {
         "create_memory_candidate",
         "propose_memory_merge",
         "list_memory_candidates",
+        "create_checkpoint",
+        "build_handoff_packet",
+        "list_active_runs",
+        "list_run_artifacts",
+        "resume_from_checkpoint",
+        "list_repo_wiki_pages",
+        "rebuild_repo_wiki",
+        "rebuild_repo_embeddings",
+        "list_memory_conflicts",
+        "list_entity_graph",
         "detect_agent_integrations"
     )) {
         if ($required -notin $toolNames) {

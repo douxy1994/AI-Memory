@@ -214,6 +214,138 @@ public sealed class CoreTests : IDisposable
     }
 
     [Fact]
+    public async Task ContinuationToolsCreateCheckpointHandoffAndFilterProjections()
+    {
+        var database = new AIMemoryDatabase(Path.Combine(_root, "continuation.db"));
+        await database.InitializeAsync();
+        var governance = new RepositoryGovernanceService(database);
+        var repoId = await governance.ResolveRepoIdAsync(@"C:\repo", create: true);
+        var now = DateTimeOffset.UtcNow.ToString("O");
+        await using (var connection = database.OpenConnection())
+        {
+            var insert = connection.CreateCommand();
+            insert.CommandText = """
+                INSERT INTO conversations VALUES(
+                  'c1',$repo,'codex','source','task',$now,$now,NULL);
+                INSERT INTO messages VALUES(
+                  'm1','c1','user','continue',$now);
+                INSERT INTO agent_runs VALUES(
+                  'run:c1',$repo,'codex','task','active','summary',$now,NULL);
+                INSERT INTO agent_runs VALUES(
+                  'run:done',$repo,'codex','done','completed','done',$now,$now);
+                INSERT INTO artifacts VALUES(
+                  'a1','run:c1','patch','Patch','summary',NULL,NULL,
+                  'verified',$now);
+                INSERT INTO artifacts VALUES(
+                  'a2','run:done','log','Log','summary',NULL,NULL,
+                  'verified',$now);
+                INSERT INTO wiki_pages VALUES(
+                  'w1',$repo,'notes','Notes','body','active','[]','[]',
+                  $now,NULL,$now,$now);
+                """;
+            insert.Parameters.AddWithValue("$repo", repoId);
+            insert.Parameters.AddWithValue("$now", now);
+            await insert.ExecuteNonQueryAsync();
+        }
+        var tools = new ContinuationToolService(
+            database,
+            new ConversationRepository(database),
+            governance);
+        var checkpoint = await tools.CreateCheckpointAsync(
+            @"C:\repo",
+            "c1",
+            "codex",
+            "Continue Windows parity",
+            "codex resume c1",
+            """{"source":"test"}""");
+        Assert.Equal("Continue Windows parity", checkpoint.Summary);
+        Assert.Equal("""{"source":"test"}""", checkpoint.MetadataJson);
+        var handoff = await tools.ResumeFromCheckpointAsync(
+            checkpoint.Id,
+            "claude",
+            "desktop");
+        Assert.Equal("claude", handoff.ToAgent);
+        Assert.Single(await tools.ListRunsAsync(@"C:\repo"));
+        Assert.Equal(2, (await tools.ListArtifactsAsync(@"C:\repo")).Count);
+        Assert.Single(await tools.ListWikiAsync(@"C:\repo"));
+        await Assert.ThrowsAsync<KeyNotFoundException>(() =>
+            tools.CreateCheckpointAsync(
+                @"C:\missing",
+                "c1",
+                "codex",
+                "wrong repo",
+                null,
+                null));
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            tools.CreateCheckpointAsync(
+                @"C:\repo",
+                "c1",
+                "claude",
+                "wrong agent",
+                null,
+                null));
+    }
+
+    [Fact]
+    public async Task KnowledgeToolsRebuildWikiIndexConflictsAndEntityGraph()
+    {
+        var database = new AIMemoryDatabase(Path.Combine(_root, "knowledge.db"));
+        await database.InitializeAsync();
+        var governance = new RepositoryGovernanceService(database);
+        var repoId = await governance.ResolveRepoIdAsync(@"C:\repo", create: true);
+        var now = DateTimeOffset.UtcNow.ToString("O");
+        await using (var connection = database.OpenConnection())
+        {
+            var insert = connection.CreateCommand();
+            insert.CommandText = """
+                INSERT INTO conversations VALUES(
+                  'c1',$repo,'codex','source','Conversation',$now,$now,NULL);
+                INSERT INTO messages VALUES(
+                  'm1','c1','user','continue parity',$now);
+                INSERT INTO approved_memories(
+                  memory_id,repo_id,kind,title,value,usage_hint,status,
+                  last_verified_at,created_from_candidate_id,created_at,updated_at,
+                  freshness_status,freshness_score,verified_at,verified_by)
+                VALUES(
+                  'mem1',$repo,'command','Build','dotnet test','before commit',
+                  'active',$now,NULL,$now,$now,'fresh',1,$now,'user');
+                INSERT INTO episodes VALUES(
+                  'ep1',$repo,'Windows parity','Implemented','passed',$now,'c1');
+                INSERT INTO memory_candidates VALUES(
+                  'candidate1',$repo,'command','Build changed','dotnet test -c Release',
+                  'keep CI aligned',0.9,'test','pending_review',$now,NULL);
+                INSERT INTO memory_conflicts VALUES(
+                  'conflict1',$repo,'candidate1','mem1','command changed',
+                  'open',$now,NULL);
+                INSERT INTO memory_entities VALUES(
+                  'entity1',$repo,'WinUI','winui','framework',$now,$now);
+                INSERT INTO memory_entity_links VALUES(
+                  'link1',$repo,'entity1','memory','mem1','uses',$now);
+                """;
+            insert.Parameters.AddWithValue("$repo", repoId);
+            insert.Parameters.AddWithValue("$now", now);
+            await insert.ExecuteNonQueryAsync();
+        }
+
+        var knowledge = new KnowledgeProjectionService(database, governance);
+        var pages = await knowledge.RebuildWikiAsync(@"C:\repo");
+        Assert.Equal(2, pages.Count);
+        Assert.Contains(pages, page => page.Slug == "command");
+        Assert.Contains(pages, page => page.Slug == "episodes");
+
+        var index = await knowledge.RebuildSearchIndexAsync(@"C:\repo");
+        Assert.Equal(4, index.DocumentCount);
+        Assert.Equal(index.DocumentCount, index.EmbeddingCount);
+        Assert.Single(await knowledge.ListConflictsAsync(@"C:\repo", "open"));
+        Assert.Empty(await knowledge.ListConflictsAsync(@"C:\repo", "resolved"));
+
+        var graph = await knowledge.ListEntityGraphAsync(@"C:\repo", 25);
+        Assert.Single(graph.Entities);
+        Assert.Single(graph.Links);
+        Assert.Equal("Build", graph.Links[0].SourceTitle);
+    }
+
+    [Fact]
     public void AgentCatalogKeepsDetectedEntriesBeforeMissingAndNeverEnablesMissing()
     {
         var bin = Path.Combine(_root, "bin");

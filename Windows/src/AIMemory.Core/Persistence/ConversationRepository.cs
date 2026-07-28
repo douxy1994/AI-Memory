@@ -8,6 +8,37 @@ namespace AIMemory.Core.Persistence;
 
 public sealed class ConversationRepository(AIMemoryDatabase database)
 {
+    public async Task<ConversationSummary?> FindAsync(
+        string conversationId,
+        CancellationToken cancellationToken = default)
+    {
+        await using var connection = database.OpenConnection();
+        var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT c.conversation_id, c.repo_id, c.source_agent,
+                   c.source_conversation_id, COALESCE(c.summary, ''),
+                   c.started_at, c.updated_at, c.storage_path,
+                   COALESCE(r.repo_root, '')
+            FROM conversations c
+            LEFT JOIN repos r ON r.repo_id=c.repo_id
+            WHERE c.conversation_id=$id
+            LIMIT 1;
+            """;
+        command.Parameters.AddWithValue("$id", conversationId);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        if (!await reader.ReadAsync(cancellationToken)) return null;
+        return new ConversationSummary(
+            reader.GetString(0),
+            reader.GetString(1),
+            reader.GetString(2),
+            reader.GetString(3),
+            reader.GetString(4),
+            ParseDate(reader.GetString(5)),
+            ParseDate(reader.GetString(6)),
+            reader.IsDBNull(7) ? null : reader.GetString(7),
+            reader.GetString(8));
+    }
+
     public async Task<IReadOnlyList<ConversationSummary>> ListAsync(
         string? sourceAgent = null,
         string? search = null,
