@@ -57,6 +57,43 @@ public sealed class CoreTests : IDisposable
     }
 
     [Fact]
+    public async Task FavoritesCanBeCreatedEditedPinnedAndRemoved()
+    {
+        var store = new SettingsStore(Path.Combine(_root, "favorites.json"));
+        var service = new FavoriteService(store);
+        var conversation = new ConversationSummary(
+            "c1",
+            "repo",
+            "codex",
+            "source",
+            "修复同步",
+            DateTimeOffset.Parse("2026-07-27T01:00:00Z"),
+            DateTimeOffset.Parse("2026-07-28T02:00:00Z"),
+            null);
+
+        Assert.True(await service.ToggleAsync(conversation, @"C:\repo"));
+        Assert.True(await service.IsFavoriteAsync("codex", "c1"));
+        await service.UpdateAsync(
+            "codex",
+            "c1",
+            "继续验证 WebDAV",
+            ["sync", "release", "sync"],
+            pinned: true);
+
+        var favorite = Assert.Single(
+            (await store.LoadAsync()).FavoriteConversations).Value;
+        Assert.True(favorite.Pinned);
+        Assert.Equal("继续验证 WebDAV", favorite.Note);
+        Assert.Equal(["release", "sync"], favorite.Tags);
+        var card = FavoriteService.ContinuationCard(favorite);
+        Assert.Contains("Use AI Memory", card);
+        Assert.DoesNotContain("ChatMem", card);
+
+        await service.RemoveAsync("codex", "c1");
+        Assert.False(await service.IsFavoriteAsync("codex", "c1"));
+    }
+
+    [Fact]
     public void AgentCatalogKeepsDetectedEntriesBeforeMissingAndNeverEnablesMissing()
     {
         var bin = Path.Combine(_root, "bin");
