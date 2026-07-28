@@ -138,7 +138,7 @@ struct AboutView: View {
             )
             releaseItem(
                 "Agent 覆盖扩展",
-                "支持 34 种主流 Agent 与 CLI 检测；已安装项目优先显示，未安装项目保持关闭。"
+                "支持 39 种主流 Agent 与 CLI 检测；已安装项目优先显示，未安装项目保持关闭。"
             )
             releaseItem(
                 "原生体验改进",
@@ -152,14 +152,18 @@ struct AboutView: View {
     }
 
     private var productDescription: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 14) {
             Text("关于本软件")
                 .font(Theme.appFont(size: 15, weight: .semibold))
             Text(
-                "AI Memory 是一款本地优先的 AI 工作记忆工具。它把不同 AI Agent 与命令行工具产生的对话历史、记忆规则、检查点和交接信息集中到一个原生工作台，帮助你快速找回上下文、检索过去的工作，并从上次中断的位置继续。所有核心数据均由本机管理，兼顾隐私、可靠性与长期可用性。"
+                """
+                AI Memory 是一款本地优先的 AI 工作记忆工具。它将不同 AI Agent 与命令行工具产生的对话历史、记忆规则、检查点和交接信息集中到一个原生工作台，帮助你快速找回上下文、检索过去的工作，并从上次中断的位置继续。
+
+                所有核心数据均由本机管理，兼顾隐私、可靠性与长期可用性。
+                """
             )
             .font(Theme.appFont(size: 13))
-            .lineSpacing(6)
+            .lineSpacing(9)
             .foregroundStyle(Theme.secondaryText)
             .fixedSize(horizontal: false, vertical: true)
         }
