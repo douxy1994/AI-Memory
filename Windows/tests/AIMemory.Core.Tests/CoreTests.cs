@@ -72,7 +72,8 @@ public sealed class CoreTests : IDisposable
             "goose", "cline", "roo", "aider", "amp", "warp", "trae",
             "junie", "crush", "augment", "cody", "tabby", "openhands",
             "open-interpreter", "openclaw", "codebuddy", "devin", "vibe",
-            "pi", "kilo", "plandex", "gptme",
+            "pi", "kilo", "plandex", "gptme", "mini-swe-agent",
+            "google-agents-cli",
         ], AgentCatalog.All.Select(value => value.Id).ToArray());
         var firstMissing = statuses
             .Select((status, index) => (status, index))
@@ -87,7 +88,7 @@ public sealed class CoreTests : IDisposable
             Assert.False(value.IsIntegrated);
             Assert.Equal(AgentIntegrationState.Missing, value.State);
         });
-        Assert.Equal(39, statuses.Count);
+        Assert.Equal(41, statuses.Count);
     }
 
     [Fact]
@@ -505,7 +506,7 @@ public sealed class CoreTests : IDisposable
         Assert.Equal(1, report.Conversations);
         Assert.Equal(1, report.Messages);
         Assert.Equal(1, report.DetectedAgents);
-        Assert.Equal(39, report.CatalogAgents);
+        Assert.Equal(41, report.CatalogAgents);
         Assert.Contains(databasePath, report.ToDisplayText());
     }
 

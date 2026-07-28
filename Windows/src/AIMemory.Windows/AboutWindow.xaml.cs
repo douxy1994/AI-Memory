@@ -25,6 +25,8 @@ public sealed partial class AboutWindow : Window
         ReleaseVersionText.Text = $"正式版本 {CurrentVersion()}";
         DevelopmentVersionText.Text = $"开发版本 {DevelopmentVersion()}";
         ReleaseTagText.Text = $"v{CurrentVersion()}";
+        AgentCoverageText.Text =
+            $"✓ Agent 覆盖扩展\n支持 {AgentCatalog.All.Count} 种主流 Agent 与 CLI 检测，已安装项目优先显示。";
 
         var handle = WindowNative.GetWindowHandle(this);
         var id = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(handle);

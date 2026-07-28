@@ -88,7 +88,7 @@ final class NativeAgentIntegrationStoreTests: XCTestCase {
             "aider", "amp", "warp", "trae", "junie", "crush",
             "augment", "cody", "tabby", "openhands", "open-interpreter",
             "openclaw", "codebuddy", "devin", "vibe", "pi", "kilo",
-            "plandex", "gptme",
+            "plandex", "gptme", "mini-swe-agent", "google-agents-cli",
         ]
         XCTAssertEqual(Set(statuses.map(\.agent)), Set(expectedAgents))
         XCTAssertEqual(statuses.count, expectedAgents.count)

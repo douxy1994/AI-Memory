@@ -544,6 +544,10 @@ actor NativeAgentIntegrationStore {
             return home.appendingPathComponent(".plandex/config.yml")
         case .gptme:
             return home.appendingPathComponent(".config/gptme/config.toml")
+        case .miniSweAgent:
+            return home.appendingPathComponent(".config/mini-swe-agent/config.yml")
+        case .googleAgentsCLI:
+            return home.appendingPathComponent(".config/google-agents-cli/config.yml")
         }
     }
 
@@ -586,7 +590,8 @@ actor NativeAgentIntegrationStore {
              .continueDev, .goose, .cline, .roo, .aider, .amp, .warp,
              .trae, .junie, .crush, .augment, .cody, .tabby,
              .openhands, .openInterpreter, .openclaw, .codebuddy, .devin,
-             .vibe, .pi, .kilo, .plandex, .gptme:
+             .vibe, .pi, .kilo, .plandex, .gptme, .miniSweAgent,
+             .googleAgentsCLI:
             return home.appendingPathComponent(".aimemory/integrations/\(agent.rawValue)")
         }
     }
@@ -845,6 +850,8 @@ private enum IntegrationAgent: String, CaseIterable {
     case augment, cody, tabby, openhands
     case openInterpreter = "open-interpreter"
     case openclaw, codebuddy, devin, vibe, pi, kilo, plandex, gptme
+    case miniSweAgent = "mini-swe-agent"
+    case googleAgentsCLI = "google-agents-cli"
 
     static func catalogIndex(_ rawValue: String) -> Int {
         allCases.firstIndex { $0.rawValue == rawValue } ?? Int.max
@@ -891,6 +898,8 @@ private enum IntegrationAgent: String, CaseIterable {
         case .kilo: "Kilo Code CLI"
         case .plandex: "Plandex"
         case .gptme: "gptme"
+        case .miniSweAgent: "mini-SWE-agent"
+        case .googleAgentsCLI: "Google Agents CLI"
         }
     }
 
@@ -913,7 +922,8 @@ private enum IntegrationAgent: String, CaseIterable {
             .continueDev, .goose, .cline, .roo, .aider, .amp, .warp,
             .trae, .junie, .crush, .augment, .cody, .tabby,
             .openhands, .openInterpreter, .openclaw, .codebuddy, .devin,
-            .vibe, .pi, .kilo, .plandex, .gptme,
+            .vibe, .pi, .kilo, .plandex, .gptme, .miniSweAgent,
+            .googleAgentsCLI,
         ].contains(self)
     }
 
@@ -922,7 +932,8 @@ private enum IntegrationAgent: String, CaseIterable {
         case .continueDev, .goose, .cline, .roo, .aider, .amp, .warp,
              .trae, .junie, .crush, .augment, .cody, .tabby,
              .openhands, .openInterpreter, .openclaw, .codebuddy, .devin,
-             .vibe, .pi, .kilo, .plandex, .gptme:
+             .vibe, .pi, .kilo, .plandex, .gptme, .miniSweAgent,
+             .googleAgentsCLI:
             false
         default:
             true
@@ -970,6 +981,8 @@ private enum IntegrationAgent: String, CaseIterable {
         case .kilo: ["kilo"]
         case .plandex: ["plandex", "pdx"]
         case .gptme: ["gptme"]
+        case .miniSweAgent: ["mini", "mini-extra"]
+        case .googleAgentsCLI: ["agents-cli"]
         }
     }
 
@@ -1032,6 +1045,20 @@ private enum IntegrationAgent: String, CaseIterable {
             [
                 home.appendingPathComponent(".config/gptme"),
                 home.appendingPathComponent(".local/share/gptme"),
+            ]
+        case .miniSweAgent:
+            [
+                home.appendingPathComponent(".config/mini-swe-agent"),
+                home.appendingPathComponent(
+                    "Library/Application Support/mini-swe-agent"
+                ),
+            ]
+        case .googleAgentsCLI:
+            [
+                home.appendingPathComponent(".config/google-agents-cli"),
+                home.appendingPathComponent(
+                    "Library/Application Support/google-agents-cli"
+                ),
             ]
         default:
             [defaultDetectionPath(home: home)]
@@ -1097,6 +1124,10 @@ private enum IntegrationAgent: String, CaseIterable {
         case .kilo: home.appendingPathComponent(".config/kilo")
         case .plandex: home.appendingPathComponent(".plandex")
         case .gptme: home.appendingPathComponent(".config/gptme")
+        case .miniSweAgent:
+            home.appendingPathComponent(".config/mini-swe-agent")
+        case .googleAgentsCLI:
+            home.appendingPathComponent(".config/google-agents-cli")
         }
     }
 }

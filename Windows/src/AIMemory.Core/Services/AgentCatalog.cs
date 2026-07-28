@@ -67,6 +67,8 @@ public sealed class AgentCatalog
         new("kilo", "Kilo Code CLI", ["kilo"], [".config\\kilo", ".kilo"], false),
         new("plandex", "Plandex", ["plandex", "pdx"], [".plandex"], false),
         new("gptme", "gptme", ["gptme"], [".config\\gptme", ".local\\share\\gptme"], false),
+        new("mini-swe-agent", "mini-SWE-agent", ["mini", "mini-extra"], [".config\\mini-swe-agent", "AppData\\Local\\mini-swe-agent"], false),
+        new("google-agents-cli", "Google Agents CLI", ["agents-cli"], [".config\\google-agents-cli", "AppData\\Local\\google-agents-cli"], false),
     ];
 
     public IReadOnlyList<AgentIntegrationStatus> Detect()

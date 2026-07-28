@@ -87,7 +87,7 @@
                                    TextWrapping="Wrap"
                                    LineHeight="22"
                                    LineStackingStrategy="BlockLineHeight" />
-                        <TextBlock Text="✓ Agent 覆盖扩展&#x0a;支持 39 种主流 Agent 与 CLI 检测，已安装项目优先显示。"
+                        <TextBlock x:Name="AgentCoverageText"
                                    TextWrapping="Wrap"
                                    LineHeight="22"
                                    LineStackingStrategy="BlockLineHeight" />
