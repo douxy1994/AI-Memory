@@ -1,0 +1,188 @@
+<Page
+    x:Class="AIMemory.Windows.Pages.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer>
+        <StackPanel Padding="32" Spacing="20" MaxWidth="980" HorizontalAlignment="Stretch">
+            <StackPanel>
+                <TextBlock Text="设置" Style="{StaticResource PageTitleStyle}" />
+                <TextBlock Text="管理启动、Agent 集成、数据同步与备份以及软件更新。" Opacity="0.65" />
+            </StackPanel>
+
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel Spacing="14">
+                    <TextBlock Text="启动与窗口" FontSize="18" FontWeight="SemiBold" />
+                    <Grid>
+                        <StackPanel>
+                            <TextBlock Text="登录时自动启动" FontWeight="SemiBold" />
+                            <TextBlock x:Name="StartupDetail" Text="正在读取系统状态…" Opacity="0.6" />
+                        </StackPanel>
+                        <ToggleSwitch x:Name="StartupToggle"
+                                      HorizontalAlignment="Right"
+                                      Toggled="StartupToggle_Toggled" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel Spacing="14">
+                    <TextBlock Text="数据同步与备份 · 本地目录" FontSize="18" FontWeight="SemiBold" />
+                    <TextBlock Text="适用于 OneDrive、Dropbox、Google Drive 等共享目录；只传输变化的对话文件。" Opacity="0.6" />
+                    <TextBox x:Name="SyncFolderBox" PlaceholderText="例如 D:\OneDrive\AI Memory" />
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                        <Button Content="保存目录" Click="SaveLocalFolder_Click" />
+                        <Button Content="立即同步" Click="SyncLocalFolder_Click" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel Spacing="14">
+                    <Grid>
+                        <StackPanel>
+                            <TextBlock Text="Agent 集成" FontSize="18" FontWeight="SemiBold" />
+                            <TextBlock Text="已安装项目优先；本机未安装的项目保持关闭。" Opacity="0.6" />
+                        </StackPanel>
+                        <Button HorizontalAlignment="Right" Content="重新检测" Click="DetectAgents_Click" />
+                    </Grid>
+                    <ItemsControl x:Name="AgentList">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Padding="0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Label}" FontWeight="SemiBold" />
+                                        <TextBlock Text="{Binding Detail}" Opacity="0.6" />
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding State}"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,12,0" />
+                                    <Button Grid.Column="2"
+                                            Content="{Binding ActionLabel}"
+                                            IsEnabled="{Binding CanToggle}"
+                                            Tag="{Binding}"
+                                            Click="ToggleAgent_Click" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel Spacing="14">
+                    <TextBlock Text="数据同步与备份 · WebDAV" FontSize="18" FontWeight="SemiBold" />
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="120" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <ComboBox x:Name="SchemeBox" SelectedIndex="0">
+                            <ComboBoxItem Content="https" />
+                            <ComboBoxItem Content="http" />
+                        </ComboBox>
+                        <TextBox x:Name="HostBox" Grid.Column="1" PlaceholderText="dav.example.com" />
+                    </Grid>
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="ServerPathBox" PlaceholderText="服务器路径，例如 webdav" />
+                        <TextBox x:Name="RemotePathBox" Grid.Column="1" PlaceholderText="远程目录，例如 chatmem" />
+                    </Grid>
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="UsernameBox" PlaceholderText="用户名" />
+                        <PasswordBox x:Name="PasswordBox" Grid.Column="1" PlaceholderText="密码" />
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                        <Button Content="验证连接" Click="VerifyWebDav_Click" />
+                        <Button Content="立即同步" Click="SyncWebDav_Click" />
+                        <Button Content="保存" Style="{StaticResource AccentButtonStyle}" Click="SaveSettings_Click" />
+                    </StackPanel>
+                    <ProgressBar x:Name="SyncProgress" IsIndeterminate="True" Visibility="Collapsed" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel Spacing="14">
+                    <TextBlock Text="软件更新" FontSize="18" FontWeight="SemiBold" />
+                    <Grid>
+                        <StackPanel>
+                            <TextBlock Text="自动检查更新" FontWeight="SemiBold" />
+                            <TextBlock Text="仅使用 AI Memory 的独立更新源，不会覆盖 ChatMem。" Opacity="0.6" />
+                        </StackPanel>
+                        <ToggleSwitch x:Name="AutoUpdateToggle"
+                                      HorizontalAlignment="Right" />
+                    </Grid>
+                    <TextBox x:Name="UpdateFeedBox"
+                             Header="GitHub 兼容发布源"
+                             PlaceholderText="https://api.example.com/repos/owner/aimemory/releases/latest" />
+                    <StackPanel Orientation="Horizontal"
+                                HorizontalAlignment="Right"
+                                Spacing="8">
+                        <Button Content="保存更新设置"
+                                Click="SaveUpdateSettings_Click" />
+                        <Button Content="检查更新"
+                                Click="CheckUpdates_Click" />
+                        <Button x:Name="InstallUpdateButton"
+                                Content="下载并打开安装包"
+                                IsEnabled="False"
+                                Click="InstallUpdate_Click" />
+                    </StackPanel>
+                    <TextBlock x:Name="UpdateStatusText"
+                               Text="尚未检查"
+                               Opacity="0.65"
+                               TextWrapping="Wrap"
+                               IsTextSelectionEnabled="True" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel Spacing="14">
+                    <TextBlock Text="运行诊断" FontSize="18" FontWeight="SemiBold" />
+                    <TextBlock Text="以下内容来自当前数据库与本机环境，可用于核对版本、数据和 Agent 状态。" Opacity="0.6" />
+                    <TextBox x:Name="DiagnosticsBox"
+                             IsReadOnly="True"
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
+                             MinHeight="180"
+                             FontFamily="Cascadia Mono" />
+                    <StackPanel Orientation="Horizontal"
+                                HorizontalAlignment="Right"
+                                Spacing="8">
+                        <Button Content="刷新诊断" Click="RefreshDiagnostics_Click" />
+                        <Button Content="复制诊断" Click="CopyDiagnostics_Click" />
+                        <Button Content="打开数据目录" Click="OpenDataDirectory_Click" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel Spacing="14">
+                    <TextBlock Text="数据同步与备份 · 数据与恢复" FontSize="18" FontWeight="SemiBold" />
+                    <TextBlock x:Name="DataPathText" Opacity="0.65" IsTextSelectionEnabled="True" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Content="创建恢复点" Click="CreateBackup_Click" />
+                        <Button Content="导入本机 Agent 历史"
+                                Click="ImportNativeHistory_Click" />
+                        <Button x:Name="ImportChatMemButton"
+                                Content="导入 ChatMem 数据"
+                                Click="ImportChatMem_Click" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <InfoBar x:Name="Feedback" IsOpen="False" IsClosable="True" />
+        </StackPanel>
+    </ScrollViewer>
+</Page>

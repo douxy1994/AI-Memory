@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="src/AIMemory.Core/AIMemory.Core.csproj" />
+  <Project Path="src/AIMemory.Mcp/AIMemory.Mcp.csproj" />
+  <Project Path="src/AIMemory.Windows/AIMemory.Windows.csproj" />
+  <Project Path="tests/AIMemory.Core.Tests/AIMemory.Core.Tests.csproj" />
+</Solution>

@@ -1,0 +1,134 @@
+<Page
+    x:Class="AIMemory.Windows.Pages.MemoryPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Padding="32" RowSpacing="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid>
+            <StackPanel>
+                <TextBlock Text="记忆与接续" Style="{StaticResource PageTitleStyle}" />
+                <TextBlock Text="审批候选规则、维护已批准记忆，并管理检查点与 Agent 交接。" Opacity="0.65" />
+            </StackPanel>
+            <Button HorizontalAlignment="Right"
+                    Content="刷新"
+                    Click="Refresh_Click" />
+        </Grid>
+
+        <TabView Grid.Row="1">
+            <TabViewItem Header="待复核" IsClosable="False">
+                <ListView x:Name="CandidateList">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource CardStyle}" Margin="0,4">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="{Binding Summary}" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding Value}" TextWrapping="Wrap" IsTextSelectionEnabled="True" />
+                                    <TextBlock Text="{Binding WhyItMatters}" Opacity="0.6" TextWrapping="Wrap" />
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                                        <Button Content="批准/编辑"
+                                                Tag="{Binding}"
+                                                Click="ApproveCandidate_Click" />
+                                        <Button Content="暂缓"
+                                                Tag="{Binding}"
+                                                Click="SnoozeCandidate_Click" />
+                                        <Button Content="拒绝"
+                                                Tag="{Binding}"
+                                                Click="RejectCandidate_Click" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </TabViewItem>
+
+            <TabViewItem Header="已批准规则" IsClosable="False">
+                <ListView x:Name="ApprovedList">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource CardStyle}" Margin="0,4">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding Value}" TextWrapping="Wrap" IsTextSelectionEnabled="True" />
+                                    <TextBlock Text="{Binding UsageHint}" Opacity="0.6" TextWrapping="Wrap" />
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                                        <Button Content="编辑"
+                                                Tag="{Binding}"
+                                                Click="EditApproved_Click" />
+                                        <Button Content="重新验证"
+                                                Tag="{Binding}"
+                                                Click="ReverifyApproved_Click" />
+                                        <Button Content="停用"
+                                                Tag="{Binding}"
+                                                Click="RetireApproved_Click" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </TabViewItem>
+
+            <TabViewItem Header="检查点与交接" IsClosable="False">
+                <Grid ColumnSpacing="16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="检查点" FontSize="18" FontWeight="SemiBold" />
+                        <ListView x:Name="CheckpointList">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Style="{StaticResource CardStyle}" Margin="0,4">
+                                        <StackPanel Spacing="6">
+                                            <TextBlock Text="{Binding Summary}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                            <TextBlock Text="{Binding SourceAgent}" Opacity="0.6" />
+                                            <TextBlock Text="{Binding ResumeCommand}"
+                                                       FontFamily="Cascadia Mono"
+                                                       IsTextSelectionEnabled="True"
+                                                       TextWrapping="Wrap" />
+                                            <Button Content="创建交接包"
+                                                    HorizontalAlignment="Right"
+                                                    Tag="{Binding}"
+                                                    Click="PromoteCheckpoint_Click" />
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Spacing="8">
+                        <TextBlock Text="交接包" FontSize="18" FontWeight="SemiBold" />
+                        <ListView x:Name="HandoffList">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Style="{StaticResource CardStyle}" Margin="0,4">
+                                        <StackPanel Spacing="6">
+                                            <TextBlock Text="{Binding CurrentGoal}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                            <TextBlock Text="{Binding Route}" Opacity="0.6" />
+                                            <TextBlock Text="{Binding Status}" Opacity="0.6" />
+                                            <Button Content="标记已消费"
+                                                    HorizontalAlignment="Right"
+                                                    Tag="{Binding}"
+                                                    IsEnabled="{Binding CanConsume}"
+                                                    Click="ConsumeHandoff_Click" />
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </StackPanel>
+                </Grid>
+            </TabViewItem>
+        </TabView>
+        <InfoBar x:Name="Feedback"
+                 Grid.Row="2"
+                 IsOpen="False"
+                 IsClosable="True" />
+    </Grid>
+</Page>

@@ -1,0 +1,51 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  macos:
+    name: macOS native
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test SwiftUI and AppKit app
+        run: |
+          xcodebuild \
+            -project AIMemory.xcodeproj \
+            -scheme AIMemory \
+            -configuration Debug \
+            -destination 'platform=macOS' \
+            -derivedDataPath .build/DerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            test
+      - name: Build Release app
+        run: |
+          xcodebuild \
+            -project AIMemory.xcodeproj \
+            -scheme AIMemory \
+            -configuration Release \
+            -destination 'platform=macOS' \
+            -derivedDataPath .build/DerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+  windows:
+    name: Windows 11 native
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Test Windows core
+        run: dotnet test Windows/tests/AIMemory.Core.Tests/AIMemory.Core.Tests.csproj --configuration Release
+      - name: Build WinUI 3 x64
+        run: dotnet build Windows/src/AIMemory.Windows/AIMemory.Windows.csproj --configuration Release -p:Platform=x64

@@ -1,0 +1,39 @@
+<Page
+    x:Class="AIMemory.Windows.Pages.TrashPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Padding="32" RowSpacing="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <StackPanel>
+            <TextBlock Text="回收站" Style="{StaticResource PageTitleStyle}" />
+            <TextBlock Text="恢复对话或永久删除回收站副本。" Opacity="0.65" />
+        </StackPanel>
+        <ListView x:Name="TrashList" Grid.Row="1">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <Border Style="{StaticResource CardStyle}" Margin="0,4">
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding Agent}" Opacity="0.6" />
+                                <TextBlock Text="{Binding ExpiresAt}" Opacity="0.6" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                                <Button Content="恢复" Tag="{Binding}" Click="Restore_Click" />
+                                <Button Content="永久删除" Tag="{Binding}" Click="Delete_Click" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+        <InfoBar x:Name="Feedback" Grid.Row="0" Margin="0,70,0,0" IsOpen="False" IsClosable="True" />
+    </Grid>
+</Page>

@@ -1,0 +1,131 @@
+name: AIMemory
+options:
+  bundleIdPrefix: com.aimemory
+  deploymentTarget:
+    macOS: "15.0"
+  createIntermediateGroups: true
+  generateEmptyDirectories: true
+  xcodeVersion: "27.0"
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "15.0"
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+    CODE_SIGNING_REQUIRED: "NO"
+    CODE_SIGNING_ALLOWED: "NO"
+    ENABLE_HARDENED_RUNTIME: "YES"
+    COMBINE_HIDPI_IMAGES: "YES"
+    SWIFT_STRICT_CONCURRENCY: minimal
+    ENABLE_USER_SCRIPT_SANDBOXING: "NO"
+targets:
+  AIMemoryMCP:
+    type: tool
+    platform: macOS
+    deploymentTarget: "14.0"
+    sources:
+      - path: AIMemoryMCP
+      - path: AIMemory/Models/ChatMemModels.swift
+      - path: AIMemory/Persistence/DataPaths.swift
+      - path: AIMemory/Persistence/NativeDatabase.swift
+      - path: AIMemory/Persistence/NativeConversationStore.swift
+      - path: AIMemory/Services/NativeHistoryImporter.swift
+      - path: AIMemory/Services/NativeAdditionalHistoryImporter.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.aimemory.mcp
+        PRODUCT_NAME: aimemory-mcp
+        GENERATE_INFOPLIST_FILE: "YES"
+        CODE_SIGNING_REQUIRED: "NO"
+        CODE_SIGNING_ALLOWED: "NO"
+  AIMemory:
+    type: application
+    platform: macOS
+    deploymentTarget: "14.0"
+    sources:
+      - path: AIMemory
+        excludes:
+          - "Resources/zh-Hans.lproj/.gitkeep"
+          - "Resources/en.lproj/.gitkeep"
+          - "Resources/IconSources"
+    resources:
+      - path: AIMemory/Resources/Assets.xcassets
+      - path: AIMemory/Resources/zh-Hans.lproj
+        optional: true
+      - path: AIMemory/Resources/en.lproj
+        optional: true
+    dependencies:
+      - target: AIMemoryMCP
+        embed: false
+    postBuildScripts:
+      - name: Embed native MCP helper
+        script: |
+          set -eu
+          helper_dir="${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/Helpers"
+          mkdir -p "${helper_dir}"
+          ditto "${BUILT_PRODUCTS_DIR}/aimemory-mcp" "${helper_dir}/aimemory-mcp"
+        basedOnDependencyAnalysis: false
+      - name: Record source revision
+        script: |
+          set -eu
+          revision="$(git -C "${SRCROOT}" rev-parse --short=7 HEAD 2>/dev/null || true)"
+          if [ -z "${revision}" ]; then
+            revision="uncommitted"
+          fi
+          /usr/libexec/PlistBuddy \
+            -c "Delete :AIMemorySourceRevision" \
+            "${TARGET_BUILD_DIR}/${INFOPLIST_PATH}" 2>/dev/null || true
+          /usr/libexec/PlistBuddy \
+            -c "Add :AIMemorySourceRevision string ${revision}" \
+            "${TARGET_BUILD_DIR}/${INFOPLIST_PATH}"
+        basedOnDependencyAnalysis: false
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.aimemory.app
+        PRODUCT_NAME: AIMemory
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        INFOPLIST_FILE: AIMemory/Info.plist
+        CODE_SIGN_ENTITLEMENTS: AIMemory/AIMemory.entitlements
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        ENABLE_PREVIEWS: "YES"
+        GENERATE_INFOPLIST_FILE: "NO"
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"
+        INFOPLIST_KEY_CFBundleDisplayName: "AI Memory"
+        INFOPLIST_KEY_LSApplicationCategoryType: "public.app-category.developer-tools"
+        INFOPLIST_KEY_NSHumanReadableCopyright: "MIT License"
+        INFOPLIST_KEY_NSPrincipalClass: NSApplication
+  AIMemoryTests:
+    type: bundle.unit-test
+    platform: macOS
+    deploymentTarget: "14.0"
+    sources:
+      - path: AIMemoryTests
+    dependencies:
+      - target: AIMemory
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.aimemory.app.tests
+        GENERATE_INFOPLIST_FILE: "YES"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/AIMemory.app/Contents/MacOS/AIMemory"
+schemes:
+  AIMemory:
+    build:
+      targets:
+        AIMemoryMCP: all
+        AIMemory: all
+        AIMemoryTests: [test]
+    test:
+      targets:
+        - AIMemoryTests
+      gatherCoverageData: true
+    run:
+      config: Debug
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release

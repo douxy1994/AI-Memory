@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="320" viewBox="0 0 560 320" role="img" aria-label="AI Memory Windows 11 preview">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e4f3ff"/><stop offset="1" stop-color="#eef8f3"/></linearGradient>
+    <linearGradient id="a" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#4fc6a1"/><stop offset="1" stop-color="#087cbe"/></linearGradient>
+  </defs>
+  <rect width="560" height="320" rx="24" fill="url(#g)"/>
+  <rect x="45" y="38" width="470" height="240" rx="14" fill="#fbfdff" stroke="#d7e5ed"/>
+  <rect x="45" y="38" width="470" height="42" rx="14" fill="#f3f8fb"/>
+  <rect x="62" y="50" width="20" height="20" rx="5" fill="url(#a)"/>
+  <text x="92" y="66" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="14" fill="#20313a">AI Memory</text>
+  <rect x="45" y="80" width="138" height="198" fill="#f2f7fa"/>
+  <rect x="60" y="99" width="108" height="30" rx="7" fill="#e1f1ed"/>
+  <rect x="60" y="142" width="108" height="24" rx="6" fill="#fff"/>
+  <rect x="60" y="176" width="108" height="24" rx="6" fill="#fff"/>
+  <rect x="201" y="101" width="294" height="59" rx="10" fill="#e9f5f3"/>
+  <rect x="201" y="176" width="91" height="80" rx="10" fill="#fff" stroke="#dfe8ed"/>
+  <rect x="302" y="176" width="91" height="80" rx="10" fill="#fff" stroke="#dfe8ed"/>
+  <rect x="403" y="176" width="92" height="80" rx="10" fill="#fff" stroke="#dfe8ed"/>
+  <rect x="430" y="51" width="58" height="18" rx="9" fill="#d7ebff"/>
+  <text x="459" y="64" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="9" font-weight="700" fill="#17669b">PREVIEW</text>
+  <text x="280" y="302" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="15" fill="#315a70">C# + WinUI 3 · Native Windows 11</text>
+</svg>

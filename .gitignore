@@ -1,0 +1,15 @@
+.DS_Store
+.build/
+DerivedData/
+*.profraw
+xcuserdata/
+tmp/
+**/bin/
+**/obj/
+*.user
+*.suo
+*.cache
+*.xcresult
+.swiftpm/
+Packages/
+AIMemory/Resources/IconSources/

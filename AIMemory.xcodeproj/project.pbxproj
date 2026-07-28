@@ -1,0 +1,900 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		05B6E83FA7F98D9C25CD8305 /* NativeLocalSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D1CB84F52DAEBE84012A967 /* NativeLocalSyncService.swift */; };
+		06658F5D58AEAD15211EB197 /* DataPaths.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17199B980BFDA94E549E2039 /* DataPaths.swift */; };
+		076BCA21CFC2145D8394C5DB /* AIMemoryApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A59C31BA6DD900A0D884E8C0 /* AIMemoryApp.swift */; };
+		0A98F07709D5FE478F210F22 /* NativeDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC4816F3C67A273D04E4CC85 /* NativeDatabase.swift */; };
+		0BE4916EB26C76C79A1D7152 /* NativeConversationStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3EA20D8D337E4872B6B02E3 /* NativeConversationStoreTests.swift */; };
+		0C3CDF5DEE823FA99FDF5276 /* NativeMigrationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57321CE2E5BF1F48B89891D2 /* NativeMigrationServiceTests.swift */; };
+		20D6DE1E050C1BAE326CA1A8 /* DataPaths.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17199B980BFDA94E549E2039 /* DataPaths.swift */; };
+		26464C6E4B0381859C4DA606 /* NativeAgentIntegrationStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78F0D527C9B6B7C38ABBAA62 /* NativeAgentIntegrationStoreTests.swift */; };
+		27088DA20F321F56C3475E36 /* NativeLaunchAtLoginService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 468549D5776C5F61D03C688B /* NativeLaunchAtLoginService.swift */; };
+		292033BE258ADA7EC0B2F71E /* AppStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D2FF97E04BBEDC26DF70061 /* AppStore.swift */; };
+		2969632C3429A90434734E75 /* NativeHistoryImporterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06ECDC10EA33C598A6D67984 /* NativeHistoryImporterTests.swift */; };
+		2C16C9DC3FCF2207E1BC38F2 /* ContinuationBriefBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45547FD6E4D1A80C80FA9081 /* ContinuationBriefBuilder.swift */; };
+		390396382370E38EFB83B117 /* LocalHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37DD3D32082A67AAA4E9AFCC /* LocalHistoryView.swift */; };
+		396880A1E8BED4F8BC9BBA7E /* NativeLocalSyncServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBD3652774A7ADDE9815C153 /* NativeLocalSyncServiceTests.swift */; };
+		3AA65C88B837A5493758524D /* MemoryDrawerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCA3FF2ED5067341EEFB6D7A /* MemoryDrawerView.swift */; };
+		3B61D670F4DA1537E2D5E5A6 /* AIMemoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 925A893C2F136B52EC20B4A2 /* AIMemoryTests.swift */; };
+		42B038DBA21C41306ECD89E0 /* NativeMigrationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F536502BE78D860C3319AA9 /* NativeMigrationService.swift */; };
+		42C714447D42BE205FEB75DB /* NativeAgentIntegrationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33D57E247576D13A5CBCB1F1 /* NativeAgentIntegrationStore.swift */; };
+		44818B31AE7802ACBF254D1D /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C4E3453F049CD2A62DA96D6 /* AboutView.swift */; };
+		493A67BF7205DB19FC5D4B22 /* MainWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE8DA10BCCBE5F355B1469A1 /* MainWindowController.swift */; };
+		49D26D983D0FBE887BBF6105 /* NativeUpdateServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA441E084330372F1755B2D3 /* NativeUpdateServiceTests.swift */; };
+		54961BAF8125FE4C565274E0 /* WorkbenchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AC0C2EFF08A9322D8278CFC /* WorkbenchView.swift */; };
+		549E0EF4F27EC5906C09FDF3 /* NativeUpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89D7F5FE674125D0CB9EE1D1 /* NativeUpdateService.swift */; };
+		55A35E3DB03FA262842C24EF /* NativeBackupServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38A888ECBF5AB51BFEBDB130 /* NativeBackupServiceTests.swift */; };
+		56AB085BC1EA3139B7498228 /* ConversationDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36A831C490E6D798D4F21B6E /* ConversationDetailView.swift */; };
+		57A8F648E26E004AB616D4F1 /* NativeSettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D105E0CC247B9B38E8867792 /* NativeSettingsStore.swift */; };
+		57C17F4FF18DB356F6C83370 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 486415C3041D8A4AA53E2303 /* Assets.xcassets */; };
+		58F5D01F093ADE3BCF1DD313 /* NativeSettingsStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB72567FA01042100B840855 /* NativeSettingsStoreTests.swift */; };
+		59FE87B000C0C43A3AA86FBB /* NativeDatabaseImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7F12F783FB230C67F5177A7 /* NativeDatabaseImporter.swift */; };
+		5AAE86C002E7EABC74C81BCA /* NativeConversationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F85D3D46483E2E9ED1EEEF06 /* NativeConversationStore.swift */; };
+		5EBD58E560B54EF777B352F8 /* StatusBarIconTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6B258F1AF7619BDCF16E61F /* StatusBarIconTests.swift */; };
+		6E4DDC130634B0A30B06E21B /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE69D22D4D4B7899F24F51BB /* SettingsView.swift */; };
+		759580487E651A55903E4431 /* NativeCredentialStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72186E86423999D7388DD8F8 /* NativeCredentialStore.swift */; };
+		77188B40AFB11270306054A3 /* NativeDatabaseImporterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ECE416DDFA8A6380650A993 /* NativeDatabaseImporterTests.swift */; };
+		7F6D96568E1A42211C2F2F62 /* BridgeClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F366ACE133848110399E70D /* BridgeClient.swift */; };
+		846B0AA10A21951EBCE03AAD /* NativeTrashStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB62D89BCD696354ECA0320B /* NativeTrashStoreTests.swift */; };
+		863086A332D9EA4F8F14D0EC /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93726B76BD9203A9DAA42688 /* SidebarView.swift */; };
+		8966E91B96DD9FDE565FE5F4 /* NativeTrashStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71653498514199497320EF84 /* NativeTrashStore.swift */; };
+		9C05D3A00800FD58C2647461 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEDD815264B0500FD0D66275 /* HistoryView.swift */; };
+		9C93E44E5B84C00EAFF81390 /* NativeBackupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 668123A7E6493C3195017969 /* NativeBackupService.swift */; };
+		A2FD2DEA9F4BB03D9947F2D5 /* NativeAgentConversationWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A79A1BE16793B8EC1264FF12 /* NativeAgentConversationWriter.swift */; };
+		A3B1004284C11E82A9749B6F /* Telemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF2DBA420615AEAB587DB9A9 /* Telemetry.swift */; };
+		A5ED8D035A3A9640CB8FA308 /* NativeWebDAVServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EB7D809C535C39A43618511 /* NativeWebDAVServiceTests.swift */; };
+		ACD5A4650D409867C35D508A /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 29B344B2D7D3EBB60059868E /* Localizable.strings */; };
+		AE81D9C2E013E85D04D2978B /* NativeConversationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F85D3D46483E2E9ED1EEEF06 /* NativeConversationStore.swift */; };
+		B19FE1875D64D7823322FEED /* NativeDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC4816F3C67A273D04E4CC85 /* NativeDatabase.swift */; };
+		C1540FC772E5643E6B47FB8C /* MCPMain.swift in Sources */ = {isa = PBXBuildFile; fileRef = E13C5E2CCB84364E77498123 /* MCPMain.swift */; };
+		D1AFDE39CAB07BECE1207A7E /* NativeDatabaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EFEA9D1AF0D70040BEAD3C0 /* NativeDatabaseTests.swift */; };
+		D3176D46396C6F49D4F03904 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37B9F1DDF320AE6B871B1FD7 /* Theme.swift */; };
+		D4A3C9F2822204651882084A /* NativeWebDAVService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C3935AA96C3E733A2EAF3D /* NativeWebDAVService.swift */; };
+		D65DA4999CEA0ECA883D6A5C /* NativeAdditionalHistoryImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 881959265865914A3F15A143 /* NativeAdditionalHistoryImporter.swift */; };
+		DA1A927F1CAB5033315A7820 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DBE879DF38D1C3DFB3DA34F /* RootView.swift */; };
+		DC7FC3B20F8D6ED5147B68BB /* NativeAdditionalHistoryImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 881959265865914A3F15A143 /* NativeAdditionalHistoryImporter.swift */; };
+		DD9D4EF9C5BF3BD5E303A5FD /* ChatMemModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EB1CE2E446F11C09F1AD35D /* ChatMemModels.swift */; };
+		E3A69B1C0595EFF19BE6ED8C /* NativeHistoryImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A98F5FEACFCB3242B28B6977 /* NativeHistoryImporter.swift */; };
+		E57E68CA7F4684320C1B1C1E /* NativeHistoryImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A98F5FEACFCB3242B28B6977 /* NativeHistoryImporter.swift */; };
+		ECBC8933B1704C20102DB844 /* ReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BF8AF8A713D3AF1E20BE381 /* ReviewView.swift */; };
+		F3214B85111E1C81DA2A6EB4 /* ChatMemModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EB1CE2E446F11C09F1AD35D /* ChatMemModels.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		2362192376F59AE97CCE4B9F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 67785EEB158B439E2FE209C4 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 33E30803E91D38E2945E012D;
+			remoteInfo = AIMemoryMCP;
+		};
+		70D9AF227EE27839B2F65615 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 67785EEB158B439E2FE209C4 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = FED494E57B8949C5316BC0F2;
+			remoteInfo = AIMemory;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		06ECDC10EA33C598A6D67984 /* NativeHistoryImporterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeHistoryImporterTests.swift; sourceTree = "<group>"; };
+		17199B980BFDA94E549E2039 /* DataPaths.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataPaths.swift; sourceTree = "<group>"; };
+		1D2FF97E04BBEDC26DF70061 /* AppStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStore.swift; sourceTree = "<group>"; };
+		1ECE416DDFA8A6380650A993 /* NativeDatabaseImporterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeDatabaseImporterTests.swift; sourceTree = "<group>"; };
+		2AC0C2EFF08A9322D8278CFC /* WorkbenchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchView.swift; sourceTree = "<group>"; };
+		2FB263909C319B7A6F3F595D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		302C60B7E01BF33BA02FAA02 /* AIMemory.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AIMemory.entitlements; sourceTree = "<group>"; };
+		33D57E247576D13A5CBCB1F1 /* NativeAgentIntegrationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeAgentIntegrationStore.swift; sourceTree = "<group>"; };
+		36A831C490E6D798D4F21B6E /* ConversationDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationDetailView.swift; sourceTree = "<group>"; };
+		37B9F1DDF320AE6B871B1FD7 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		37DD3D32082A67AAA4E9AFCC /* LocalHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalHistoryView.swift; sourceTree = "<group>"; };
+		38A888ECBF5AB51BFEBDB130 /* NativeBackupServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeBackupServiceTests.swift; sourceTree = "<group>"; };
+		45547FD6E4D1A80C80FA9081 /* ContinuationBriefBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContinuationBriefBuilder.swift; sourceTree = "<group>"; };
+		468549D5776C5F61D03C688B /* NativeLaunchAtLoginService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeLaunchAtLoginService.swift; sourceTree = "<group>"; };
+		486415C3041D8A4AA53E2303 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		57321CE2E5BF1F48B89891D2 /* NativeMigrationServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeMigrationServiceTests.swift; sourceTree = "<group>"; };
+		58932192869C37F70D3BC531 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		5D1CB84F52DAEBE84012A967 /* NativeLocalSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeLocalSyncService.swift; sourceTree = "<group>"; };
+		5EB7D809C535C39A43618511 /* NativeWebDAVServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeWebDAVServiceTests.swift; sourceTree = "<group>"; };
+		5F536502BE78D860C3319AA9 /* NativeMigrationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeMigrationService.swift; sourceTree = "<group>"; };
+		64EF65C15347DD43A7C15023 /* AIMemoryMCP */ = {isa = PBXFileReference; includeInIndex = 0; path = AIMemoryMCP; sourceTree = BUILT_PRODUCTS_DIR; };
+		668123A7E6493C3195017969 /* NativeBackupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeBackupService.swift; sourceTree = "<group>"; };
+		6C4E3453F049CD2A62DA96D6 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
+		6DBE879DF38D1C3DFB3DA34F /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		71653498514199497320EF84 /* NativeTrashStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeTrashStore.swift; sourceTree = "<group>"; };
+		72186E86423999D7388DD8F8 /* NativeCredentialStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeCredentialStore.swift; sourceTree = "<group>"; };
+		75C3935AA96C3E733A2EAF3D /* NativeWebDAVService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeWebDAVService.swift; sourceTree = "<group>"; };
+		78F0D527C9B6B7C38ABBAA62 /* NativeAgentIntegrationStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeAgentIntegrationStoreTests.swift; sourceTree = "<group>"; };
+		7EFEA9D1AF0D70040BEAD3C0 /* NativeDatabaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeDatabaseTests.swift; sourceTree = "<group>"; };
+		8013CEAF0E439D2B8C923784 /* AIMemory.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AIMemory.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		881959265865914A3F15A143 /* NativeAdditionalHistoryImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeAdditionalHistoryImporter.swift; sourceTree = "<group>"; };
+		89D7F5FE674125D0CB9EE1D1 /* NativeUpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeUpdateService.swift; sourceTree = "<group>"; };
+		925A893C2F136B52EC20B4A2 /* AIMemoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIMemoryTests.swift; sourceTree = "<group>"; };
+		93726B76BD9203A9DAA42688 /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
+		9BF8AF8A713D3AF1E20BE381 /* ReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewView.swift; sourceTree = "<group>"; };
+		9EB1CE2E446F11C09F1AD35D /* ChatMemModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMemModels.swift; sourceTree = "<group>"; };
+		9F366ACE133848110399E70D /* BridgeClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BridgeClient.swift; sourceTree = "<group>"; };
+		A59C31BA6DD900A0D884E8C0 /* AIMemoryApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIMemoryApp.swift; sourceTree = "<group>"; };
+		A79A1BE16793B8EC1264FF12 /* NativeAgentConversationWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeAgentConversationWriter.swift; sourceTree = "<group>"; };
+		A98F5FEACFCB3242B28B6977 /* NativeHistoryImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeHistoryImporter.swift; sourceTree = "<group>"; };
+		AA441E084330372F1755B2D3 /* NativeUpdateServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeUpdateServiceTests.swift; sourceTree = "<group>"; };
+		B3EA20D8D337E4872B6B02E3 /* NativeConversationStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeConversationStoreTests.swift; sourceTree = "<group>"; };
+		BE8DA10BCCBE5F355B1469A1 /* MainWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowController.swift; sourceTree = "<group>"; };
+		C6B258F1AF7619BDCF16E61F /* StatusBarIconTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBarIconTests.swift; sourceTree = "<group>"; };
+		C7F12F783FB230C67F5177A7 /* NativeDatabaseImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeDatabaseImporter.swift; sourceTree = "<group>"; };
+		CB72567FA01042100B840855 /* NativeSettingsStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeSettingsStoreTests.swift; sourceTree = "<group>"; };
+		CBDBFC094BA9C41E101344D8 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		D105E0CC247B9B38E8867792 /* NativeSettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeSettingsStore.swift; sourceTree = "<group>"; };
+		DB62D89BCD696354ECA0320B /* NativeTrashStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeTrashStoreTests.swift; sourceTree = "<group>"; };
+		DBD3652774A7ADDE9815C153 /* NativeLocalSyncServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeLocalSyncServiceTests.swift; sourceTree = "<group>"; };
+		DF2DBA420615AEAB587DB9A9 /* Telemetry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Telemetry.swift; sourceTree = "<group>"; };
+		E13C5E2CCB84364E77498123 /* MCPMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPMain.swift; sourceTree = "<group>"; };
+		EC4816F3C67A273D04E4CC85 /* NativeDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeDatabase.swift; sourceTree = "<group>"; };
+		EE69D22D4D4B7899F24F51BB /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		EEDD815264B0500FD0D66275 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
+		F40CED9A97DF8F642EA8F5CC /* AIMemoryTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AIMemoryTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F85D3D46483E2E9ED1EEEF06 /* NativeConversationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeConversationStore.swift; sourceTree = "<group>"; };
+		FCA3FF2ED5067341EEFB6D7A /* MemoryDrawerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryDrawerView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		07FFD4BDC19565257EFA5F1A /* ViewControllers */ = {
+			isa = PBXGroup;
+			children = (
+				6C4E3453F049CD2A62DA96D6 /* AboutView.swift */,
+				36A831C490E6D798D4F21B6E /* ConversationDetailView.swift */,
+				EEDD815264B0500FD0D66275 /* HistoryView.swift */,
+				37DD3D32082A67AAA4E9AFCC /* LocalHistoryView.swift */,
+				FCA3FF2ED5067341EEFB6D7A /* MemoryDrawerView.swift */,
+				9BF8AF8A713D3AF1E20BE381 /* ReviewView.swift */,
+				6DBE879DF38D1C3DFB3DA34F /* RootView.swift */,
+				EE69D22D4D4B7899F24F51BB /* SettingsView.swift */,
+				93726B76BD9203A9DAA42688 /* SidebarView.swift */,
+				2AC0C2EFF08A9322D8278CFC /* WorkbenchView.swift */,
+			);
+			path = ViewControllers;
+			sourceTree = "<group>";
+		};
+		0F1FA8892138B4F92CD786E1 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				8013CEAF0E439D2B8C923784 /* AIMemory.app */,
+				64EF65C15347DD43A7C15023 /* AIMemoryMCP */,
+				F40CED9A97DF8F642EA8F5CC /* AIMemoryTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		0FF1DD039D5F458127C33077 = {
+			isa = PBXGroup;
+			children = (
+				AC8E45AA40E239D0E822F688 /* AIMemory */,
+				5A9C28EBEA4EA20932E8B95A /* AIMemoryMCP */,
+				AE94F4EB2E84006991D8C2B4 /* AIMemoryTests */,
+				0F1FA8892138B4F92CD786E1 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		301C2B3CB1BE3B3791ED7E8A /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				9F366ACE133848110399E70D /* BridgeClient.swift */,
+				45547FD6E4D1A80C80FA9081 /* ContinuationBriefBuilder.swift */,
+				881959265865914A3F15A143 /* NativeAdditionalHistoryImporter.swift */,
+				A79A1BE16793B8EC1264FF12 /* NativeAgentConversationWriter.swift */,
+				33D57E247576D13A5CBCB1F1 /* NativeAgentIntegrationStore.swift */,
+				A98F5FEACFCB3242B28B6977 /* NativeHistoryImporter.swift */,
+				468549D5776C5F61D03C688B /* NativeLaunchAtLoginService.swift */,
+				5D1CB84F52DAEBE84012A967 /* NativeLocalSyncService.swift */,
+				5F536502BE78D860C3319AA9 /* NativeMigrationService.swift */,
+				89D7F5FE674125D0CB9EE1D1 /* NativeUpdateService.swift */,
+				75C3935AA96C3E733A2EAF3D /* NativeWebDAVService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		4D043078A1BB672567F98B06 /* App */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		545FD4A7DCAA8A7141692D77 /* Stores */ = {
+			isa = PBXGroup;
+			children = (
+				1D2FF97E04BBEDC26DF70061 /* AppStore.swift */,
+			);
+			path = Stores;
+			sourceTree = "<group>";
+		};
+		5A9C28EBEA4EA20932E8B95A /* AIMemoryMCP */ = {
+			isa = PBXGroup;
+			children = (
+				E13C5E2CCB84364E77498123 /* MCPMain.swift */,
+			);
+			path = AIMemoryMCP;
+			sourceTree = "<group>";
+		};
+		6D18C871C140E8C0539B2EB4 /* Logging */ = {
+			isa = PBXGroup;
+			children = (
+				DF2DBA420615AEAB587DB9A9 /* Telemetry.swift */,
+			);
+			path = Logging;
+			sourceTree = "<group>";
+		};
+		701529F43C49B6512FDF4D9C /* Views */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		7068225E119695C9C6FCA638 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				9EB1CE2E446F11C09F1AD35D /* ChatMemModels.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		842276352CFD18B7B53016A1 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				486415C3041D8A4AA53E2303 /* Assets.xcassets */,
+				29B344B2D7D3EBB60059868E /* Localizable.strings */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		AC8E45AA40E239D0E822F688 /* AIMemory */ = {
+			isa = PBXGroup;
+			children = (
+				302C60B7E01BF33BA02FAA02 /* AIMemory.entitlements */,
+				A59C31BA6DD900A0D884E8C0 /* AIMemoryApp.swift */,
+				2FB263909C319B7A6F3F595D /* Info.plist */,
+				4D043078A1BB672567F98B06 /* App */,
+				6D18C871C140E8C0539B2EB4 /* Logging */,
+				7068225E119695C9C6FCA638 /* Models */,
+				CBB9B9CF4EF969A5C102E620 /* Persistence */,
+				842276352CFD18B7B53016A1 /* Resources */,
+				301C2B3CB1BE3B3791ED7E8A /* Services */,
+				545FD4A7DCAA8A7141692D77 /* Stores */,
+				BC1DE28159FA24CDD35289D6 /* Theme */,
+				BF300932F6B91A2048FB3190 /* Utilities */,
+				07FFD4BDC19565257EFA5F1A /* ViewControllers */,
+				701529F43C49B6512FDF4D9C /* Views */,
+				C33D2357DE97800B20ABE262 /* WindowManagement */,
+			);
+			path = AIMemory;
+			sourceTree = "<group>";
+		};
+		AE94F4EB2E84006991D8C2B4 /* AIMemoryTests */ = {
+			isa = PBXGroup;
+			children = (
+				925A893C2F136B52EC20B4A2 /* AIMemoryTests.swift */,
+				78F0D527C9B6B7C38ABBAA62 /* NativeAgentIntegrationStoreTests.swift */,
+				38A888ECBF5AB51BFEBDB130 /* NativeBackupServiceTests.swift */,
+				B3EA20D8D337E4872B6B02E3 /* NativeConversationStoreTests.swift */,
+				1ECE416DDFA8A6380650A993 /* NativeDatabaseImporterTests.swift */,
+				7EFEA9D1AF0D70040BEAD3C0 /* NativeDatabaseTests.swift */,
+				06ECDC10EA33C598A6D67984 /* NativeHistoryImporterTests.swift */,
+				DBD3652774A7ADDE9815C153 /* NativeLocalSyncServiceTests.swift */,
+				57321CE2E5BF1F48B89891D2 /* NativeMigrationServiceTests.swift */,
+				CB72567FA01042100B840855 /* NativeSettingsStoreTests.swift */,
+				DB62D89BCD696354ECA0320B /* NativeTrashStoreTests.swift */,
+				AA441E084330372F1755B2D3 /* NativeUpdateServiceTests.swift */,
+				5EB7D809C535C39A43618511 /* NativeWebDAVServiceTests.swift */,
+				C6B258F1AF7619BDCF16E61F /* StatusBarIconTests.swift */,
+			);
+			path = AIMemoryTests;
+			sourceTree = "<group>";
+		};
+		BC1DE28159FA24CDD35289D6 /* Theme */ = {
+			isa = PBXGroup;
+			children = (
+				37B9F1DDF320AE6B871B1FD7 /* Theme.swift */,
+			);
+			path = Theme;
+			sourceTree = "<group>";
+		};
+		BF300932F6B91A2048FB3190 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		C33D2357DE97800B20ABE262 /* WindowManagement */ = {
+			isa = PBXGroup;
+			children = (
+				BE8DA10BCCBE5F355B1469A1 /* MainWindowController.swift */,
+			);
+			path = WindowManagement;
+			sourceTree = "<group>";
+		};
+		CBB9B9CF4EF969A5C102E620 /* Persistence */ = {
+			isa = PBXGroup;
+			children = (
+				17199B980BFDA94E549E2039 /* DataPaths.swift */,
+				668123A7E6493C3195017969 /* NativeBackupService.swift */,
+				F85D3D46483E2E9ED1EEEF06 /* NativeConversationStore.swift */,
+				72186E86423999D7388DD8F8 /* NativeCredentialStore.swift */,
+				EC4816F3C67A273D04E4CC85 /* NativeDatabase.swift */,
+				C7F12F783FB230C67F5177A7 /* NativeDatabaseImporter.swift */,
+				D105E0CC247B9B38E8867792 /* NativeSettingsStore.swift */,
+				71653498514199497320EF84 /* NativeTrashStore.swift */,
+			);
+			path = Persistence;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		33E30803E91D38E2945E012D /* AIMemoryMCP */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E7C6A17FCED089E12F3118D6 /* Build configuration list for PBXNativeTarget "AIMemoryMCP" */;
+			buildPhases = (
+				6753D67FA2F0099846B447C6 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AIMemoryMCP;
+			packageProductDependencies = (
+			);
+			productName = AIMemoryMCP;
+			productReference = 64EF65C15347DD43A7C15023 /* AIMemoryMCP */;
+			productType = "com.apple.product-type.tool";
+		};
+		7A7D35AE0B48B1AB81211BBF /* AIMemoryTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 45C9F1F42A38E4E41CF0AD0E /* Build configuration list for PBXNativeTarget "AIMemoryTests" */;
+			buildPhases = (
+				63721EA4682889C7A87B10DF /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A01046C552E07353EDF1FD7A /* PBXTargetDependency */,
+			);
+			name = AIMemoryTests;
+			packageProductDependencies = (
+			);
+			productName = AIMemoryTests;
+			productReference = F40CED9A97DF8F642EA8F5CC /* AIMemoryTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		FED494E57B8949C5316BC0F2 /* AIMemory */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DC0ED5D4A2086BFB137A765C /* Build configuration list for PBXNativeTarget "AIMemory" */;
+			buildPhases = (
+				E266F7C6232CDE6442AE8DF0 /* Sources */,
+				7575BDEEFDD9B3F351585A4A /* Resources */,
+				F463DB0AEFE42BA3D1A12112 /* Embed native MCP helper */,
+				385E00FE45CCC375B0853EC1 /* Record source revision */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				631BDE1F7A8BE1DEAE90FA11 /* PBXTargetDependency */,
+			);
+			name = AIMemory;
+			packageProductDependencies = (
+			);
+			productName = AIMemory;
+			productReference = 8013CEAF0E439D2B8C923784 /* AIMemory.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		67785EEB158B439E2FE209C4 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 2700;
+				TargetAttributes = {
+					33E30803E91D38E2945E012D = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					7A7D35AE0B48B1AB81211BBF = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					FED494E57B8949C5316BC0F2 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 2B7D2D2B7F1D47F6DB4B2616 /* Build configuration list for PBXProject "AIMemory" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+				"zh-Hans",
+			);
+			mainGroup = 0FF1DD039D5F458127C33077;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 0F1FA8892138B4F92CD786E1 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				33E30803E91D38E2945E012D /* AIMemoryMCP */,
+				FED494E57B8949C5316BC0F2 /* AIMemory */,
+				7A7D35AE0B48B1AB81211BBF /* AIMemoryTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		7575BDEEFDD9B3F351585A4A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				57C17F4FF18DB356F6C83370 /* Assets.xcassets in Resources */,
+				ACD5A4650D409867C35D508A /* Localizable.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		385E00FE45CCC375B0853EC1 /* Record source revision */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Record source revision";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -eu\nrevision=\"$(git -C \"${SRCROOT}\" rev-parse --short=7 HEAD 2>/dev/null || true)\"\nif [ -z \"${revision}\" ]; then\n  revision=\"uncommitted\"\nfi\n/usr/libexec/PlistBuddy \\\n  -c \"Delete :AIMemorySourceRevision\" \\\n  \"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\" 2>/dev/null || true\n/usr/libexec/PlistBuddy \\\n  -c \"Add :AIMemorySourceRevision string ${revision}\" \\\n  \"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\n";
+		};
+		F463DB0AEFE42BA3D1A12112 /* Embed native MCP helper */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Embed native MCP helper";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -eu\nhelper_dir=\"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/Helpers\"\nmkdir -p \"${helper_dir}\"\nditto \"${BUILT_PRODUCTS_DIR}/aimemory-mcp\" \"${helper_dir}/aimemory-mcp\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		63721EA4682889C7A87B10DF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3B61D670F4DA1537E2D5E5A6 /* AIMemoryTests.swift in Sources */,
+				26464C6E4B0381859C4DA606 /* NativeAgentIntegrationStoreTests.swift in Sources */,
+				55A35E3DB03FA262842C24EF /* NativeBackupServiceTests.swift in Sources */,
+				0BE4916EB26C76C79A1D7152 /* NativeConversationStoreTests.swift in Sources */,
+				77188B40AFB11270306054A3 /* NativeDatabaseImporterTests.swift in Sources */,
+				D1AFDE39CAB07BECE1207A7E /* NativeDatabaseTests.swift in Sources */,
+				2969632C3429A90434734E75 /* NativeHistoryImporterTests.swift in Sources */,
+				396880A1E8BED4F8BC9BBA7E /* NativeLocalSyncServiceTests.swift in Sources */,
+				0C3CDF5DEE823FA99FDF5276 /* NativeMigrationServiceTests.swift in Sources */,
+				58F5D01F093ADE3BCF1DD313 /* NativeSettingsStoreTests.swift in Sources */,
+				846B0AA10A21951EBCE03AAD /* NativeTrashStoreTests.swift in Sources */,
+				49D26D983D0FBE887BBF6105 /* NativeUpdateServiceTests.swift in Sources */,
+				A5ED8D035A3A9640CB8FA308 /* NativeWebDAVServiceTests.swift in Sources */,
+				5EBD58E560B54EF777B352F8 /* StatusBarIconTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6753D67FA2F0099846B447C6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DD9D4EF9C5BF3BD5E303A5FD /* ChatMemModels.swift in Sources */,
+				06658F5D58AEAD15211EB197 /* DataPaths.swift in Sources */,
+				C1540FC772E5643E6B47FB8C /* MCPMain.swift in Sources */,
+				DC7FC3B20F8D6ED5147B68BB /* NativeAdditionalHistoryImporter.swift in Sources */,
+				5AAE86C002E7EABC74C81BCA /* NativeConversationStore.swift in Sources */,
+				B19FE1875D64D7823322FEED /* NativeDatabase.swift in Sources */,
+				E57E68CA7F4684320C1B1C1E /* NativeHistoryImporter.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E266F7C6232CDE6442AE8DF0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				076BCA21CFC2145D8394C5DB /* AIMemoryApp.swift in Sources */,
+				44818B31AE7802ACBF254D1D /* AboutView.swift in Sources */,
+				292033BE258ADA7EC0B2F71E /* AppStore.swift in Sources */,
+				7F6D96568E1A42211C2F2F62 /* BridgeClient.swift in Sources */,
+				F3214B85111E1C81DA2A6EB4 /* ChatMemModels.swift in Sources */,
+				2C16C9DC3FCF2207E1BC38F2 /* ContinuationBriefBuilder.swift in Sources */,
+				56AB085BC1EA3139B7498228 /* ConversationDetailView.swift in Sources */,
+				20D6DE1E050C1BAE326CA1A8 /* DataPaths.swift in Sources */,
+				9C05D3A00800FD58C2647461 /* HistoryView.swift in Sources */,
+				390396382370E38EFB83B117 /* LocalHistoryView.swift in Sources */,
+				493A67BF7205DB19FC5D4B22 /* MainWindowController.swift in Sources */,
+				3AA65C88B837A5493758524D /* MemoryDrawerView.swift in Sources */,
+				D65DA4999CEA0ECA883D6A5C /* NativeAdditionalHistoryImporter.swift in Sources */,
+				A2FD2DEA9F4BB03D9947F2D5 /* NativeAgentConversationWriter.swift in Sources */,
+				42C714447D42BE205FEB75DB /* NativeAgentIntegrationStore.swift in Sources */,
+				9C93E44E5B84C00EAFF81390 /* NativeBackupService.swift in Sources */,
+				AE81D9C2E013E85D04D2978B /* NativeConversationStore.swift in Sources */,
+				759580487E651A55903E4431 /* NativeCredentialStore.swift in Sources */,
+				0A98F07709D5FE478F210F22 /* NativeDatabase.swift in Sources */,
+				59FE87B000C0C43A3AA86FBB /* NativeDatabaseImporter.swift in Sources */,
+				E3A69B1C0595EFF19BE6ED8C /* NativeHistoryImporter.swift in Sources */,
+				27088DA20F321F56C3475E36 /* NativeLaunchAtLoginService.swift in Sources */,
+				05B6E83FA7F98D9C25CD8305 /* NativeLocalSyncService.swift in Sources */,
+				42B038DBA21C41306ECD89E0 /* NativeMigrationService.swift in Sources */,
+				57A8F648E26E004AB616D4F1 /* NativeSettingsStore.swift in Sources */,
+				8966E91B96DD9FDE565FE5F4 /* NativeTrashStore.swift in Sources */,
+				549E0EF4F27EC5906C09FDF3 /* NativeUpdateService.swift in Sources */,
+				D4A3C9F2822204651882084A /* NativeWebDAVService.swift in Sources */,
+				ECBC8933B1704C20102DB844 /* ReviewView.swift in Sources */,
+				DA1A927F1CAB5033315A7820 /* RootView.swift in Sources */,
+				6E4DDC130634B0A30B06E21B /* SettingsView.swift in Sources */,
+				863086A332D9EA4F8F14D0EC /* SidebarView.swift in Sources */,
+				A3B1004284C11E82A9749B6F /* Telemetry.swift in Sources */,
+				D3176D46396C6F49D4F03904 /* Theme.swift in Sources */,
+				54961BAF8125FE4C565274E0 /* WorkbenchView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		631BDE1F7A8BE1DEAE90FA11 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 33E30803E91D38E2945E012D /* AIMemoryMCP */;
+			targetProxy = 2362192376F59AE97CCE4B9F /* PBXContainerItemProxy */;
+		};
+		A01046C552E07353EDF1FD7A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FED494E57B8949C5316BC0F2 /* AIMemory */;
+			targetProxy = 70D9AF227EE27839B2F65615 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		29B344B2D7D3EBB60059868E /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				CBDBFC094BA9C41E101344D8 /* en */,
+				58932192869C37F70D3BC531 /* zh-Hans */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		58ED46EC7D1678CFA30FB7EC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = AIMemory/AIMemory.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = AIMemory/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "AI Memory";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "MIT License";
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.aimemory.app;
+				PRODUCT_NAME = AIMemory;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		659921CB94F88624C029CA40 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.aimemory.mcp;
+				PRODUCT_NAME = "aimemory-mcp";
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		846945108918A8B502C86437 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.aimemory.app.tests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AIMemory.app/Contents/MacOS/AIMemory";
+			};
+			name = Debug;
+		};
+		95022BDA53C84AFA6753ED25 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = AIMemory/AIMemory.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = AIMemory/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "AI Memory";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "MIT License";
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.aimemory.app;
+				PRODUCT_NAME = AIMemory;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		CB762D78BD760E1D0B988D20 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		D257DFD25FC860584BED5A7C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.aimemory.app.tests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AIMemory.app/Contents/MacOS/AIMemory";
+			};
+			name = Release;
+		};
+		EB5E96CCEECC1CEB4FDF2A6D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		ED107799F6593EAF62705EEF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.aimemory.mcp;
+				PRODUCT_NAME = "aimemory-mcp";
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		2B7D2D2B7F1D47F6DB4B2616 /* Build configuration list for PBXProject "AIMemory" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CB762D78BD760E1D0B988D20 /* Debug */,
+				EB5E96CCEECC1CEB4FDF2A6D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		45C9F1F42A38E4E41CF0AD0E /* Build configuration list for PBXNativeTarget "AIMemoryTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				846945108918A8B502C86437 /* Debug */,
+				D257DFD25FC860584BED5A7C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		DC0ED5D4A2086BFB137A765C /* Build configuration list for PBXNativeTarget "AIMemory" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				95022BDA53C84AFA6753ED25 /* Debug */,
+				58ED46EC7D1678CFA30FB7EC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		E7C6A17FCED089E12F3118D6 /* Build configuration list for PBXNativeTarget "AIMemoryMCP" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				659921CB94F88624C029CA40 /* Debug */,
+				ED107799F6593EAF62705EEF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 67785EEB158B439E2FE209C4 /* Project object */;
+}

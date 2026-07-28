@@ -1,0 +1,14 @@
+/* AI Memory — Simplified Chinese */
+"app.name" = "AI Memory";
+"menu.about" = "关于 AI Memory";
+"menu.import" = "从 ChatMem 导入…";
+"menu.workbench" = "工作台";
+"menu.review" = "待复核";
+"menu.history" = "历史";
+"sidebar.source" = "来源";
+"sidebar.search" = "搜索本地历史";
+"workbench.continue" = "继续工作";
+"workbench.empty" = "暂无对话";
+"import.title" = "从 ChatMem 导入";
+"import.success" = "导入完成";
+"import.failed" = "导入失败";

@@ -1,0 +1,75 @@
+<Page
+    x:Class="AIMemory.Windows.Pages.WorkbenchPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer>
+        <StackPanel Padding="32" Spacing="20" MaxWidth="1080" HorizontalAlignment="Stretch">
+            <Grid>
+                <StackPanel>
+                    <TextBlock Text="继续工作" Style="{StaticResource PageTitleStyle}" />
+                    <TextBlock Text="最近进度、恢复命令、项目记忆和下一步集中在一个工作台。" Opacity="0.65" />
+                </StackPanel>
+                <CommandBar HorizontalAlignment="Right" Background="Transparent">
+                    <AppBarButton Icon="Sync" Label="立即同步" Click="Sync_Click" />
+                    <AppBarButton Icon="Refresh" Label="刷新来源" Click="Refresh_Click" />
+                    <AppBarButton Icon="Clock" Label="历史" Click="History_Click" />
+                </CommandBar>
+            </Grid>
+
+            <Grid ColumnSpacing="14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel Spacing="8">
+                        <FontIcon Glyph="&#xE8BD;" Foreground="{StaticResource AIMemoryGreenBrush}" />
+                        <TextBlock x:Name="ConversationCount" Text="0" FontSize="30" FontWeight="SemiBold" />
+                        <TextBlock Text="本机对话" Opacity="0.65" />
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="1" Style="{StaticResource CardStyle}">
+                    <StackPanel Spacing="8">
+                        <FontIcon Glyph="&#xE950;" Foreground="{StaticResource AIMemoryGreenBrush}" />
+                        <TextBlock x:Name="DetectedAgentCount" Text="0" FontSize="30" FontWeight="SemiBold" />
+                        <TextBlock Text="已安装 Agent / CLI" Opacity="0.65" />
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="2" Style="{StaticResource CardStyle}">
+                    <StackPanel Spacing="8">
+                        <FontIcon Glyph="&#xE73E;" Foreground="{StaticResource AIMemoryGreenBrush}" />
+                        <TextBlock x:Name="MemoryCount" Text="0" FontSize="30" FontWeight="SemiBold" />
+                        <TextBlock Text="已批准记忆" Opacity="0.65" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="已安装的 Agent / CLI" FontSize="18" FontWeight="SemiBold" />
+                    <ItemsControl x:Name="AgentList">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Padding="0,7">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Label}" />
+                                    <TextBlock Grid.Column="1" Text="{Binding Detail}" Opacity="0.6" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock x:Name="NoAgentsText"
+                               Text="没有检测到本机 Agent；所有集成保持关闭。"
+                               Opacity="0.6"
+                               Visibility="Collapsed" />
+                </StackPanel>
+            </Border>
+
+            <InfoBar x:Name="StatusBar" IsOpen="False" IsClosable="True" />
+        </StackPanel>
+    </ScrollViewer>
+</Page>

@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.22000.0</TargetPlatformMinVersion>
+    <RootNamespace>AIMemory.Windows</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Platforms>x64;ARM64</Platforms>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <UseWinUI>true</UseWinUI>
+    <EnableMsixTooling>true</EnableMsixTooling>
+    <WindowsPackageType>MSIX</WindowsPackageType>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <DefineConstants>DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+    <McpRuntimeIdentifier Condition="'$(Platform)' == 'x64'">win-x64</McpRuntimeIdentifier>
+    <McpRuntimeIdentifier Condition="'$(Platform)' == 'ARM64'">win-arm64</McpRuntimeIdentifier>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\AIMemory.Core\AIMemory.Core.csproj" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.4654" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Assets\*.png" />
+  </ItemGroup>
+  <Target Name="PublishNativeMcpHelper" BeforeTargets="AssignTargetPaths">
+    <MSBuild
+      Projects="..\AIMemory.Mcp\AIMemory.Mcp.csproj"
+      Targets="Publish"
+      Properties="Configuration=$(Configuration);RuntimeIdentifier=$(McpRuntimeIdentifier);PublishDir=$(IntermediateOutputPath)McpHelper\;SelfContained=true;PublishSingleFile=true" />
+    <ItemGroup>
+      <Content Include="$(IntermediateOutputPath)McpHelper\aimemory-mcp.exe"
+               Link="Helpers\aimemory-mcp.exe"
+               CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+  </Target>
+</Project>

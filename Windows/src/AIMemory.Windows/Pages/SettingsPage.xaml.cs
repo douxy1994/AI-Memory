@@ -1,0 +1,444 @@
+using AIMemory.Core.Models;
+using AIMemory.Core.Persistence;
+using AIMemory.Core.Services;
+using AIMemory.Windows.Services;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Navigation;
+using Windows.ApplicationModel;
+using Windows.ApplicationModel.DataTransfer;
+using Windows.Storage;
+using Windows.System;
+
+namespace AIMemory.Windows.Pages;
+
+public sealed partial class SettingsPage : Page
+{
+    private MainWindow? _window;
+    private AppSettings _settings = new();
+    private readonly StartupService _startup = new();
+    private readonly CredentialService _credentials = new();
+    private readonly AgentIntegrationService _agentIntegrations = new();
+    private UpdateRelease? _availableRelease;
+    private bool _loading;
+
+    public SettingsPage() => InitializeComponent();
+
+    protected override async void OnNavigatedTo(NavigationEventArgs args)
+    {
+        _window = (MainWindow)args.Parameter;
+        _loading = true;
+        try
+        {
+            _settings = await _window.Settings.LoadAsync();
+            SchemeBox.SelectedIndex = _settings.Sync.WebdavScheme == "http" ? 1 : 0;
+            HostBox.Text = _settings.Sync.WebdavHost;
+            ServerPathBox.Text = _settings.Sync.WebdavPath;
+            RemotePathBox.Text = _settings.Sync.RemotePath;
+            UsernameBox.Text = _settings.Sync.Username;
+            SyncFolderBox.Text = _settings.Sync.SyncFolder;
+            AutoUpdateToggle.IsOn = _settings.AutoCheckUpdates;
+            UpdateFeedBox.Text = _settings.UpdateFeedUrl;
+            if (_credentials.Load() is { } stored)
+            {
+                UsernameBox.Text = stored.Username;
+                PasswordBox.Password = stored.Password;
+            }
+            await ReloadStartupAsync();
+            ReloadAgents();
+            DataPathText.Text = $"数据目录：{DataPaths.SupportDirectory}";
+            var importer = new ChatMemImportService(_window.Database);
+            ImportChatMemButton.IsEnabled = importer.FindSource() is not null;
+            await RefreshDiagnosticsAsync();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task ReloadStartupAsync()
+    {
+        var state = await _startup.GetStateAsync();
+        StartupToggle.IsOn = state == StartupTaskState.Enabled;
+        StartupDetail.Text = state switch
+        {
+            StartupTaskState.Enabled => "已开启",
+            StartupTaskState.DisabledByUser => "已被系统或用户禁用，可在 Windows 设置中恢复",
+            StartupTaskState.DisabledByPolicy => "组织策略禁止开机启动",
+            _ => "已关闭",
+        };
+        StartupToggle.IsEnabled = state != StartupTaskState.DisabledByPolicy;
+    }
+
+    private async void StartupToggle_Toggled(object sender, RoutedEventArgs args)
+    {
+        if (_loading) return;
+        try
+        {
+            await _startup.SetEnabledAsync(StartupToggle.IsOn);
+            await ReloadStartupAsync();
+            Show("启动设置已更新。", InfoBarSeverity.Success);
+        }
+        catch (Exception exception)
+        {
+            Show($"更新启动设置失败：{exception.Message}", InfoBarSeverity.Error);
+        }
+    }
+
+    private void DetectAgents_Click(object sender, RoutedEventArgs args) =>
+        ReloadAgents();
+
+    private void ReloadAgents() =>
+        AgentList.ItemsSource = _agentIntegrations.Detect();
+
+    private void ToggleAgent_Click(object sender, RoutedEventArgs args)
+    {
+        if (sender is not Button
+            {
+                Tag: AgentIntegrationStatus integration,
+            })
+        {
+            return;
+        }
+        try
+        {
+            _agentIntegrations.SetEnabled(
+                integration,
+                !integration.IsIntegrated);
+            ReloadAgents();
+            Show(
+                integration.IsIntegrated
+                    ? $"{integration.Label} 集成已关闭。"
+                    : $"{integration.Label} 集成已启用。",
+                InfoBarSeverity.Success);
+        }
+        catch (Exception exception)
+        {
+            Show($"更新 Agent 集成失败：{exception.Message}", InfoBarSeverity.Error);
+        }
+    }
+
+    private async void SaveSettings_Click(object sender, RoutedEventArgs args)
+    {
+        if (_window is null) return;
+        ApplyForm();
+        try
+        {
+            await _window.Settings.SaveAsync(_settings);
+            _credentials.Save(UsernameBox.Text.Trim(), PasswordBox.Password);
+            Show("设置已保存。", InfoBarSeverity.Success);
+        }
+        catch (Exception exception)
+        {
+            Show($"保存失败：{exception.Message}", InfoBarSeverity.Error);
+        }
+    }
+
+    private async void VerifyWebDav_Click(object sender, RoutedEventArgs args)
+    {
+        ApplyForm();
+        SyncProgress.Visibility = Visibility.Visible;
+        try
+        {
+            var status = await new WebDavService().VerifyAsync(
+                WebDavService.BuildCollectionUri(_settings.Sync),
+                UsernameBox.Text.Trim(),
+                PasswordBox.Password);
+            Show($"连接验证成功（HTTP {status}）。", InfoBarSeverity.Success);
+        }
+        catch (Exception exception)
+        {
+            Show($"连接验证失败：{exception.Message}", InfoBarSeverity.Error);
+        }
+        finally
+        {
+            SyncProgress.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private async void SyncWebDav_Click(object sender, RoutedEventArgs args)
+    {
+        if (_window is null) return;
+        ApplyForm();
+        SyncProgress.Visibility = Visibility.Visible;
+        try
+        {
+            var service = new WebDavService(_window.Conversations);
+            var result = await service.SyncAsync(
+                WebDavService.BuildCollectionUri(_settings.Sync),
+                UsernameBox.Text.Trim(),
+                PasswordBox.Password);
+            Show(result.Message, InfoBarSeverity.Success);
+        }
+        catch (Exception exception)
+        {
+            Show($"同步失败：{exception.Message}", InfoBarSeverity.Error);
+        }
+        finally
+        {
+            SyncProgress.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private async void CreateBackup_Click(object sender, RoutedEventArgs args)
+    {
+        if (_window is null) return;
+        try
+        {
+            var path = await new BackupService(_window.Database)
+                .CreateRecoveryPointAsync();
+            Show($"恢复点已创建：{path}", InfoBarSeverity.Success);
+        }
+        catch (Exception exception)
+        {
+            Show($"备份失败：{exception.Message}", InfoBarSeverity.Error);
+        }
+    }
+
+    private async void SaveLocalFolder_Click(object sender, RoutedEventArgs args)
+    {
+        if (_window is null) return;
+        _settings.Sync.Provider = "local";
+        _settings.Sync.SyncFolder = SyncFolderBox.Text.Trim();
+        await _window.Settings.SaveAsync(_settings);
+        Show("本地同步目录已保存。", InfoBarSeverity.Success);
+    }
+
+    private async void SyncLocalFolder_Click(object sender, RoutedEventArgs args)
+    {
+        if (_window is null) return;
+        try
+        {
+            var result = await new LocalFolderSyncService(_window.Conversations)
+                .SyncAsync(SyncFolderBox.Text.Trim());
+            Show(result.Message, InfoBarSeverity.Success);
+        }
+        catch (Exception exception)
+        {
+            Show($"本地同步失败：{exception.Message}", InfoBarSeverity.Error);
+        }
+    }
+
+    private async void ImportChatMem_Click(object sender, RoutedEventArgs args)
+    {
+        if (_window is null) return;
+        var importer = new ChatMemImportService(_window.Database);
+        var source = importer.FindSource();
+        if (source is null)
+        {
+            Show("没有找到可导入的 ChatMem 数据库。", InfoBarSeverity.Warning);
+            return;
+        }
+        try
+        {
+            var backup = await importer.ImportAsync(source);
+            Show(
+                string.IsNullOrWhiteSpace(backup)
+                    ? "ChatMem 数据已导入。"
+                    : $"ChatMem 数据已导入，原数据备份：{backup}",
+                InfoBarSeverity.Success);
+        }
+        catch (Exception exception)
+        {
+            Show($"导入失败：{exception.Message}", InfoBarSeverity.Error);
+        }
+    }
+
+    private async void ImportNativeHistory_Click(object sender, RoutedEventArgs args)
+    {
+        if (_window is null) return;
+        SyncProgress.Visibility = Visibility.Visible;
+        try
+        {
+            var report = await new NativeHistoryImportService(
+                _window.Conversations).ImportAllAsync();
+            var details = string.Join(
+                "，",
+                report.Imported.Select(value => $"{value.Key} {value.Value}"));
+            Show(
+                report.Warnings.Count == 0
+                    ? $"本机历史导入完成：{details}。"
+                    : $"本机历史导入完成：{details}；{report.Warnings.Count} 项警告。",
+                report.Warnings.Count == 0
+                    ? InfoBarSeverity.Success
+                    : InfoBarSeverity.Warning);
+        }
+        catch (Exception exception)
+        {
+            Show($"本机历史导入失败：{exception.Message}", InfoBarSeverity.Error);
+        }
+        finally
+        {
+            SyncProgress.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private async void SaveUpdateSettings_Click(
+        object sender,
+        RoutedEventArgs args)
+    {
+        if (_window is null) return;
+        _settings.AutoCheckUpdates = AutoUpdateToggle.IsOn;
+        _settings.UpdateFeedUrl = UpdateFeedBox.Text.Trim();
+        try
+        {
+            await _window.Settings.SaveAsync(_settings);
+            Show("更新设置已保存。", InfoBarSeverity.Success);
+        }
+        catch (Exception exception)
+        {
+            Show($"保存更新设置失败：{exception.Message}", InfoBarSeverity.Error);
+        }
+    }
+
+    private async void CheckUpdates_Click(object sender, RoutedEventArgs args)
+    {
+        if (_window is null) return;
+        _settings.AutoCheckUpdates = AutoUpdateToggle.IsOn;
+        _settings.UpdateFeedUrl = UpdateFeedBox.Text.Trim();
+        InstallUpdateButton.IsEnabled = false;
+        _availableRelease = null;
+        SyncProgress.Visibility = Visibility.Visible;
+        try
+        {
+            await _window.Settings.SaveAsync(_settings);
+            var current = CurrentVersion();
+            var result = await new UpdateService().CheckAsync(
+                _settings.UpdateFeedUrl,
+                current);
+            if (result.IsUpdateAvailable)
+            {
+                _availableRelease = result.Release;
+                InstallUpdateButton.IsEnabled = result.Release.AssetUri is not null;
+                UpdateStatusText.Text =
+                    $"发现新版本 {result.Release.Version}：{result.Release.Title}";
+                Show(UpdateStatusText.Text, InfoBarSeverity.Success);
+            }
+            else
+            {
+                UpdateStatusText.Text =
+                    $"当前版本 {current} 已是最新；更新源最新版本为 {result.Release.Version}。";
+                Show(UpdateStatusText.Text, InfoBarSeverity.Success);
+            }
+        }
+        catch (Exception exception)
+        {
+            UpdateStatusText.Text = $"检查更新失败：{exception.Message}";
+            Show(UpdateStatusText.Text, InfoBarSeverity.Error);
+        }
+        finally
+        {
+            SyncProgress.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private async void InstallUpdate_Click(object sender, RoutedEventArgs args)
+    {
+        if (_availableRelease is null) return;
+        SyncProgress.Visibility = Visibility.Visible;
+        try
+        {
+            var path = await new UpdateService().DownloadAsync(
+                _availableRelease,
+                DataPaths.UpdateDirectory);
+            var file = await StorageFile.GetFileFromPathAsync(path);
+            if (!await Launcher.LaunchFileAsync(file))
+            {
+                throw new InvalidOperationException("Windows 无法打开安装包。");
+            }
+            Show($"安装包已下载并交给 Windows 安装器：{path}",
+                InfoBarSeverity.Success);
+        }
+        catch (Exception exception)
+        {
+            Show($"下载更新失败：{exception.Message}", InfoBarSeverity.Error);
+        }
+        finally
+        {
+            SyncProgress.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private async void RefreshDiagnostics_Click(
+        object sender,
+        RoutedEventArgs args) =>
+        await RefreshDiagnosticsAsync();
+
+    private async Task RefreshDiagnosticsAsync()
+    {
+        if (_window is null) return;
+        try
+        {
+            var report = await new DiagnosticsService(_window.Database)
+                .CollectAsync(CurrentVersion());
+            DiagnosticsBox.Text = report.ToDisplayText();
+        }
+        catch (Exception exception)
+        {
+            DiagnosticsBox.Text = $"读取诊断失败：{exception.Message}";
+        }
+    }
+
+    private void CopyDiagnostics_Click(object sender, RoutedEventArgs args)
+    {
+        var package = new DataPackage();
+        package.SetText(DiagnosticsBox.Text ?? "");
+        Clipboard.SetContent(package);
+        Clipboard.Flush();
+        Show("诊断信息已复制。", InfoBarSeverity.Success);
+    }
+
+    private async void OpenDataDirectory_Click(
+        object sender,
+        RoutedEventArgs args)
+    {
+        try
+        {
+            var folder = await StorageFolder.GetFolderFromPathAsync(
+                DataPaths.SupportDirectory);
+            if (!await Launcher.LaunchFolderAsync(folder))
+            {
+                throw new InvalidOperationException("Windows 无法打开数据目录。");
+            }
+        }
+        catch (Exception exception)
+        {
+            Show($"打开数据目录失败：{exception.Message}", InfoBarSeverity.Error);
+        }
+    }
+
+    private static string CurrentVersion()
+    {
+        try
+        {
+            var version = Package.Current.Id.Version;
+            return $"{version.Major}.{version.Minor}.{version.Build}";
+        }
+        catch
+        {
+            return typeof(SettingsPage).Assembly.GetName().Version?
+                .ToString(3) ?? "0.1.0";
+        }
+    }
+
+    private void ApplyForm()
+    {
+        _settings.Sync.Provider = "webdav";
+        _settings.Sync.WebdavScheme =
+            ((ComboBoxItem)SchemeBox.SelectedItem).Content.ToString() ?? "https";
+        _settings.Sync.WebdavHost = HostBox.Text.Trim();
+        _settings.Sync.WebdavPath = ServerPathBox.Text.Trim();
+        _settings.Sync.RemotePath = string.IsNullOrWhiteSpace(RemotePathBox.Text)
+            ? "chatmem"
+            : RemotePathBox.Text.Trim();
+        _settings.Sync.Username = UsernameBox.Text.Trim();
+    }
+
+    private void Show(string message, InfoBarSeverity severity)
+    {
+        Feedback.Message = message;
+        Feedback.Severity = severity;
+        Feedback.IsOpen = true;
+    }
+}

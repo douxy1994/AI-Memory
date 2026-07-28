@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "reference": "macOS AI Memory and ChatMem behavior",
+  "features": [
+    { "id": "native-ui", "status": "implemented", "evidence": "C# WinUI 3 and Windows App SDK project" },
+    { "id": "single-instance", "status": "implemented", "evidence": "Program.cs AppInstance redirection" },
+    { "id": "launch-at-login", "status": "implemented", "evidence": "MSIX StartupTask plus Settings toggle" },
+    { "id": "independent-data", "status": "implemented", "evidence": "%LOCALAPPDATA%/AIMemory" },
+    { "id": "database-schema", "status": "implemented", "evidence": "SchemaV1.sql table-compatible with macOS" },
+    { "id": "settings-persistence", "status": "implemented", "evidence": "atomic JSON SettingsStore" },
+    { "id": "workbench", "status": "implemented", "evidence": "WorkbenchPage" },
+    { "id": "history-search", "status": "implemented", "evidence": "HistoryPage and ConversationRepository" },
+    { "id": "conversation-reader", "status": "implemented", "evidence": "ConversationPage" },
+    { "id": "approved-memory-reader", "status": "implemented", "evidence": "MemoryPage" },
+    { "id": "favorites", "status": "implemented", "evidence": "FavoritesPage reads compatible settings snapshots" },
+    { "id": "trash-restore-delete", "status": "implemented", "evidence": "TrashService and TrashPage" },
+    { "id": "agent-catalog", "status": "implemented", "evidence": "34 products, detected-first and missing-disabled" },
+    { "id": "credential-storage", "status": "implemented", "evidence": "Windows PasswordVault" },
+    { "id": "webdav-verification", "status": "implemented", "evidence": "PROPFIND verification with visible result" },
+    { "id": "backup", "status": "implemented", "evidence": "SQLite online backup and settings copy" },
+    { "id": "chatmem-database-import", "status": "implemented", "evidence": "read-only validation, pre-import backup, atomic replacement" },
+    { "id": "incremental-webdav-sync", "status": "implemented", "evidence": "schema v2 manifest hash/timestamp merge with upload, download and skip counts" },
+    { "id": "local-folder-incremental-sync", "status": "implemented", "evidence": "atomic per-conversation files, schema v2 manifest and hash/timestamp merge" },
+    { "id": "native-source-history-import", "status": "partial", "evidence": "Claude, Codex and Gemini source readers are implemented; remaining source families require Windows-host validation" },
+    { "id": "memory-review-editing", "status": "implemented", "evidence": "MemoryGovernanceService and MemoryPage review actions" },
+    { "id": "checkpoint-handoff-actions", "status": "implemented", "evidence": "RecoveryService and MemoryPage checkpoint/handoff actions" },
+    { "id": "menu-and-shortcut-parity", "status": "implemented", "evidence": "MainWindow MenuBar and keyboard accelerator map" },
+    { "id": "update-and-diagnostics", "status": "implemented", "evidence": "UpdateService, DiagnosticsService and Settings UI" }
+  ]
+}

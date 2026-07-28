@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="620" viewBox="0 0 1200 620" role="img" aria-labelledby="title desc">
+  <title id="title">AI Memory workbench</title>
+  <desc id="desc">A stylized AI Memory dashboard showing local agent sources, recent work, memory review and sync.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ecf8f1"/>
+      <stop offset="0.5" stop-color="#f6f4ea"/>
+      <stop offset="1" stop-color="#e9f5f0"/>
+    </linearGradient>
+    <linearGradient id="green" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#80dfae"/>
+      <stop offset="0.5" stop-color="#21b978"/>
+      <stop offset="1" stop-color="#087d51"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="16" stdDeviation="22" flood-color="#143b2d" flood-opacity=".14"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="620" rx="34" fill="url(#bg)"/>
+  <circle cx="1100" cy="80" r="180" fill="#60d79f" opacity=".13"/>
+  <circle cx="80" cy="565" r="150" fill="#fff" opacity=".65"/>
+  <g filter="url(#shadow)">
+    <rect x="70" y="55" width="1060" height="510" rx="24" fill="#fbfcfa"/>
+  </g>
+  <rect x="70" y="55" width="1060" height="66" rx="24" fill="#f7faf6"/>
+  <circle cx="102" cy="87" r="7" fill="#ff6b68"/>
+  <circle cx="126" cy="87" r="7" fill="#ffbe4d"/>
+  <circle cx="150" cy="87" r="7" fill="#58c76f"/>
+  <rect x="530" y="72" width="34" height="34" rx="9" fill="url(#green)"/>
+  <path d="M546 80c-8 1-11 8-9 15 1 5 5 7 10 7h6v-5h3v-4h-3v-4h-2l-1-5-2 4-3-3-1 5-4-2 2 5-4 1 5 2-1 4h7v-16z" fill="#fff"/>
+  <text x="575" y="96" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-weight="700" font-size="22" fill="#1c2822">AI Memory</text>
+
+  <rect x="70" y="121" width="260" height="444" fill="#f5f8f4"/>
+  <rect x="92" y="145" width="216" height="42" rx="12" fill="#fff" stroke="#e2e9e4"/>
+  <text x="111" y="172" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-weight="650" font-size="15" fill="#21342a">⌘  Claude Code</text>
+  <text x="94" y="221" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-weight="700" font-size="14" fill="#526158">项目</text>
+  <rect x="90" y="238" width="220" height="58" rx="12" fill="#e4f3e9"/>
+  <circle cx="113" cy="264" r="9" fill="#37a66f"/>
+  <text x="132" y="261" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-weight="700" font-size="14" fill="#183629">AI Memory</text>
+  <text x="132" y="280" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12" fill="#6f7d74">刚刚 · 42 条对话</text>
+  <g font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" fill="#34483d">
+    <text x="105" y="333" font-size="14">产品工作台重构</text>
+    <text x="105" y="372" font-size="14">增量同步与备份</text>
+    <text x="105" y="411" font-size="14">Windows 原生版本</text>
+    <text x="105" y="450" font-size="14">记忆规则复核</text>
+  </g>
+  <line x1="96" y1="492" x2="304" y2="492" stroke="#dfe7e1"/>
+  <text x="105" y="528" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" fill="#4d6155">☆ 收藏  8</text>
+  <text x="217" y="528" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" fill="#4d6155">♲ 回收站  0</text>
+
+  <text x="365" y="166" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-weight="750" font-size="27" fill="#1a2820">继续工作</text>
+  <text x="365" y="192" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" fill="#718077">把最近进度、恢复命令、项目记忆和下一步集中在一个工作台里。</text>
+  <rect x="365" y="216" width="717" height="56" rx="14" fill="#e7f4eb"/>
+  <circle cx="391" cy="244" r="12" fill="#2aa66d"/>
+  <path d="M386 244l4 4 7-9" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="415" y="249" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-weight="650" font-size="15" fill="#286a49">3 条候选规则等待复核</text>
+
+  <g font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif">
+    <g>
+      <rect x="365" y="300" width="168" height="126" rx="16" fill="#fff" stroke="#e1e9e3"/>
+      <text x="385" y="331" font-size="21" fill="#3aa875">◫</text>
+      <text x="385" y="373" font-weight="750" font-size="28" fill="#18231d">248</text>
+      <text x="385" y="399" font-size="13" fill="#77837b">本机历史对话</text>
+    </g>
+    <g>
+      <rect x="548" y="300" width="168" height="126" rx="16" fill="#fff" stroke="#e1e9e3"/>
+      <text x="568" y="331" font-size="21" fill="#3aa875">⌁</text>
+      <text x="568" y="373" font-weight="750" font-size="28" fill="#18231d">8</text>
+      <text x="568" y="399" font-size="13" fill="#77837b">已检测 Agent</text>
+    </g>
+    <g>
+      <rect x="731" y="300" width="168" height="126" rx="16" fill="#fff" stroke="#e1e9e3"/>
+      <text x="751" y="331" font-size="21" fill="#3aa875">✓</text>
+      <text x="751" y="373" font-weight="750" font-size="28" fill="#18231d">3</text>
+      <text x="751" y="399" font-size="13" fill="#77837b">待审候选记忆</text>
+    </g>
+    <g>
+      <rect x="914" y="300" width="168" height="126" rx="16" fill="#fff" stroke="#e1e9e3"/>
+      <text x="934" y="331" font-size="21" fill="#3aa875">↻</text>
+      <text x="934" y="373" font-weight="750" font-size="28" fill="#18231d">增量</text>
+      <text x="934" y="399" font-size="13" fill="#77837b">同步与恢复点</text>
+    </g>
+  </g>
+  <rect x="365" y="450" width="717" height="78" rx="16" fill="#f7faf7" stroke="#e1e9e3"/>
+  <text x="388" y="480" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-weight="700" font-size="15" fill="#27372e">最近任务</text>
+  <rect x="388" y="493" width="430" height="9" rx="4.5" fill="#dce8df"/>
+  <rect x="388" y="510" width="310" height="7" rx="3.5" fill="#e7eee9"/>
+  <rect x="930" y="476" width="126" height="30" rx="15" fill="url(#green)"/>
+  <text x="958" y="496" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-weight="650" font-size="13" fill="#fff">继续工作 →</text>
+</svg>
