@@ -91,20 +91,15 @@ struct SidebarView: View {
 
     private var libraryHeader: some View {
         HStack(spacing: 8) {
-            HStack(spacing: 5) {
-                Image(systemName: "folder")
-                    .font(Theme.appFont(size: 11))
-                    .foregroundStyle(Theme.accent)
-                Text("项目")
-                    .font(Theme.appFont(size: 13, weight: .semibold))
-            }
-            // Count pill = number of project groups.
-            Text("\(store.projectGroups.count)")
-                .font(Theme.appFont(size: 10, weight: .semibold))
-                .foregroundStyle(Theme.accentStrong)
-                .padding(.horizontal, 6).padding(.vertical, 1)
-                .background(Theme.accent.opacity(0.14))
-                .clipShape(Capsule())
+            SidebarGroupLabel(
+                icon: "folder",
+                title: "项目",
+                count: store.projectGroups.count,
+                titleWeight: .semibold,
+                titleSize: 13,
+                localizesTitle: true,
+                countBackgroundOpacity: 0.14
+            )
 
             Spacer()
 
@@ -433,18 +428,13 @@ struct MachineGroupSection: View {
         VStack(alignment: .leading, spacing: 2) {
             // Machine group header.
             HStack(spacing: 6) {
-                Image(systemName: machineIcon)
-                    .font(Theme.appFont(size: 11))
-                    .foregroundStyle(Theme.accent)
-                Text(machineGroup.label)
-                    .font(Theme.appFont(size: 12, weight: .bold))
-                    .foregroundStyle(Theme.primaryText)
-                Text("\(machineGroup.conversationCount)")
-                    .font(Theme.appFont(size: 10, weight: .semibold))
-                    .foregroundStyle(Theme.accentStrong)
-                    .padding(.horizontal, 6).padding(.vertical, 1)
-                    .background(Theme.accent.opacity(0.12))
-                    .clipShape(Capsule())
+                SidebarGroupLabel(
+                    icon: machineIcon,
+                    title: machineGroup.label,
+                    count: machineGroup.conversationCount,
+                    titleWeight: .bold,
+                    countBackgroundOpacity: 0.12
+                )
                 Spacer()
             }
             .padding(.horizontal, 8)
@@ -472,6 +462,46 @@ struct MachineGroupSection: View {
         case "linux": "terminal"
         case "internal": "gearshape"
         default: "questionmark.folder"
+        }
+    }
+}
+
+private struct SidebarGroupLabel: View {
+    let icon: String
+    let title: String
+    let count: Int
+    let titleWeight: Font.Weight
+    var titleSize: CGFloat = 12
+    var localizesTitle = false
+    let countBackgroundOpacity: Double
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(Theme.appFont(size: 11))
+                .foregroundStyle(Theme.accent)
+                .frame(width: 16, alignment: .center)
+
+            Group {
+                if localizesTitle {
+                    Text(LocalizedStringKey(title))
+                } else {
+                    Text(verbatim: title)
+                }
+            }
+                .font(Theme.appFont(size: titleSize, weight: titleWeight))
+                .foregroundStyle(Theme.primaryText)
+                .lineLimit(1)
+                .frame(width: 70, alignment: .leading)
+
+            Text("\(count)")
+                .font(Theme.appFont(size: 10, weight: .semibold))
+                .foregroundStyle(Theme.accentStrong)
+                .frame(width: 24)
+                .padding(.horizontal, 4)
+                .padding(.vertical, 1)
+                .background(Theme.accent.opacity(countBackgroundOpacity))
+                .clipShape(Capsule())
         }
     }
 }
