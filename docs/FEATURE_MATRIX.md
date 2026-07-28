@@ -9,9 +9,9 @@
 | 工作台与项目归组 | 已实现 | Preview |
 | 对话搜索与详情 | 已实现 | Preview |
 | 收藏与可恢复回收站 | 已实现 | Preview |
-| Claude/Codex/Gemini 历史 | 已实现 | Preview |
-| Kimi/Hermes/Antigravity/OpenCode/ZCode 历史 | 已实现 | 对齐中 |
-| 34 种 Agent/CLI 安装检测 | 已实现集成目录 | 已实现检测目录 |
+| Claude/Codex/Gemini 历史 | 已实现 | 已实现核心 |
+| Kimi/Hermes/Antigravity/OpenCode/ZCode 历史 | 已实现 | 已实现核心 |
+| 39 种 Agent/CLI 安装检测 | 已实现集成目录 | 已实现检测目录 |
 | 候选记忆复核 | 已实现 | Preview |
 | 检查点与交接 | 已实现 | Preview |
 | MCP helper | 已实现 | Preview |

@@ -39,6 +39,16 @@ public sealed class NativeHistoryImportService
             "Claude", ImportClaudeAsync, warnings, cancellationToken);
         imported["gemini"] = await ImportSafelyAsync(
             "Gemini", ImportGeminiAsync, warnings, cancellationToken);
+        imported["hermes"] = await ImportSafelyAsync(
+            "Hermes", ImportHermesAsync, warnings, cancellationToken);
+        imported["kimi"] = await ImportSafelyAsync(
+            "Kimi Code", ImportKimiAsync, warnings, cancellationToken);
+        imported["antigravity"] = await ImportSafelyAsync(
+            "Google Antigravity", ImportAntigravityAsync, warnings, cancellationToken);
+        imported["opencode"] = await ImportSafelyAsync(
+            "OpenCode", ImportOpenCodeAsync, warnings, cancellationToken);
+        imported["zcode"] = await ImportSafelyAsync(
+            "ZCode", ImportZCodeAsync, warnings, cancellationToken);
         return new NativeHistoryImportReport(imported, warnings);
     }
 
@@ -349,6 +359,668 @@ public sealed class NativeHistoryImportService
             }
         }
         return count;
+    }
+
+    private async Task<int> ImportHermesAsync(
+        CancellationToken cancellationToken)
+    {
+        var candidates = new[]
+        {
+            Path.Combine(_home, ".hermes", "state.db"),
+            Path.Combine(_home, "AppData", "Roaming", "hermes", "state.db"),
+            Path.Combine(_home, "AppData", "Local", "hermes", "state.db"),
+        };
+        var databasePath = candidates.FirstOrDefault(File.Exists);
+        if (databasePath is null) return 0;
+        var builder = new SqliteConnectionStringBuilder
+        {
+            DataSource = databasePath,
+            Mode = SqliteOpenMode.ReadOnly,
+            Cache = SqliteCacheMode.Private,
+        };
+        await using var connection = new SqliteConnection(builder.ToString());
+        await connection.OpenAsync(cancellationToken);
+        var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT id,COALESCE(title,''),started_at,
+                   COALESCE(ended_at,started_at),COALESCE(cwd,'')
+            FROM sessions WHERE archived=0
+            ORDER BY started_at DESC;
+            """;
+        var rows = new List<(
+            string Id,
+            string Title,
+            object Started,
+            object Ended,
+            string Cwd)>();
+        await using (var reader = await command.ExecuteReaderAsync(cancellationToken))
+        {
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                rows.Add((
+                    reader.GetString(0),
+                    reader.GetString(1),
+                    reader.GetValue(2),
+                    reader.GetValue(3),
+                    reader.GetString(4)));
+            }
+        }
+        var count = 0;
+        foreach (var session in rows)
+        {
+            var messages = connection.CreateCommand();
+            messages.CommandText = """
+                SELECT id,role,COALESCE(content,''),COALESCE(tool_calls,''),
+                       COALESCE(tool_name,''),timestamp
+                FROM messages
+                WHERE session_id=$session AND active=1
+                ORDER BY timestamp;
+                """;
+            messages.Parameters.AddWithValue("$session", session.Id);
+            var parsed = new List<WebDavMessage>();
+            await using var reader = await messages.ExecuteReaderAsync(cancellationToken);
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                var role = reader.GetString(1);
+                var content = reader.GetString(2);
+                var timestamp = EpochToIso(reader.GetValue(5));
+                if (role == "tool")
+                {
+                    if (parsed.LastOrDefault() is { Role: "assistant" } prior)
+                    {
+                        var toolName = reader.GetString(4);
+                        var tools = prior.ToolCalls.ToList();
+                        var index = tools.FindLastIndex(value =>
+                            value.Output is null && value.Name == toolName);
+                        if (index >= 0)
+                        {
+                            tools[index] = tools[index] with
+                            {
+                                Output = content,
+                                Status = LooksFailed(content) ? "error" : "success",
+                            };
+                            parsed[^1] = prior with { ToolCalls = tools };
+                        }
+                    }
+                    continue;
+                }
+                var toolCalls = new List<WebDavToolCall>();
+                var rawTools = reader.GetString(3);
+                if (!string.IsNullOrWhiteSpace(rawTools))
+                {
+                    try
+                    {
+                        using var toolsDocument = JsonDocument.Parse(rawTools);
+                        if (toolsDocument.RootElement.ValueKind == JsonValueKind.Array)
+                        {
+                            foreach (var tool in toolsDocument.RootElement.EnumerateArray())
+                            {
+                                var function = tool.TryGetProperty(
+                                    "function", out var functionValue)
+                                    ? functionValue : default;
+                                var arguments = function.ValueKind == JsonValueKind.Object
+                                    ? GetString(function, "arguments")
+                                    : null;
+                                toolCalls.Add(new WebDavToolCall(
+                                    GetString(tool, "id") ?? Guid.NewGuid().ToString(),
+                                    function.ValueKind == JsonValueKind.Object
+                                        ? GetString(function, "name") ?? "tool"
+                                        : "tool",
+                                    ParseJson(arguments),
+                                    null,
+                                    "success"));
+                            }
+                        }
+                    }
+                    catch (JsonException)
+                    {
+                        // Preserve the visible message even if tool metadata is malformed.
+                    }
+                }
+                if (string.IsNullOrWhiteSpace(content) && toolCalls.Count == 0) continue;
+                parsed.Add(new WebDavMessage(
+                    reader.GetString(0),
+                    timestamp,
+                    role is "user" or "assistant" or "system"
+                        ? role : "assistant",
+                    content,
+                    toolCalls,
+                    []));
+            }
+            if (parsed.Count == 0) continue;
+            await _repository.UpsertAsync(
+                new WebDavConversationDetail(
+                    session.Id, "hermes", session.Cwd,
+                    EpochToIso(session.Started), EpochToIso(session.Ended),
+                    Truncate(UsefulTitle(session.Title), 100),
+                    databasePath, $"hermes resume {session.Id}", parsed, []),
+                cancellationToken);
+            count++;
+        }
+        return count;
+    }
+
+    private async Task<int> ImportKimiAsync(CancellationToken cancellationToken)
+    {
+        var sessions = Path.Combine(_home, ".kimi-code", "sessions");
+        if (!Directory.Exists(sessions)) return 0;
+        var count = 0;
+        foreach (var session in Directory.EnumerateDirectories(
+                     sessions, "*", SearchOption.AllDirectories)
+                 .Where(path => Directory.Exists(Path.Combine(path, "agents"))))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var messages = new List<WebDavMessage>();
+            var statePath = Path.Combine(session, "state.json");
+            var project = "";
+            var created = File.GetCreationTimeUtc(session).ToString("O");
+            var updated = File.GetLastWriteTimeUtc(session).ToString("O");
+            string? title = null;
+            if (File.Exists(statePath))
+            {
+                try
+                {
+                    using var state = JsonDocument.Parse(
+                        await File.ReadAllTextAsync(statePath, cancellationToken));
+                    project = GetString(state.RootElement, "workDir") ?? "";
+                    created = GetString(state.RootElement, "createdAt") ?? created;
+                    updated = GetString(state.RootElement, "updatedAt") ?? updated;
+                    title = GetString(state.RootElement, "title");
+                }
+                catch (JsonException)
+                {
+                    // The wire logs still contain useful history.
+                }
+            }
+            var agents = Directory.EnumerateDirectories(Path.Combine(session, "agents"))
+                .OrderBy(path =>
+                    string.Equals(Path.GetFileName(path), "main",
+                        StringComparison.OrdinalIgnoreCase) ? 0 : 1)
+                .ThenBy(path => path, StringComparer.OrdinalIgnoreCase);
+            var sequence = 0;
+            foreach (var agent in agents)
+            {
+                var wire = Path.Combine(agent, "wire.jsonl");
+                if (!File.Exists(wire)) continue;
+                await foreach (var line in File.ReadLinesAsync(wire, cancellationToken))
+                {
+                    if (string.IsNullOrWhiteSpace(line)) continue;
+                    try
+                    {
+                        using var document = JsonDocument.Parse(line);
+                        var root = document.RootElement;
+                        var timestamp = JsonTimestamp(root, "time") ?? updated;
+                        if (GetString(root, "type") == "turn.prompt"
+                            && root.TryGetProperty("input", out var input)
+                            && input.ValueKind == JsonValueKind.Array)
+                        {
+                            var text = string.Join(
+                                "\n",
+                                input.EnumerateArray()
+                                    .Where(value => GetString(value, "type") == "text")
+                                    .Select(value => GetString(value, "text"))
+                                    .Where(value => !string.IsNullOrWhiteSpace(value)));
+                            if (!string.IsNullOrWhiteSpace(text))
+                            {
+                                messages.Add(new WebDavMessage(
+                                    $"kimi:{Path.GetFileName(session)}:{sequence++}",
+                                    timestamp, "user", text, [], []));
+                            }
+                            continue;
+                        }
+                        if (GetString(root, "type") != "context.append_loop_event"
+                            || !root.TryGetProperty("event", out var eventValue)
+                            || eventValue.ValueKind != JsonValueKind.Object)
+                        {
+                            continue;
+                        }
+                        var eventType = GetString(eventValue, "type");
+                        if (eventType == "content.part"
+                            && eventValue.TryGetProperty("part", out var part)
+                            && part.ValueKind == JsonValueKind.Object)
+                        {
+                            var text = GetString(part, "text");
+                            if (!string.IsNullOrWhiteSpace(text))
+                            {
+                                messages.Add(new WebDavMessage(
+                                    $"kimi:{Path.GetFileName(session)}:{sequence++}",
+                                    timestamp, "assistant", text, [], []));
+                            }
+                        }
+                        else if (eventType == "tool.call")
+                        {
+                            var name = GetString(eventValue, "name") ?? "tool";
+                            var callId = GetString(eventValue, "toolCallId")
+                                ?? Guid.NewGuid().ToString();
+                            var arguments = eventValue.TryGetProperty("args", out var args)
+                                ? args.Clone()
+                                : EmptyJson();
+                            messages.Add(new WebDavMessage(
+                                $"kimi:{Path.GetFileName(session)}:{sequence++}",
+                                timestamp, "assistant", "",
+                                [new WebDavToolCall(
+                                    callId, name, arguments, null, "success")],
+                                []));
+                        }
+                    }
+                    catch (JsonException)
+                    {
+                        // Keep reading independent wire events.
+                    }
+                }
+            }
+            if (messages.Count == 0) continue;
+            var id = Path.GetFileName(session);
+            await _repository.UpsertAsync(
+                new WebDavConversationDetail(
+                    id, "kimi", project, created, updated,
+                    Truncate(UsefulTitle(title)
+                        ?? messages.FirstOrDefault(value => value.Role == "user")?.Content, 100),
+                    File.Exists(statePath) ? statePath : session,
+                    $"kimi --session {id}", messages, []),
+                cancellationToken);
+            count++;
+        }
+        return count;
+    }
+
+    private async Task<int> ImportAntigravityAsync(
+        CancellationToken cancellationToken)
+    {
+        var brain = Path.Combine(_home, ".gemini", "antigravity", "brain");
+        if (!Directory.Exists(brain)) return 0;
+        var count = 0;
+        foreach (var session in Directory.EnumerateDirectories(brain))
+        {
+            var transcript = Path.Combine(
+                session, ".system_generated", "logs", "transcript.jsonl");
+            if (!File.Exists(transcript)) continue;
+            cancellationToken.ThrowIfCancellationRequested();
+            var messages = new List<WebDavMessage>();
+            var first = File.GetCreationTimeUtc(transcript).ToString("O");
+            var last = File.GetLastWriteTimeUtc(transcript).ToString("O");
+            var sequence = 0;
+            await foreach (var line in File.ReadLinesAsync(
+                               transcript, cancellationToken))
+            {
+                if (string.IsNullOrWhiteSpace(line)) continue;
+                try
+                {
+                    using var document = JsonDocument.Parse(line);
+                    var root = document.RootElement;
+                    var source = GetString(root, "source") ?? "";
+                    var role = source switch
+                    {
+                        "USER_EXPLICIT" or "USER" => "user",
+                        "MODEL" => "assistant",
+                        _ => "system",
+                    };
+                    var content = GetString(root, "content") ?? "";
+                    content = ExtractTag(content, "USER_REQUEST");
+                    var timestamp = GetString(root, "created_at") ?? last;
+                    first = Earlier(first, timestamp);
+                    last = Later(last, timestamp);
+                    var tools = new List<WebDavToolCall>();
+                    if (root.TryGetProperty("tool_calls", out var toolCalls)
+                        && toolCalls.ValueKind == JsonValueKind.Array)
+                    {
+                        foreach (var tool in toolCalls.EnumerateArray())
+                        {
+                            tools.Add(new WebDavToolCall(
+                                GetString(tool, "id") ?? Guid.NewGuid().ToString(),
+                                GetString(tool, "name") ?? "tool",
+                                tool.TryGetProperty("args", out var args)
+                                    ? args.Clone() : EmptyJson(),
+                                null,
+                                GetString(root, "status") == "ERROR"
+                                    ? "error" : "success"));
+                        }
+                    }
+                    if (string.IsNullOrWhiteSpace(content) && tools.Count == 0) continue;
+                    messages.Add(new WebDavMessage(
+                        $"antigravity:{Path.GetFileName(session)}:{sequence++}",
+                        timestamp, role, content, tools, []));
+                }
+                catch (JsonException)
+                {
+                    // Keep importing independent transcript events.
+                }
+            }
+            if (messages.Count == 0) continue;
+            var id = Path.GetFileName(session);
+            await _repository.UpsertAsync(
+                new WebDavConversationDetail(
+                    id, "antigravity", session, first, last,
+                    Truncate(messages.FirstOrDefault(
+                        value => value.Role == "user")?.Content, 100),
+                    transcript, null, messages, []),
+                cancellationToken);
+            count++;
+        }
+        return count;
+    }
+
+    private async Task<int> ImportOpenCodeAsync(
+        CancellationToken cancellationToken)
+    {
+        var candidates = new[]
+        {
+            Path.Combine(_home, ".local", "share", "opencode", "opencode.db"),
+            Path.Combine(_home, ".config", "opencode", "opencode.db"),
+            Path.Combine(_home, "AppData", "Local", "opencode", "opencode.db"),
+            Path.Combine(_home, "AppData", "Roaming", "opencode", "opencode.db"),
+        };
+        var databasePath = candidates.FirstOrDefault(File.Exists);
+        if (databasePath is null) return 0;
+        var builder = new SqliteConnectionStringBuilder
+        {
+            DataSource = databasePath,
+            Mode = SqliteOpenMode.ReadOnly,
+            Cache = SqliteCacheMode.Private,
+        };
+        await using var connection = new SqliteConnection(builder.ToString());
+        await connection.OpenAsync(cancellationToken);
+        var sessions = connection.CreateCommand();
+        sessions.CommandText = """
+            SELECT id,COALESCE(directory,''),COALESCE(title,''),
+                   time_created,time_updated
+            FROM session WHERE time_archived IS NULL
+            ORDER BY time_updated DESC;
+            """;
+        var sessionRows = new List<(
+            string Id,
+            string Project,
+            string Title,
+            object Created,
+            object Updated)>();
+        await using (var reader = await sessions.ExecuteReaderAsync(cancellationToken))
+        {
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                sessionRows.Add((
+                    reader.GetString(0),
+                    reader.GetString(1),
+                    reader.GetString(2),
+                    reader.GetValue(3),
+                    reader.GetValue(4)));
+            }
+        }
+        var count = 0;
+        foreach (var row in sessionRows)
+        {
+            var id = row.Id;
+            var created = EpochToIso(row.Created);
+            var updated = EpochToIso(row.Updated);
+            var messages = await ReadOpenCodeMessagesAsync(
+                connection, id, cancellationToken);
+            if (messages.Count == 0) continue;
+            await _repository.UpsertAsync(
+                new WebDavConversationDetail(
+                    id, "opencode", row.Project, created, updated,
+                    Truncate(UsefulTitle(row.Title)
+                        ?? messages.FirstOrDefault(value => value.Role == "user")?.Content, 100),
+                    databasePath, $"opencode --session {id}", messages, []),
+                cancellationToken);
+            count++;
+        }
+        return count;
+    }
+
+    private static async Task<IReadOnlyList<WebDavMessage>> ReadOpenCodeMessagesAsync(
+        SqliteConnection connection,
+        string sessionId,
+        CancellationToken cancellationToken)
+    {
+        var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT id,time_created,data FROM message
+            WHERE session_id=$session
+            ORDER BY time_created,rowid;
+            """;
+        command.Parameters.AddWithValue("$session", sessionId);
+        var rows = new List<(string Id, object Created, string Data)>();
+        await using (var reader = await command.ExecuteReaderAsync(cancellationToken))
+        {
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                rows.Add((
+                    reader.GetString(0),
+                    reader.GetValue(1),
+                    reader.IsDBNull(2) ? "{}" : reader.GetString(2)));
+            }
+        }
+        var result = new List<WebDavMessage>();
+        foreach (var row in rows)
+        {
+            using var messageDocument = JsonDocument.Parse(row.Data);
+            var role = GetString(messageDocument.RootElement, "role") switch
+            {
+                "assistant" => "assistant",
+                "system" => "system",
+                _ => "user",
+            };
+            var content = new List<string>();
+            var tools = new List<WebDavToolCall>();
+            var parts = connection.CreateCommand();
+            parts.CommandText = """
+                SELECT data FROM part
+                WHERE session_id=$session AND message_id=$message
+                ORDER BY time_created,rowid;
+                """;
+            parts.Parameters.AddWithValue("$session", sessionId);
+            parts.Parameters.AddWithValue("$message", row.Id);
+            await using var partReader = await parts.ExecuteReaderAsync(cancellationToken);
+            while (await partReader.ReadAsync(cancellationToken))
+            {
+                if (partReader.IsDBNull(0)) continue;
+                using var partDocument = JsonDocument.Parse(partReader.GetString(0));
+                var part = partDocument.RootElement;
+                switch (GetString(part, "type"))
+                {
+                    case "text":
+                        var text = GetString(part, "text");
+                        if (!string.IsNullOrWhiteSpace(text)) content.Add(text);
+                        break;
+                    case "file":
+                        var file = GetString(part, "filename")
+                            ?? GetString(part, "url");
+                        if (!string.IsNullOrWhiteSpace(file))
+                            content.Add($"[file: {file}]");
+                        break;
+                    case "tool":
+                        var state = part.TryGetProperty("state", out var stateValue)
+                            ? stateValue : default;
+                        var input = state.ValueKind == JsonValueKind.Object
+                            && state.TryGetProperty("input", out var inputValue)
+                                ? inputValue.Clone() : EmptyJson();
+                        tools.Add(new WebDavToolCall(
+                            GetString(part, "callID") ?? Guid.NewGuid().ToString(),
+                            GetString(part, "tool") ?? "tool",
+                            input,
+                            state.ValueKind == JsonValueKind.Object
+                                ? GetString(state, "output")
+                                    ?? GetString(state, "error")
+                                : null,
+                            state.ValueKind == JsonValueKind.Object
+                                && GetString(state, "status") == "error"
+                                    ? "error" : "success"));
+                        break;
+                }
+            }
+            if (content.Count == 0 && tools.Count == 0) continue;
+            result.Add(new WebDavMessage(
+                $"opencode:{sessionId}:{row.Id}",
+                EpochToIso(row.Created), role,
+                string.Join("\n\n", content), tools, []));
+        }
+        return result;
+    }
+
+    private async Task<int> ImportZCodeAsync(CancellationToken cancellationToken)
+    {
+        var sessions = Path.Combine(_home, ".zcode", "v2", "sessions");
+        if (!Directory.Exists(sessions)) return 0;
+        var count = 0;
+        foreach (var path in Directory.EnumerateFiles(
+                     sessions, "*.json", SearchOption.AllDirectories))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            try
+            {
+                using var document = JsonDocument.Parse(
+                    await File.ReadAllTextAsync(path, cancellationToken));
+                var root = document.RootElement;
+                var meta = root.TryGetProperty("meta", out var metaValue)
+                    ? metaValue : default;
+                var profile = Path.GetFileName(Path.GetDirectoryName(path)) ?? "default";
+                var provider = meta.ValueKind == JsonValueKind.Object
+                    ? (GetString(meta, "provider") ?? "unknown").ToLowerInvariant()
+                    : "unknown";
+                var task = meta.ValueKind == JsonValueKind.Object
+                    ? GetString(meta, "taskId")
+                    : null;
+                task ??= Path.GetFileNameWithoutExtension(path);
+                var id = $"{provider}:task:{profile}:{task}";
+                var created = meta.ValueKind == JsonValueKind.Object
+                    ? JsonTimestamp(meta, "createdAt") : null;
+                created ??= File.GetCreationTimeUtc(path).ToString("O");
+                var updated = meta.ValueKind == JsonValueKind.Object
+                    ? JsonTimestamp(meta, "updatedAt") : null;
+                updated ??= created;
+                var project = meta.ValueKind == JsonValueKind.Object
+                    ? GetString(meta, "workspacePath")
+                        ?? GetString(meta, "cwd")
+                        ?? ""
+                    : "";
+                var messages = new List<WebDavMessage>();
+                if (root.TryGetProperty("messages", out var values)
+                    && values.ValueKind == JsonValueKind.Array)
+                {
+                    var index = 0;
+                    foreach (var value in values.EnumerateArray())
+                    {
+                        var role = GetString(value, "role") switch
+                        {
+                            "assistant" => "assistant",
+                            "system" => "system",
+                            _ => "user",
+                        };
+                        var content = GetString(value, "content")
+                            ?? ExtractPartsText(value);
+                        if (string.IsNullOrWhiteSpace(content)
+                            || (role == "user" && !MeaningfulUserText(content)))
+                        {
+                            continue;
+                        }
+                        messages.Add(new WebDavMessage(
+                            $"zcode:{profile}:{task}:{index++}",
+                            JsonTimestamp(value, "timestamp") ?? updated,
+                            role, content, [], []));
+                    }
+                }
+                if (messages.Count == 0) continue;
+                var title = meta.ValueKind == JsonValueKind.Object
+                    ? GetString(meta, "title") : null;
+                await _repository.UpsertAsync(
+                    new WebDavConversationDetail(
+                        id, "zcode", project, created, updated,
+                        Truncate(UsefulTitle(title)
+                            ?? messages.FirstOrDefault(
+                                value => value.Role == "user")?.Content, 100),
+                        path, null, messages, []),
+                    cancellationToken);
+                count++;
+            }
+            catch (JsonException)
+            {
+                // Keep importing independent task files.
+            }
+        }
+        return count;
+    }
+
+    private static string ExtractTag(string value, string tag)
+    {
+        var startToken = $"<{tag}>";
+        var endToken = $"</{tag}>";
+        var start = value.IndexOf(startToken, StringComparison.Ordinal);
+        var end = value.IndexOf(endToken, StringComparison.Ordinal);
+        return start >= 0 && end > start
+            ? value[(start + startToken.Length)..end].Trim()
+            : value.Trim();
+    }
+
+    private static string ExtractPartsText(JsonElement value)
+    {
+        if (!value.TryGetProperty("parts", out var parts)
+            || parts.ValueKind != JsonValueKind.Array)
+        {
+            return "";
+        }
+        return string.Join(
+            "\n",
+            parts.EnumerateArray().Select(part =>
+            {
+                var direct = GetString(part, "content");
+                if (direct is not null) return direct;
+                if (part.TryGetProperty("content", out var nested)
+                    && nested.ValueKind == JsonValueKind.Object)
+                {
+                    return GetString(nested, "text");
+                }
+                return null;
+            }).Where(text => !string.IsNullOrWhiteSpace(text)));
+    }
+
+    private static string? JsonTimestamp(JsonElement value, string property)
+    {
+        if (!value.TryGetProperty(property, out var timestamp)) return null;
+        if (timestamp.ValueKind == JsonValueKind.String)
+        {
+            var text = timestamp.GetString();
+            if (double.TryParse(
+                    text,
+                    System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    out var number))
+            {
+                return EpochToIso(number);
+            }
+            return text;
+        }
+        return timestamp.ValueKind == JsonValueKind.Number
+            ? EpochToIso(timestamp.GetDouble())
+            : null;
+    }
+
+    private static JsonElement EmptyJson()
+    {
+        using var document = JsonDocument.Parse("{}");
+        return document.RootElement.Clone();
+    }
+
+    private static JsonElement ParseJson(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return EmptyJson();
+        try
+        {
+            using var document = JsonDocument.Parse(value);
+            return document.RootElement.Clone();
+        }
+        catch (JsonException)
+        {
+            using var document = JsonDocument.Parse(
+                JsonSerializer.Serialize(new { raw = value }));
+            return document.RootElement.Clone();
+        }
+    }
+
+    private static bool LooksFailed(string? value)
+    {
+        var text = value?.ToLowerInvariant() ?? "";
+        return text.Contains("error", StringComparison.Ordinal)
+            || text.Contains("failed", StringComparison.Ordinal)
+            || text.Contains("exception", StringComparison.Ordinal);
     }
 
     private static WebDavMessage Message(

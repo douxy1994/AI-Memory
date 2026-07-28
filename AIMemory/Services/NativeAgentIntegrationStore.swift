@@ -534,6 +534,16 @@ actor NativeAgentIntegrationStore {
             return home.appendingPathComponent(".codebuddy")
         case .devin:
             return home.appendingPathComponent(".devin")
+        case .vibe:
+            return home.appendingPathComponent(".vibe/config.toml")
+        case .pi:
+            return home.appendingPathComponent(".pi/agent/settings.json")
+        case .kilo:
+            return home.appendingPathComponent(".config/kilo/kilo.json")
+        case .plandex:
+            return home.appendingPathComponent(".plandex/config.yml")
+        case .gptme:
+            return home.appendingPathComponent(".config/gptme/config.toml")
         }
     }
 
@@ -575,7 +585,8 @@ actor NativeAgentIntegrationStore {
         case .cursor, .vscode, .amazonq, .windsurf, .kiro,
              .continueDev, .goose, .cline, .roo, .aider, .amp, .warp,
              .trae, .junie, .crush, .augment, .cody, .tabby,
-             .openhands, .openInterpreter, .openclaw, .codebuddy, .devin:
+             .openhands, .openInterpreter, .openclaw, .codebuddy, .devin,
+             .vibe, .pi, .kilo, .plandex, .gptme:
             return home.appendingPathComponent(".aimemory/integrations/\(agent.rawValue)")
         }
     }
@@ -833,7 +844,7 @@ private enum IntegrationAgent: String, CaseIterable {
     case goose, cline, roo, aider, amp, warp, trae, junie, crush
     case augment, cody, tabby, openhands
     case openInterpreter = "open-interpreter"
-    case openclaw, codebuddy, devin
+    case openclaw, codebuddy, devin, vibe, pi, kilo, plandex, gptme
 
     static func catalogIndex(_ rawValue: String) -> Int {
         allCases.firstIndex { $0.rawValue == rawValue } ?? Int.max
@@ -875,6 +886,11 @@ private enum IntegrationAgent: String, CaseIterable {
         case .openclaw: "OpenClaw"
         case .codebuddy: "CodeBuddy"
         case .devin: "Devin"
+        case .vibe: "Mistral Vibe"
+        case .pi: "Pi Coding Agent"
+        case .kilo: "Kilo Code CLI"
+        case .plandex: "Plandex"
+        case .gptme: "gptme"
         }
     }
 
@@ -897,6 +913,7 @@ private enum IntegrationAgent: String, CaseIterable {
             .continueDev, .goose, .cline, .roo, .aider, .amp, .warp,
             .trae, .junie, .crush, .augment, .cody, .tabby,
             .openhands, .openInterpreter, .openclaw, .codebuddy, .devin,
+            .vibe, .pi, .kilo, .plandex, .gptme,
         ].contains(self)
     }
 
@@ -904,7 +921,8 @@ private enum IntegrationAgent: String, CaseIterable {
         switch self {
         case .continueDev, .goose, .cline, .roo, .aider, .amp, .warp,
              .trae, .junie, .crush, .augment, .cody, .tabby,
-             .openhands, .openInterpreter, .openclaw, .codebuddy, .devin:
+             .openhands, .openInterpreter, .openclaw, .codebuddy, .devin,
+             .vibe, .pi, .kilo, .plandex, .gptme:
             false
         default:
             true
@@ -947,6 +965,11 @@ private enum IntegrationAgent: String, CaseIterable {
         case .openclaw: ["openclaw"]
         case .codebuddy: ["codebuddy", "codebuddy-cli"]
         case .devin: ["devin"]
+        case .vibe: ["vibe", "vibe-acp"]
+        case .pi: ["pi"]
+        case .kilo: ["kilo"]
+        case .plandex: ["plandex", "pdx"]
+        case .gptme: ["gptme"]
         }
     }
 
@@ -999,6 +1022,16 @@ private enum IntegrationAgent: String, CaseIterable {
             [
                 home.appendingPathComponent(".config/amp/settings.json"),
                 home.appendingPathComponent(".amp/settings.json"),
+            ]
+        case .kilo:
+            [
+                home.appendingPathComponent(".config/kilo"),
+                home.appendingPathComponent(".kilo"),
+            ]
+        case .gptme:
+            [
+                home.appendingPathComponent(".config/gptme"),
+                home.appendingPathComponent(".local/share/gptme"),
             ]
         default:
             [defaultDetectionPath(home: home)]
@@ -1059,6 +1092,11 @@ private enum IntegrationAgent: String, CaseIterable {
         case .openclaw: home.appendingPathComponent(".openclaw")
         case .codebuddy: home.appendingPathComponent(".codebuddy")
         case .devin: home.appendingPathComponent(".devin")
+        case .vibe: home.appendingPathComponent(".vibe")
+        case .pi: home.appendingPathComponent(".pi")
+        case .kilo: home.appendingPathComponent(".config/kilo")
+        case .plandex: home.appendingPathComponent(".plandex")
+        case .gptme: home.appendingPathComponent(".config/gptme")
         }
     }
 }

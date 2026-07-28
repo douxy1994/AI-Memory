@@ -25,12 +25,14 @@ AI Memory 的 Windows 11 原生版本，使用 C#、WinUI 3 与 Windows App SDK 
 - 备份、恢复、更新检查与诊断；
 - Windows Credential Locker 保存 WebDAV 密码；
 - 登录启动开关；
-- 34 种主流 Agent/CLI 安装检测，已安装项优先，未安装项默认关闭；
-- Claude、Codex、Gemini 本地历史导入核心；
+- 39 种主流 Agent/CLI 安装检测，已安装项优先，未安装项默认关闭；
+- Claude、Codex、Gemini、Kimi、Hermes、Antigravity、OpenCode 与 ZCode
+  本地历史只读导入；
 - 记忆复核、检查点与交接核心流程；
 - 菜单、快捷键和原生 MCP helper。
 
-Kimi、Hermes、Antigravity、OpenCode 与 ZCode 的 Windows 历史读取仍在对齐和真实主机验证中，详见[功能矩阵](../docs/FEATURE_MATRIX.md)。
+八类本地历史均通过共享核心层测试；Windows 桌面端的完整安装与交互状态见
+[功能矩阵](../docs/FEATURE_MATRIX.md)。
 
 ## 构建
 

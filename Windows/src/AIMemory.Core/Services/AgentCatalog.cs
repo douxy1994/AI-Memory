@@ -62,6 +62,11 @@ public sealed class AgentCatalog
         new("openclaw", "OpenClaw", ["openclaw.exe"], [".openclaw"], false),
         new("codebuddy", "CodeBuddy", ["codebuddy.exe"], [".codebuddy"], false),
         new("devin", "Devin", ["devin.exe"], [".devin"], false),
+        new("vibe", "Mistral Vibe", ["vibe", "vibe-acp"], [".vibe"], false),
+        new("pi", "Pi Coding Agent", ["pi"], [".pi"], false),
+        new("kilo", "Kilo Code CLI", ["kilo"], [".config\\kilo", ".kilo"], false),
+        new("plandex", "Plandex", ["plandex", "pdx"], [".plandex"], false),
+        new("gptme", "gptme", ["gptme"], [".config\\gptme", ".local\\share\\gptme"], false),
     ];
 
     public IReadOnlyList<AgentIntegrationStatus> Detect()
@@ -73,7 +78,7 @@ public sealed class AgentCatalog
                         || Directory.Exists(Path.Combine(_home, relative)))
                     || agent.Executables.Any(executable =>
                         _pathDirectories.Any(directory =>
-                            File.Exists(Path.Combine(directory, executable))));
+                            ExecutableExists(directory, executable)));
                 return (agent, index, detected);
             })
             .OrderByDescending(value => value.detected)
@@ -91,5 +96,17 @@ public sealed class AgentCatalog
                     ? "已检测到本机安装；尚未启用 AI Memory 集成。"
                     : "本机未安装，默认不启用。"))
             .ToArray();
+    }
+
+    private static bool ExecutableExists(string directory, string executable)
+    {
+        if (File.Exists(Path.Combine(directory, executable))) return true;
+        if (Path.HasExtension(executable)) return false;
+        var extensions = (Environment.GetEnvironmentVariable("PATHEXT")
+                ?? ".COM;.EXE;.BAT;.CMD")
+            .Split(';', StringSplitOptions.RemoveEmptyEntries);
+        return extensions.Any(extension =>
+            File.Exists(Path.Combine(directory, executable + extension.ToLowerInvariant()))
+            || File.Exists(Path.Combine(directory, executable + extension.ToUpperInvariant())));
     }
 }

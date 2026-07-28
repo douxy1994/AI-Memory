@@ -62,10 +62,24 @@ public sealed class CoreTests : IDisposable
         var bin = Path.Combine(_root, "bin");
         Directory.CreateDirectory(bin);
         File.WriteAllText(Path.Combine(bin, "goose.exe"), "");
+        File.WriteAllText(Path.Combine(bin, "vibe.cmd"), "");
         var statuses = new AgentCatalog(_root, [bin]).Detect();
+        Assert.Equal(
+        [
+            "claude", "codex", "gemini", "antigravity", "opencode",
+            "hermes", "zcode", "kimi", "cursor", "vscode", "copilot",
+            "qwen", "amazonq", "factory", "windsurf", "kiro", "continue",
+            "goose", "cline", "roo", "aider", "amp", "warp", "trae",
+            "junie", "crush", "augment", "cody", "tabby", "openhands",
+            "open-interpreter", "openclaw", "codebuddy", "devin", "vibe",
+            "pi", "kilo", "plandex", "gptme",
+        ], AgentCatalog.All.Select(value => value.Id).ToArray());
         var firstMissing = statuses
             .Select((status, index) => (status, index))
             .First(value => !value.status.IsDetected).index;
+        Assert.Equal(2, firstMissing);
+        Assert.Equal(["goose", "vibe"], statuses
+            .Take(firstMissing).Select(value => value.Id).ToArray());
         Assert.All(statuses.Take(firstMissing), value => Assert.True(value.IsDetected));
         Assert.All(statuses.Skip(firstMissing), value =>
         {
@@ -73,7 +87,7 @@ public sealed class CoreTests : IDisposable
             Assert.False(value.IsIntegrated);
             Assert.Equal(AgentIntegrationState.Missing, value.State);
         });
-        Assert.Equal(34, statuses.Count);
+        Assert.Equal(39, statuses.Count);
     }
 
     [Fact]
@@ -137,7 +151,7 @@ public sealed class CoreTests : IDisposable
     }
 
     [Fact]
-    public async Task NativeHistoryImportCopiesClaudeCodexAndGeminiReadOnly()
+    public async Task NativeHistoryImportCopiesAllEightSourcesReadOnly()
     {
         var home = Path.Combine(_root, "home");
         var claudeProject = Path.Combine(home, ".claude", "projects", "repo");
@@ -194,18 +208,137 @@ public sealed class CoreTests : IDisposable
             }
             """);
 
+        var hermesRoot = Path.Combine(home, ".hermes");
+        Directory.CreateDirectory(hermesRoot);
+        var hermesPath = Path.Combine(hermesRoot, "state.db");
+        await using (var hermes = new SqliteConnection(
+                         $"Data Source={hermesPath}"))
+        {
+            await hermes.OpenAsync();
+            var create = hermes.CreateCommand();
+            create.CommandText = """
+                CREATE TABLE sessions(
+                  id TEXT,title TEXT,started_at REAL,ended_at REAL,
+                  cwd TEXT,archived INTEGER);
+                CREATE TABLE messages(
+                  id TEXT,session_id TEXT,role TEXT,content TEXT,
+                  tool_calls TEXT,tool_name TEXT,timestamp REAL,active INTEGER);
+                INSERT INTO sessions VALUES(
+                  'hermes-1','Hermes title',1783050000,1783050060,
+                  'C:\repo',0);
+                INSERT INTO messages VALUES(
+                  'hm1','hermes-1','user','Hermes question',
+                  NULL,NULL,1783050000,1);
+                INSERT INTO messages VALUES(
+                  'hm2','hermes-1','assistant','Hermes answer',
+                  NULL,NULL,1783050060,1);
+                """;
+            await create.ExecuteNonQueryAsync();
+        }
+
+        var kimiSession = Path.Combine(
+            home, ".kimi-code", "sessions", "workspace", "kimi-1");
+        var kimiAgent = Path.Combine(kimiSession, "agents", "main");
+        Directory.CreateDirectory(kimiAgent);
+        var kimiState = Path.Combine(kimiSession, "state.json");
+        await File.WriteAllTextAsync(
+            kimiState,
+            """{"workDir":"C:\\repo","createdAt":"2026-07-04T01:00:00Z","updatedAt":"2026-07-04T01:02:00Z","title":"Kimi title"}""");
+        var kimiWire = Path.Combine(kimiAgent, "wire.jsonl");
+        await File.WriteAllLinesAsync(kimiWire,
+        [
+            """{"time":1783136400000,"type":"turn.prompt","input":[{"type":"text","text":"Kimi question"}]}""",
+            """{"time":1783136460000,"type":"context.append_loop_event","event":{"type":"content.part","part":{"type":"text","text":"Kimi answer"}}}""",
+        ]);
+
+        var antigravitySession = Path.Combine(
+            home, ".gemini", "antigravity", "brain", "anti-1");
+        var antigravityLogs = Path.Combine(
+            antigravitySession, ".system_generated", "logs");
+        Directory.CreateDirectory(antigravityLogs);
+        var antigravityTranscript = Path.Combine(
+            antigravityLogs, "transcript.jsonl");
+        await File.WriteAllLinesAsync(antigravityTranscript,
+        [
+            """{"source":"USER_EXPLICIT","content":"<USER_REQUEST>Antigravity question</USER_REQUEST>","created_at":"2026-07-05T01:00:00Z"}""",
+            """{"source":"MODEL","content":"Antigravity answer","created_at":"2026-07-05T01:01:00Z"}""",
+        ]);
+
+        var zcodeProfile = Path.Combine(
+            home, ".zcode", "v2", "sessions", "default");
+        Directory.CreateDirectory(zcodeProfile);
+        var zcodePath = Path.Combine(zcodeProfile, "zcode-1.json");
+        await File.WriteAllTextAsync(
+            zcodePath,
+            """
+            {
+              "meta":{
+                "provider":"codex",
+                "taskId":"zcode-1",
+                "workspacePath":"C:\\repo",
+                "createdAt":1783222800000,
+                "updatedAt":1783222860000,
+                "title":"ZCode title"
+              },
+              "messages":[
+                {"role":"user","content":"ZCode question","timestamp":1783222800000},
+                {"role":"assistant","content":"ZCode answer","timestamp":1783222860000}
+              ]
+            }
+            """);
+
+        var openCodeRoot = Path.Combine(
+            home, ".local", "share", "opencode");
+        Directory.CreateDirectory(openCodeRoot);
+        var openCodePath = Path.Combine(openCodeRoot, "opencode.db");
+        await using (var openCode = new SqliteConnection(
+                         $"Data Source={openCodePath}"))
+        {
+            await openCode.OpenAsync();
+            var create = openCode.CreateCommand();
+            create.CommandText = """
+                CREATE TABLE session(
+                  id TEXT,directory TEXT,title TEXT,time_created INTEGER,
+                  time_updated INTEGER,time_archived INTEGER);
+                CREATE TABLE message(
+                  id TEXT,session_id TEXT,time_created INTEGER,data TEXT);
+                CREATE TABLE part(
+                  id TEXT,session_id TEXT,message_id TEXT,
+                  time_created INTEGER,data TEXT);
+                INSERT INTO session VALUES(
+                  'opencode-1','C:\repo','OpenCode title',
+                  1783309200000,1783309260000,NULL);
+                INSERT INTO message VALUES(
+                  'om1','opencode-1',1783309200000,'{"role":"user"}');
+                INSERT INTO message VALUES(
+                  'om2','opencode-1',1783309260000,'{"role":"assistant"}');
+                INSERT INTO part VALUES(
+                  'op1','opencode-1','om1',1783309200000,
+                  '{"type":"text","text":"OpenCode question"}');
+                INSERT INTO part VALUES(
+                  'op2','opencode-1','om2',1783309260000,
+                  '{"type":"text","text":"OpenCode answer"}');
+                """;
+            await create.ExecuteNonQueryAsync();
+        }
+
         var database = new AIMemoryDatabase(Path.Combine(_root, "history.db"));
         await database.InitializeAsync();
         var repository = new ConversationRepository(database);
         var report = await new NativeHistoryImportService(repository, home)
             .ImportAllAsync();
-        Assert.Equal(3, report.Total);
+        Assert.Equal(8, report.Total);
         Assert.Empty(report.Warnings);
         var conversations = await repository.ListAsync();
-        Assert.Equal(3, conversations.Count);
+        Assert.Equal(8, conversations.Count);
         Assert.Contains(conversations, value => value.SourceAgent == "claude");
         Assert.Contains(conversations, value => value.SourceAgent == "codex");
         Assert.Contains(conversations, value => value.SourceAgent == "gemini");
+        Assert.Contains(conversations, value => value.SourceAgent == "hermes");
+        Assert.Contains(conversations, value => value.SourceAgent == "kimi");
+        Assert.Contains(conversations, value => value.SourceAgent == "antigravity");
+        Assert.Contains(conversations, value => value.SourceAgent == "opencode");
+        Assert.Contains(conversations, value => value.SourceAgent == "zcode");
         Assert.Equal(
             "Claude question",
             (await repository.ReadMessagesAsync("claude-1")).First().Content);
@@ -213,6 +346,11 @@ public sealed class CoreTests : IDisposable
         Assert.True(File.Exists(claudePath));
         Assert.True(File.Exists(rolloutPath));
         Assert.True(File.Exists(geminiPath));
+        Assert.True(File.Exists(hermesPath));
+        Assert.True(File.Exists(kimiWire));
+        Assert.True(File.Exists(antigravityTranscript));
+        Assert.True(File.Exists(openCodePath));
+        Assert.True(File.Exists(zcodePath));
     }
 
     [Fact]
@@ -367,7 +505,7 @@ public sealed class CoreTests : IDisposable
         Assert.Equal(1, report.Conversations);
         Assert.Equal(1, report.Messages);
         Assert.Equal(1, report.DetectedAgents);
-        Assert.Equal(34, report.CatalogAgents);
+        Assert.Equal(39, report.CatalogAgents);
         Assert.Contains(databasePath, report.ToDisplayText());
     }
 

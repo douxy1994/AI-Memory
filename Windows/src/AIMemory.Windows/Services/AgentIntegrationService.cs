@@ -66,6 +66,11 @@ public sealed class AgentIntegrationService
 
     private bool IsIntegrated(string id)
     {
+        if (!AgentCatalog.All.First(value => value.Id == id)
+                .SupportsAutomaticIntegration)
+        {
+            return false;
+        }
         var path = ConfigPath(id);
         if (!File.Exists(path)) return false;
         var text = File.ReadAllText(path);
