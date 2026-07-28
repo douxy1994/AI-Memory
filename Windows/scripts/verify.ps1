@@ -17,6 +17,7 @@ try {
     }
     $requests = @(
         '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}'
+        '{"jsonrpc":"2.0","method":"notifications/initialized","params":{}}'
         '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}'
     )
     $responses = $requests | & $helper.FullName
@@ -28,9 +29,16 @@ try {
     if ($initialize.result.serverInfo.name -ne "aimemory") {
         throw "MCP initialize response is invalid."
     }
+    if ($initialize.result.protocolVersion -ne "2025-03-26") {
+        throw "MCP protocol version is not aligned with the macOS helper."
+    }
     $toolNames = @($tools.result.tools | ForEach-Object name)
     foreach ($required in @(
+        "get_repo_memory",
         "get_project_context",
+        "get_repo_memory_health",
+        "import_all_local_history",
+        "scan_repo_conversations",
         "search_repo_history",
         "read_history_conversation",
         "detect_agent_integrations"

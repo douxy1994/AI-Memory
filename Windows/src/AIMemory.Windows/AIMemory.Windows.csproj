@@ -14,6 +14,7 @@
     <DefineConstants>DISABLE_XAML_GENERATED_MAIN</DefineConstants>
     <McpRuntimeIdentifier Condition="'$(Platform)' == 'x64'">win-x64</McpRuntimeIdentifier>
     <McpRuntimeIdentifier Condition="'$(Platform)' == 'ARM64'">win-arm64</McpRuntimeIdentifier>
+    <McpPublishDir>$(MSBuildProjectDirectory)\obj\McpHelper\$(Configuration)\$(Platform)\</McpPublishDir>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\AIMemory.Core\AIMemory.Core.csproj" />
@@ -22,6 +23,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Assets\*.*" />
+    <Content Include="$(McpPublishDir)aimemory-mcp.exe"
+             Link="Helpers\aimemory-mcp.exe"
+             CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <Target Name="RecordSourceRevision" BeforeTargets="AssignTargetPaths">
     <Exec
@@ -43,10 +47,7 @@
                CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
   </Target>
-  <Target Name="PublishNativeMcpHelper" BeforeTargets="AssignTargetPaths">
-    <PropertyGroup>
-      <McpPublishDir>$(MSBuildProjectDirectory)\$(IntermediateOutputPath)McpHelper\</McpPublishDir>
-    </PropertyGroup>
+  <Target Name="PublishNativeMcpHelper" BeforeTargets="PrepareForBuild">
     <MSBuild
       Projects="..\AIMemory.Mcp\AIMemory.Mcp.csproj"
       Targets="Restore"
@@ -55,10 +56,5 @@
       Projects="..\AIMemory.Mcp\AIMemory.Mcp.csproj"
       Targets="Publish"
       Properties="Configuration=$(Configuration);RuntimeIdentifier=$(McpRuntimeIdentifier);PublishDir=$(McpPublishDir);SelfContained=true;PublishSingleFile=true" />
-    <ItemGroup>
-      <Content Include="$(McpPublishDir)aimemory-mcp.exe"
-               Link="Helpers\aimemory-mcp.exe"
-               CopyToOutputDirectory="PreserveNewest" />
-    </ItemGroup>
   </Target>
 </Project>

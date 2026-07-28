@@ -28,49 +28,59 @@ public static class Program
         await database.InitializeAsync();
         var query = new MemoryQueryService(database);
         var conversations = new ConversationRepository(database);
+        var history = new NativeHistoryImportService(conversations);
+        var diagnostics = new DiagnosticsService(database);
 
         string? line;
         while ((line = await Console.In.ReadLineAsync()) is not null)
         {
             if (string.IsNullOrWhiteSpace(line)) continue;
-            object response;
+            object? response;
             try
             {
                 using var document = JsonDocument.Parse(line);
                 response = await HandleAsync(
-                    document.RootElement, query, conversations);
+                    document.RootElement,
+                    query,
+                    conversations,
+                    history,
+                    diagnostics);
             }
             catch (Exception exception)
             {
                 response = Error(null, -32603, exception.Message);
             }
+            if (response is null) continue;
             await Console.Out.WriteLineAsync(
                 JsonSerializer.Serialize(response, RpcJsonOptions));
             await Console.Out.FlushAsync();
         }
     }
 
-    private static async Task<object> HandleAsync(
+    private static async Task<object?> HandleAsync(
         JsonElement request,
         MemoryQueryService query,
-        ConversationRepository conversations)
+        ConversationRepository conversations,
+        NativeHistoryImportService history,
+        DiagnosticsService diagnostics)
     {
-        var id = request.TryGetProperty("id", out var idValue)
+        var hasId = request.TryGetProperty("id", out var idValue);
+        var id = hasId
             ? idValue.Clone()
             : (JsonElement?)null;
         var method = request.GetProperty("method").GetString() ?? "";
+        if (!hasId)
+        {
+            return null;
+        }
         if (method == "initialize")
         {
             return Success(id, new
             {
-                protocolVersion = "2024-11-05",
+                protocolVersion = "2025-03-26",
                 capabilities = new { tools = new { } },
                 serverInfo = new { name = "aimemory", version = "0.1.0" },
             });
-        }
-        if (method == "notifications/initialized")
-        {
-            return Success(id, new { });
         }
         if (method == "tools/list")
         {
@@ -88,7 +98,17 @@ public static class Program
             : JsonSerializer.SerializeToElement(new { });
         object result = name switch
         {
+            "get_repo_memory" => await GetRepoMemoryAsync(query, arguments),
             "get_project_context" => await GetContextAsync(query, arguments),
+            "get_repo_memory_health" => await GetHealthAsync(
+                query,
+                diagnostics,
+                arguments),
+            "import_all_local_history" => await ImportHistoryAsync(history),
+            "scan_repo_conversations" => await ScanRepositoryAsync(
+                query,
+                history,
+                arguments),
             "search_repo_history" => await SearchAsync(query, arguments),
             "read_history_conversation" => await ReadAsync(conversations, arguments),
             "detect_agent_integrations" => new AgentCatalog().Detect(),
@@ -100,6 +120,23 @@ public static class Program
             content = new[] { new { type = "text", text } },
             isError = false,
         });
+    }
+
+    private static async Task<object> GetRepoMemoryAsync(
+        MemoryQueryService service,
+        JsonElement arguments)
+    {
+        var root = Required(arguments, "repo_root");
+        var context = await service.GetProjectContextAsync(
+            root,
+            Optional(arguments, "task_hint"),
+            20);
+        return new
+        {
+            repo_root = root,
+            task_hint = Optional(arguments, "task_hint"),
+            memories = context.ApprovedMemory,
+        };
     }
 
     private static async Task<object> GetContextAsync(
@@ -119,6 +156,57 @@ public static class Program
             Required(arguments, "repo_root"),
             Required(arguments, "query"),
             OptionalInt(arguments, "limit", 3));
+
+    private static async Task<object> GetHealthAsync(
+        MemoryQueryService query,
+        DiagnosticsService diagnostics,
+        JsonElement arguments)
+    {
+        var root = Required(arguments, "repo_root");
+        var context = await query.GetProjectContextAsync(root, "", 3);
+        var report = await diagnostics.CollectAsync("0.1.0");
+        return new
+        {
+            repo_root = root,
+            approved_memory_count = context.ApprovedMemory.Count,
+            checkpoint_count = context.RecentCheckpoints.Count,
+            search_document_count = report.Messages,
+            indexed_conversation_count = report.Conversations,
+            pending_candidate_count = report.PendingCandidates,
+            schema_version = report.SchemaVersion,
+        };
+    }
+
+    private static async Task<object> ImportHistoryAsync(
+        NativeHistoryImportService history)
+    {
+        var report = await history.ImportAllAsync();
+        return new
+        {
+            imported = report.Imported,
+            imported_count = report.Imported.Values.Sum(),
+            warnings = report.Warnings,
+        };
+    }
+
+    private static async Task<object> ScanRepositoryAsync(
+        MemoryQueryService query,
+        NativeHistoryImportService history,
+        JsonElement arguments)
+    {
+        var root = Required(arguments, "repo_root");
+        var report = await history.ImportAllAsync();
+        var context = await query.GetProjectContextAsync(root, "", 3);
+        return new
+        {
+            repo_root = root,
+            imported = report.Imported,
+            warnings = report.Warnings,
+            approved_memory_count = context.ApprovedMemory.Count,
+            checkpoint_count = context.RecentCheckpoints.Count,
+            relevant_history_count = context.RelevantHistory.Count,
+        };
+    }
 
     private static async Task<object> ReadAsync(
         ConversationRepository repository,
@@ -158,9 +246,33 @@ public static class Program
     private static readonly object[] ToolDefinitions =
     [
         Tool(
+            "get_repo_memory",
+            "Return compact approved startup rules for an agent.",
+            new
+            {
+                repo_root = StringSchema(),
+                task_hint = StringSchema(),
+            },
+            ["repo_root"]),
+        Tool(
             "get_project_context",
             "Return approved memory, checkpoints and compact local history.",
             new { repo_root = StringSchema(), query = StringSchema(), limit = IntSchema() },
+            ["repo_root"]),
+        Tool(
+            "get_repo_memory_health",
+            "Return local-history and memory diagnostics.",
+            new { repo_root = StringSchema() },
+            ["repo_root"]),
+        Tool(
+            "import_all_local_history",
+            "Import supported local agent histories into AI Memory's independent index.",
+            new { },
+            []),
+        Tool(
+            "scan_repo_conversations",
+            "Scan local histories and return repository memory health.",
+            new { repo_root = StringSchema() },
             ["repo_root"]),
         Tool(
             "search_repo_history",
