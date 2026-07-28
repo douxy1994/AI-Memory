@@ -24,6 +24,9 @@
     <Content Include="Assets\*.png" />
   </ItemGroup>
   <Target Name="PublishNativeMcpHelper" BeforeTargets="AssignTargetPaths">
+    <PropertyGroup>
+      <McpPublishDir>$(MSBuildProjectDirectory)\$(IntermediateOutputPath)McpHelper\</McpPublishDir>
+    </PropertyGroup>
     <MSBuild
       Projects="..\AIMemory.Mcp\AIMemory.Mcp.csproj"
       Targets="Restore"
@@ -31,9 +34,9 @@
     <MSBuild
       Projects="..\AIMemory.Mcp\AIMemory.Mcp.csproj"
       Targets="Publish"
-      Properties="Configuration=$(Configuration);RuntimeIdentifier=$(McpRuntimeIdentifier);PublishDir=$(IntermediateOutputPath)McpHelper\;SelfContained=true;PublishSingleFile=true" />
+      Properties="Configuration=$(Configuration);RuntimeIdentifier=$(McpRuntimeIdentifier);PublishDir=$(McpPublishDir);SelfContained=true;PublishSingleFile=true" />
     <ItemGroup>
-      <Content Include="$(IntermediateOutputPath)McpHelper\aimemory-mcp.exe"
+      <Content Include="$(McpPublishDir)aimemory-mcp.exe"
                Link="Helpers\aimemory-mcp.exe"
                CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
