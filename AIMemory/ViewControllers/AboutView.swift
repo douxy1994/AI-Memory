@@ -213,9 +213,15 @@ struct AboutView: View {
     }
 
     private var buildVersion: String {
-        let revision = Bundle.main.object(
+        let bundledRevision = Bundle.main.url(
+            forResource: "AIMemorySourceRevision",
+            withExtension: "txt"
+        ).flatMap { try? String(contentsOf: $0, encoding: .utf8) }
+        let plistRevision = Bundle.main.object(
             forInfoDictionaryKey: "AIMemorySourceRevision"
         ) as? String
+        let revision = (bundledRevision ?? plistRevision)?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
         guard let revision,
               !revision.isEmpty,
               revision != "uncommitted"

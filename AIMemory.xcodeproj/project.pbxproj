@@ -471,7 +471,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "set -eu\nrevision=\"$(git -C \"${SRCROOT}\" rev-parse --short=7 HEAD 2>/dev/null || true)\"\nif [ -z \"${revision}\" ]; then\n  revision=\"uncommitted\"\nfi\n/usr/libexec/PlistBuddy \\\n  -c \"Delete :AIMemorySourceRevision\" \\\n  \"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\" 2>/dev/null || true\n/usr/libexec/PlistBuddy \\\n  -c \"Add :AIMemorySourceRevision string ${revision}\" \\\n  \"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\n";
+			shellScript = "set -eu\nrevision=\"$(git -C \"${SRCROOT}\" rev-parse --short=7 HEAD 2>/dev/null || true)\"\nif [ -z \"${revision}\" ]; then\n  revision=\"uncommitted\"\nfi\nresource_dir=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}\"\nmkdir -p \"${resource_dir}\"\nprintf '%s\\n' \"${revision}\" > \"${resource_dir}/AIMemorySourceRevision.txt\"\n";
 		};
 		F463DB0AEFE42BA3D1A12112 /* Embed native MCP helper */ = {
 			isa = PBXShellScriptBuildPhase;
