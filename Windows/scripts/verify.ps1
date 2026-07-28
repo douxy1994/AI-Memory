@@ -7,6 +7,39 @@ try {
         --configuration Release --no-restore
     dotnet build .\src\AIMemory.Windows\AIMemory.Windows.csproj `
         --configuration Release --no-restore -p:Platform=x64
+
+    $helper = Get-ChildItem `
+        .\src\AIMemory.Windows\bin\Release `
+        -Recurse -Filter aimemory-mcp.exe |
+        Select-Object -First 1
+    if (-not $helper) {
+        throw "Packaged aimemory-mcp.exe was not found."
+    }
+    $requests = @(
+        '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}'
+        '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}'
+    )
+    $responses = $requests | & $helper.FullName
+    if ($LASTEXITCODE -ne 0) {
+        throw "aimemory-mcp.exe exited with code $LASTEXITCODE."
+    }
+    $initialize = $responses[0] | ConvertFrom-Json
+    $tools = $responses[1] | ConvertFrom-Json
+    if ($initialize.result.serverInfo.name -ne "aimemory") {
+        throw "MCP initialize response is invalid."
+    }
+    $toolNames = @($tools.result.tools | ForEach-Object name)
+    foreach ($required in @(
+        "get_project_context",
+        "search_repo_history",
+        "read_history_conversation",
+        "detect_agent_integrations"
+    )) {
+        if ($required -notin $toolNames) {
+            throw "MCP tool is missing: $required"
+        }
+    }
+
     dotnet build .\src\AIMemory.Windows\AIMemory.Windows.csproj `
         --configuration Release --no-restore -p:Platform=ARM64
 
