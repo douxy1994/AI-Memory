@@ -256,6 +256,9 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    public void OpenAboutAndCheckForUpdates() =>
+        ShowAbout(checkForUpdates: true);
+
     private void WorkbenchMenu_Click(object sender, RoutedEventArgs args) =>
         NavigateTo("workbench");
 

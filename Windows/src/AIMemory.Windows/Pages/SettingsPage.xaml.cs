@@ -19,7 +19,6 @@ public sealed partial class SettingsPage : Page
     private readonly StartupService _startup = new();
     private readonly CredentialService _credentials = new();
     private readonly AgentIntegrationService _agentIntegrations = new();
-    private UpdateRelease? _availableRelease;
     private bool _loading;
 
     public SettingsPage() => InitializeComponent();
@@ -50,11 +49,44 @@ public sealed partial class SettingsPage : Page
             var importer = new ChatMemImportService(_window.Database);
             ImportChatMemButton.IsEnabled = importer.FindSource() is not null;
             await RefreshDiagnosticsAsync();
+            if (SettingsCategories.SelectedIndex < 0)
+            {
+                SettingsCategories.SelectedIndex = 0;
+            }
+            ShowCategory(
+                (SettingsCategories.SelectedItem as ListViewItem)?.Tag as string
+                ?? "general");
         }
         finally
         {
             _loading = false;
         }
+    }
+
+    private void SettingsCategories_SelectionChanged(
+        object sender,
+        SelectionChangedEventArgs args)
+    {
+        if (SettingsCategories.SelectedItem is ListViewItem item)
+        {
+            ShowCategory(item.Tag as string ?? "general");
+        }
+    }
+
+    private void ShowCategory(string category)
+    {
+        GeneralPanel.Visibility = category == "general"
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        AgentsPanel.Visibility = category == "agents"
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        SyncPanel.Visibility = category == "sync"
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        UpdatesPanel.Visibility = category == "updates"
+            ? Visibility.Visible
+            : Visibility.Collapsed;
     }
 
     private async Task ReloadStartupAsync()
@@ -297,66 +329,16 @@ public sealed partial class SettingsPage : Page
         if (_window is null) return;
         _settings.AutoCheckUpdates = AutoUpdateToggle.IsOn;
         _settings.UpdateFeedUrl = UpdateFeedBox.Text.Trim();
-        InstallUpdateButton.IsEnabled = false;
-        _availableRelease = null;
-        SyncProgress.Visibility = Visibility.Visible;
         try
         {
             await _window.Settings.SaveAsync(_settings);
-            var current = CurrentVersion();
-            var result = await new UpdateService().CheckAsync(
-                _settings.UpdateFeedUrl,
-                current);
-            if (result.IsUpdateAvailable)
-            {
-                _availableRelease = result.Release;
-                InstallUpdateButton.IsEnabled = result.Release.AssetUri is not null;
-                UpdateStatusText.Text =
-                    $"发现新版本 {result.Release.Version}：{result.Release.Title}";
-                Show(UpdateStatusText.Text, InfoBarSeverity.Success);
-            }
-            else
-            {
-                UpdateStatusText.Text =
-                    $"当前版本 {current} 已是最新；更新源最新版本为 {result.Release.Version}。";
-                Show(UpdateStatusText.Text, InfoBarSeverity.Success);
-            }
+            UpdateStatusText.Text = "已打开“关于 AI Memory”并开始检查更新。";
+            _window.OpenAboutAndCheckForUpdates();
         }
         catch (Exception exception)
         {
-            UpdateStatusText.Text = $"检查更新失败：{exception.Message}";
+            UpdateStatusText.Text = $"保存更新设置失败：{exception.Message}";
             Show(UpdateStatusText.Text, InfoBarSeverity.Error);
-        }
-        finally
-        {
-            SyncProgress.Visibility = Visibility.Collapsed;
-        }
-    }
-
-    private async void InstallUpdate_Click(object sender, RoutedEventArgs args)
-    {
-        if (_availableRelease is null) return;
-        SyncProgress.Visibility = Visibility.Visible;
-        try
-        {
-            var path = await new UpdateService().DownloadAsync(
-                _availableRelease,
-                DataPaths.UpdateDirectory);
-            var file = await StorageFile.GetFileFromPathAsync(path);
-            if (!await Launcher.LaunchFileAsync(file))
-            {
-                throw new InvalidOperationException("Windows 无法打开安装包。");
-            }
-            Show($"安装包已下载并交给 Windows 安装器：{path}",
-                InfoBarSeverity.Success);
-        }
-        catch (Exception exception)
-        {
-            Show($"下载更新失败：{exception.Message}", InfoBarSeverity.Error);
-        }
-        finally
-        {
-            SyncProgress.Visibility = Visibility.Collapsed;
         }
     }
 
@@ -392,19 +374,35 @@ public sealed partial class SettingsPage : Page
     private async void OpenDataDirectory_Click(
         object sender,
         RoutedEventArgs args)
+        => await OpenDirectoryAsync(
+            DataPaths.SupportDirectory,
+            "数据目录");
+
+    private async void OpenBackupDirectory_Click(
+        object sender,
+        RoutedEventArgs args)
+        => await OpenDirectoryAsync(
+            DataPaths.BackupDirectory,
+            "备份目录");
+
+    private async Task OpenDirectoryAsync(
+        string path,
+        string label)
     {
         try
         {
-            var folder = await StorageFolder.GetFolderFromPathAsync(
-                DataPaths.SupportDirectory);
+            Directory.CreateDirectory(path);
+            var folder = await StorageFolder.GetFolderFromPathAsync(path);
             if (!await Launcher.LaunchFolderAsync(folder))
             {
-                throw new InvalidOperationException("Windows 无法打开数据目录。");
+                throw new InvalidOperationException(
+                    $"Windows 无法打开{label}。");
             }
         }
         catch (Exception exception)
         {
-            Show($"打开数据目录失败：{exception.Message}", InfoBarSeverity.Error);
+            Show($"打开{label}失败：{exception.Message}",
+                InfoBarSeverity.Error);
         }
     }
 

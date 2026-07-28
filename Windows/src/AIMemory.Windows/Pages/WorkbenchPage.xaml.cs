@@ -34,9 +34,23 @@ public sealed partial class WorkbenchPage : Page
             : Visibility.Collapsed;
 
         await using var connection = _window.Database.OpenConnection();
+        PendingCandidateCount.Text = (await CountAsync(
+            connection,
+            "SELECT COUNT(*) FROM memory_candidates WHERE status='pending_review';"))
+            .ToString();
+        CheckpointCount.Text = (await CountAsync(
+            connection,
+            "SELECT COUNT(*) FROM checkpoints;"))
+            .ToString();
+    }
+
+    private static async Task<int> CountAsync(
+        Microsoft.Data.Sqlite.SqliteConnection connection,
+        string query)
+    {
         var command = connection.CreateCommand();
-        command.CommandText = "SELECT COUNT(*) FROM approved_memories WHERE status='approved';";
-        MemoryCount.Text = Convert.ToInt32(await command.ExecuteScalarAsync()).ToString();
+        command.CommandText = query;
+        return Convert.ToInt32(await command.ExecuteScalarAsync());
     }
 
     private async void Refresh_Click(object sender, RoutedEventArgs args)
