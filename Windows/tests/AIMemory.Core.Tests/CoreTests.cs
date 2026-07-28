@@ -41,6 +41,32 @@ public sealed class CoreTests : IDisposable
     }
 
     [Fact]
+    public async Task ConversationListIncludesProjectPathForWorkbenchGrouping()
+    {
+        var database = new AIMemoryDatabase(Path.Combine(_root, "projects.db"));
+        await database.InitializeAsync();
+        await using (var connection = database.OpenConnection())
+        {
+            var insert = connection.CreateCommand();
+            insert.CommandText = """
+                INSERT INTO repos(
+                  repo_id,repo_root,repo_fingerprint,git_remote,
+                  default_branch,created_at,updated_at)
+                VALUES(
+                  'repo','C:\src\AI-Memory','fingerprint',NULL,NULL,$now,$now);
+                INSERT INTO conversations VALUES(
+                  'c1','repo','codex','source','title',$now,$now,NULL);
+                """;
+            insert.Parameters.AddWithValue(
+                "$now", DateTimeOffset.UtcNow.ToString("O"));
+            await insert.ExecuteNonQueryAsync();
+        }
+        var conversation = Assert.Single(
+            await new ConversationRepository(database).ListAsync());
+        Assert.Equal(@"C:\src\AI-Memory", conversation.ProjectPath);
+    }
+
+    [Fact]
     public async Task SettingsNormalizeAndPersistWithoutDroppingExtensions()
     {
         var path = Path.Combine(_root, "settings.json");

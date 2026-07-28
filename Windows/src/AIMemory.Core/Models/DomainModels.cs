@@ -8,7 +8,8 @@ public sealed record ConversationSummary(
     string Summary,
     DateTimeOffset StartedAt,
     DateTimeOffset UpdatedAt,
-    string? StoragePath);
+    string? StoragePath,
+    string ProjectPath = "");
 
 public sealed record ConversationMessage(
     string Id,

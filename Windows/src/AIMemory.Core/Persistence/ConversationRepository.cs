@@ -17,13 +17,17 @@ public sealed class ConversationRepository(AIMemoryDatabase database)
         await using var connection = database.OpenConnection();
         var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT conversation_id, repo_id, source_agent, source_conversation_id,
-                   COALESCE(summary, ''), started_at, updated_at, storage_path
-            FROM conversations
+            SELECT c.conversation_id, c.repo_id, c.source_agent,
+                   c.source_conversation_id, COALESCE(c.summary, ''),
+                   c.started_at, c.updated_at, c.storage_path,
+                   COALESCE(r.repo_root, '')
+            FROM conversations c
+            LEFT JOIN repos r ON r.repo_id=c.repo_id
             WHERE ($agent IS NULL OR source_agent = $agent)
-              AND ($search IS NULL OR summary LIKE '%' || $search || '%'
-                   OR repo_id LIKE '%' || $search || '%')
-            ORDER BY updated_at DESC
+              AND ($search IS NULL OR c.summary LIKE '%' || $search || '%'
+                   OR c.repo_id LIKE '%' || $search || '%'
+                   OR r.repo_root LIKE '%' || $search || '%')
+            ORDER BY c.updated_at DESC
             LIMIT $limit;
             """;
         command.Parameters.AddWithValue("$agent", (object?)sourceAgent ?? DBNull.Value);
@@ -42,7 +46,8 @@ public sealed class ConversationRepository(AIMemoryDatabase database)
                 reader.GetString(4),
                 ParseDate(reader.GetString(5)),
                 ParseDate(reader.GetString(6)),
-                reader.IsDBNull(7) ? null : reader.GetString(7)));
+                reader.IsDBNull(7) ? null : reader.GetString(7),
+                reader.GetString(8)));
         }
         return result;
     }
