@@ -26,6 +26,10 @@
   <Target Name="PublishNativeMcpHelper" BeforeTargets="AssignTargetPaths">
     <MSBuild
       Projects="..\AIMemory.Mcp\AIMemory.Mcp.csproj"
+      Targets="Restore"
+      Properties="Configuration=$(Configuration);RuntimeIdentifier=$(McpRuntimeIdentifier)" />
+    <MSBuild
+      Projects="..\AIMemory.Mcp\AIMemory.Mcp.csproj"
       Targets="Publish"
       Properties="Configuration=$(Configuration);RuntimeIdentifier=$(McpRuntimeIdentifier);PublishDir=$(IntermediateOutputPath)McpHelper\;SelfContained=true;PublishSingleFile=true" />
     <ItemGroup>
