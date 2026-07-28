@@ -83,8 +83,12 @@ jobs:
             "get_repo_memory_health",
             "import_all_local_history",
             "scan_repo_conversations",
+            "merge_repo_alias",
             "search_repo_history",
             "read_history_conversation",
+            "create_memory_candidate",
+            "propose_memory_merge",
+            "list_memory_candidates",
             "detect_agent_integrations"
           )) {
             if ($required -notin $toolNames) {

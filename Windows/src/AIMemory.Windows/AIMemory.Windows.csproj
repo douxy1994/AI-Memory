@@ -56,5 +56,10 @@
       Projects="..\AIMemory.Mcp\AIMemory.Mcp.csproj"
       Targets="Publish"
       Properties="Configuration=$(Configuration);RuntimeIdentifier=$(McpRuntimeIdentifier);PublishDir=$(McpPublishDir);SelfContained=true;PublishSingleFile=true" />
+    <MakeDir Directories="$(TargetDir)Helpers" />
+    <Copy
+      SourceFiles="$(McpPublishDir)aimemory-mcp.exe"
+      DestinationFolder="$(TargetDir)Helpers"
+      SkipUnchangedFiles="true" />
   </Target>
 </Project>

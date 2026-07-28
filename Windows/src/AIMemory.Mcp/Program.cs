@@ -30,6 +30,7 @@ public static class Program
         var conversations = new ConversationRepository(database);
         var history = new NativeHistoryImportService(conversations);
         var diagnostics = new DiagnosticsService(database);
+        var governance = new RepositoryGovernanceService(database);
 
         string? line;
         while ((line = await Console.In.ReadLineAsync()) is not null)
@@ -44,7 +45,8 @@ public static class Program
                     query,
                     conversations,
                     history,
-                    diagnostics);
+                    diagnostics,
+                    governance);
             }
             catch (Exception exception)
             {
@@ -62,7 +64,8 @@ public static class Program
         MemoryQueryService query,
         ConversationRepository conversations,
         NativeHistoryImportService history,
-        DiagnosticsService diagnostics)
+        DiagnosticsService diagnostics,
+        RepositoryGovernanceService governance)
     {
         var hasId = request.TryGetProperty("id", out var idValue);
         var id = hasId
@@ -109,8 +112,20 @@ public static class Program
                 query,
                 history,
                 arguments),
+            "merge_repo_alias" => await MergeAliasAsync(
+                governance,
+                arguments),
             "search_repo_history" => await SearchAsync(query, arguments),
             "read_history_conversation" => await ReadAsync(conversations, arguments),
+            "create_memory_candidate" => await CreateCandidateAsync(
+                governance,
+                arguments),
+            "propose_memory_merge" => await ProposeMergeAsync(
+                governance,
+                arguments),
+            "list_memory_candidates" => await ListCandidatesAsync(
+                governance,
+                arguments),
             "detect_agent_integrations" => new AgentCatalog().Detect(),
             _ => throw new InvalidOperationException($"Unknown tool: {name}"),
         };
@@ -208,6 +223,51 @@ public static class Program
         };
     }
 
+    private static async Task<object> MergeAliasAsync(
+        RepositoryGovernanceService governance,
+        JsonElement arguments) =>
+        await governance.MergeAliasAsync(
+            Required(arguments, "repo_root"),
+            Required(arguments, "alias_root"));
+
+    private static async Task<object> CreateCandidateAsync(
+        RepositoryGovernanceService governance,
+        JsonElement arguments)
+    {
+        var id = await governance.CreateMemoryCandidateAsync(
+            Required(arguments, "repo_root"),
+            Required(arguments, "kind"),
+            Required(arguments, "summary"),
+            Required(arguments, "value"),
+            Optional(arguments, "why_it_matters"),
+            OptionalDouble(arguments, "confidence", 0.75),
+            Optional(arguments, "proposed_by"));
+        return new { candidate_id = id, status = "pending_review" };
+    }
+
+    private static async Task<object> ProposeMergeAsync(
+        RepositoryGovernanceService governance,
+        JsonElement arguments) =>
+        await governance.ProposeMemoryMergeAsync(
+            Required(arguments, "repo_root"),
+            Required(arguments, "candidate_id"),
+            Required(arguments, "target_memory_id"),
+            Required(arguments, "proposed_title"),
+            Required(arguments, "proposed_value"),
+            Optional(arguments, "proposed_usage_hint"),
+            Optional(arguments, "risk_note"),
+            Optional(arguments, "proposed_by"));
+
+    private static async Task<object> ListCandidatesAsync(
+        RepositoryGovernanceService governance,
+        JsonElement arguments) =>
+        new
+        {
+            candidates = await governance.ListCandidatesAsync(
+                Required(arguments, "repo_root"),
+                Optional(arguments, "status")),
+        };
+
     private static async Task<object> ReadAsync(
         ConversationRepository repository,
         JsonElement arguments)
@@ -234,6 +294,15 @@ public static class Program
     private static int OptionalInt(JsonElement value, string key, int fallback) =>
         value.TryGetProperty(key, out var property)
         && property.TryGetInt32(out var result)
+            ? result
+            : fallback;
+
+    private static double OptionalDouble(
+        JsonElement value,
+        string key,
+        double fallback) =>
+        value.TryGetProperty(key, out var property)
+        && property.TryGetDouble(out var result)
             ? result
             : fallback;
 
@@ -275,6 +344,15 @@ public static class Program
             new { repo_root = StringSchema() },
             ["repo_root"]),
         Tool(
+            "merge_repo_alias",
+            "Link an older project path alias to this repository.",
+            new
+            {
+                repo_root = StringSchema(),
+                alias_root = StringSchema(),
+            },
+            ["repo_root", "alias_root"]),
+        Tool(
             "search_repo_history",
             "Search indexed local repository history.",
             new { repo_root = StringSchema(), query = StringSchema(), limit = IntSchema() },
@@ -284,6 +362,50 @@ public static class Program
             "Read messages from a local indexed conversation.",
             new { repo_root = StringSchema(), conversation_id = StringSchema() },
             ["repo_root", "conversation_id"]),
+        Tool(
+            "create_memory_candidate",
+            "Create a pending startup-rule candidate.",
+            new
+            {
+                repo_root = StringSchema(),
+                kind = StringSchema(),
+                summary = StringSchema(),
+                value = StringSchema(),
+                why_it_matters = StringSchema(),
+                confidence = NumberSchema(),
+                proposed_by = StringSchema(),
+            },
+            ["repo_root", "kind", "summary", "value"]),
+        Tool(
+            "propose_memory_merge",
+            "Create or update a candidate merge proposal.",
+            new
+            {
+                repo_root = StringSchema(),
+                candidate_id = StringSchema(),
+                target_memory_id = StringSchema(),
+                proposed_title = StringSchema(),
+                proposed_value = StringSchema(),
+                proposed_usage_hint = StringSchema(),
+                risk_note = StringSchema(),
+                proposed_by = StringSchema(),
+            },
+            [
+                "repo_root",
+                "candidate_id",
+                "target_memory_id",
+                "proposed_title",
+                "proposed_value",
+            ]),
+        Tool(
+            "list_memory_candidates",
+            "List repository memory candidates.",
+            new
+            {
+                repo_root = StringSchema(),
+                status = StringSchema(),
+            },
+            ["repo_root"]),
         Tool(
             "detect_agent_integrations",
             "Detect installed AI agents and CLIs without enabling missing products.",
@@ -306,4 +428,6 @@ public static class Program
     private static object StringSchema() => new { type = "string" };
     private static object IntSchema() =>
         new { type = "integer", minimum = 1, maximum = 50 };
+    private static object NumberSchema() =>
+        new { type = "number", minimum = 0, maximum = 1 };
 }

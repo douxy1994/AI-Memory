@@ -157,6 +157,63 @@ public sealed class CoreTests : IDisposable
     }
 
     [Fact]
+    public async Task RepositoryGovernancePersistsAliasesCandidatesAndMergeProposals()
+    {
+        var database = new AIMemoryDatabase(Path.Combine(_root, "governance.db"));
+        await database.InitializeAsync();
+        var service = new RepositoryGovernanceService(database);
+        var repoId = await service.ResolveRepoIdAsync(@"C:\repo", create: true);
+        Assert.NotNull(repoId);
+        var alias = await service.MergeAliasAsync(@"C:\repo", @"D:\old-repo");
+        Assert.Equal(repoId, alias.RepoId);
+        Assert.Equal(
+            repoId,
+            await service.ResolveRepoIdAsync(@"D:\old-repo"));
+        var candidateId = await service.CreateMemoryCandidateAsync(
+            @"D:\old-repo",
+            "convention",
+            "Use native UI",
+            "Use WinUI 3",
+            "Matches product requirements",
+            1.5,
+            "test");
+        var candidate = Assert.Single(
+            await service.ListCandidatesAsync(@"C:\repo", "pending_review"));
+        Assert.Equal(candidateId, candidate.Id);
+        Assert.Equal(1, candidate.Confidence);
+
+        await using (var connection = database.OpenConnection())
+        {
+            var insert = connection.CreateCommand();
+            insert.CommandText = """
+                INSERT INTO approved_memories(
+                  memory_id,repo_id,kind,title,value,usage_hint,status,
+                  last_verified_at,created_from_candidate_id,created_at,
+                  updated_at,freshness_status,freshness_score,verified_at,
+                  verified_by)
+                VALUES(
+                  'memory',$repo,'convention','Native','WinUI','',
+                  'active',$now,NULL,$now,$now,'fresh',1.0,$now,'test');
+                """;
+            insert.Parameters.AddWithValue("$repo", repoId);
+            insert.Parameters.AddWithValue(
+                "$now", DateTimeOffset.UtcNow.ToString("O"));
+            await insert.ExecuteNonQueryAsync();
+        }
+        var proposal = await service.ProposeMemoryMergeAsync(
+            @"C:\repo",
+            candidateId,
+            "memory",
+            "Native UI",
+            "Use WinUI 3",
+            "Apply to desktop UI",
+            "",
+            "test");
+        Assert.Equal("pending_review", proposal.Status);
+        Assert.Equal(repoId, proposal.RepoId);
+    }
+
+    [Fact]
     public void AgentCatalogKeepsDetectedEntriesBeforeMissingAndNeverEnablesMissing()
     {
         var bin = Path.Combine(_root, "bin");
