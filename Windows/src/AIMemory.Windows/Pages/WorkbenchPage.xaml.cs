@@ -64,10 +64,11 @@ public sealed partial class WorkbenchPage : Page
             }
             catch (Exception exception)
             {
-                StatusBar.Title = "同步失败";
-                StatusBar.Message = exception.Message;
-                StatusBar.Severity = InfoBarSeverity.Error;
-                StatusBar.IsOpen = true;
+                AIMemory.Windows.Services.FeedbackPresenter.Show(
+                    StatusBar,
+                    exception.Message,
+                    InfoBarSeverity.Error,
+                    "同步失败");
             }
             return;
         }
@@ -89,18 +90,18 @@ public sealed partial class WorkbenchPage : Page
         }
         catch (Exception exception)
         {
-            StatusBar.Title = "同步失败";
-            StatusBar.Message = exception.Message;
-            StatusBar.Severity = InfoBarSeverity.Error;
-            StatusBar.IsOpen = true;
+            AIMemory.Windows.Services.FeedbackPresenter.Show(
+                StatusBar,
+                exception.Message,
+                InfoBarSeverity.Error,
+                "同步失败");
         }
     }
 
     private void ShowStatus(string title, string message)
-    {
-        StatusBar.Title = title;
-        StatusBar.Message = message;
-        StatusBar.Severity = InfoBarSeverity.Success;
-        StatusBar.IsOpen = true;
-    }
+        => AIMemory.Windows.Services.FeedbackPresenter.Show(
+            StatusBar,
+            message,
+            InfoBarSeverity.Success,
+            title);
 }

@@ -436,9 +436,8 @@ public sealed partial class SettingsPage : Page
     }
 
     private void Show(string message, InfoBarSeverity severity)
-    {
-        Feedback.Message = message;
-        Feedback.Severity = severity;
-        Feedback.IsOpen = true;
-    }
+        => FeedbackPresenter.Show(
+            Feedback,
+            message,
+            severity);
 }

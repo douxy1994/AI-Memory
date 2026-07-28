@@ -15,9 +15,19 @@ public sealed record UpdateCheckResult(
     bool IsUpdateAvailable,
     UpdateRelease Release);
 
-public sealed class UpdateService(HttpClient? client = null)
+public sealed class UpdateService
 {
-    private readonly HttpClient _client = client ?? new HttpClient();
+    private readonly HttpClient _client;
+
+    public UpdateService(HttpClient? client = null)
+    {
+        _client = client ?? new HttpClient();
+        if (!_client.DefaultRequestHeaders.UserAgent.Any())
+        {
+            _client.DefaultRequestHeaders.UserAgent.ParseAdd(
+                "AI-Memory-Windows/0.1");
+        }
+    }
 
     public async Task<UpdateCheckResult> CheckAsync(
         string? feedUrl,

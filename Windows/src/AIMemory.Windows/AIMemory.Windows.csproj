@@ -21,8 +21,28 @@
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.4654" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Assets\*.png" />
+    <Content Include="Assets\*.*" />
   </ItemGroup>
+  <Target Name="RecordSourceRevision" BeforeTargets="AssignTargetPaths">
+    <Exec
+      Command="git -C &quot;$(MSBuildProjectDirectory)\..\..\..&quot; rev-parse --short HEAD"
+      ConsoleToMSBuild="true"
+      IgnoreExitCode="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="AIMemorySourceRevision" />
+    </Exec>
+    <PropertyGroup>
+      <AIMemorySourceRevision Condition="'$(AIMemorySourceRevision)' == ''">uncommitted</AIMemorySourceRevision>
+    </PropertyGroup>
+    <WriteLinesToFile
+      File="$(IntermediateOutputPath)AIMemorySourceRevision.txt"
+      Lines="$(AIMemorySourceRevision)"
+      Overwrite="true" />
+    <ItemGroup>
+      <Content Include="$(IntermediateOutputPath)AIMemorySourceRevision.txt"
+               Link="AIMemorySourceRevision.txt"
+               CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+  </Target>
   <Target Name="PublishNativeMcpHelper" BeforeTargets="AssignTargetPaths">
     <PropertyGroup>
       <McpPublishDir>$(MSBuildProjectDirectory)\$(IntermediateOutputPath)McpHelper\</McpPublishDir>

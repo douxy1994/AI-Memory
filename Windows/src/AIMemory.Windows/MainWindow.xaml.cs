@@ -5,7 +5,6 @@ using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
-using Windows.ApplicationModel;
 using Windows.System;
 using WinRT.Interop;
 
@@ -16,6 +15,7 @@ public sealed partial class MainWindow : Window
     public AIMemoryDatabase Database { get; }
     public ConversationRepository Conversations { get; }
     public SettingsStore Settings { get; } = new();
+    private AboutWindow? _aboutWindow;
 
     public MainWindow(AIMemoryDatabase database)
     {
@@ -218,11 +218,10 @@ public sealed partial class MainWindow : Window
     }
 
     public void ShowFeedback(string message, InfoBarSeverity severity)
-    {
-        GlobalFeedback.Message = message;
-        GlobalFeedback.Severity = severity;
-        GlobalFeedback.IsOpen = true;
-    }
+        => Services.FeedbackPresenter.Show(
+            GlobalFeedback,
+            message,
+            severity);
 
     private async Task ShowHelpAsync()
     {
@@ -243,28 +242,18 @@ public sealed partial class MainWindow : Window
         await dialog.ShowAsync();
     }
 
-    private async Task ShowAboutAsync()
+    private void ShowAbout(bool checkForUpdates)
     {
-        string version;
-        try
+        if (_aboutWindow is null)
         {
-            var packageVersion = Package.Current.Id.Version;
-            version = $"{packageVersion.Major}.{packageVersion.Minor}.{packageVersion.Build}";
+            _aboutWindow = new AboutWindow(Settings);
+            _aboutWindow.Closed += (_, _) => _aboutWindow = null;
         }
-        catch
+        _aboutWindow.Activate();
+        if (checkForUpdates)
         {
-            version = typeof(MainWindow).Assembly.GetName().Version?
-                .ToString(3) ?? "0.1.0";
+            _ = _aboutWindow.CheckForUpdatesAsync(automaticInstall: true);
         }
-        var dialog = new ContentDialog
-        {
-            XamlRoot = RootLayout.XamlRoot,
-            Title = "关于 AI Memory",
-            Content =
-                $"AI Memory {version}\n原生 Windows 11 · WinUI 3\n支持 {AgentCatalog.All.Count} 种 Agent / CLI。",
-            CloseButtonText = "完成",
-        };
-        await dialog.ShowAsync();
     }
 
     private void WorkbenchMenu_Click(object sender, RoutedEventArgs args) =>
@@ -293,8 +282,11 @@ public sealed partial class MainWindow : Window
     private async void HelpMenu_Click(object sender, RoutedEventArgs args) =>
         await ShowHelpAsync();
 
-    private async void AboutMenu_Click(object sender, RoutedEventArgs args) =>
-        await ShowAboutAsync();
+    private void AboutMenu_Click(object sender, RoutedEventArgs args) =>
+        ShowAbout(checkForUpdates: false);
+
+    private void CheckUpdatesMenu_Click(object sender, RoutedEventArgs args) =>
+        ShowAbout(checkForUpdates: true);
 }
 
 file static class NativeMethods

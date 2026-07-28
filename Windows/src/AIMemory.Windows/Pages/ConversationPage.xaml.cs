@@ -79,9 +79,8 @@ public sealed partial class ConversationPage : Page
     }
 
     private void Show(string message, InfoBarSeverity severity)
-    {
-        Feedback.Message = message;
-        Feedback.Severity = severity;
-        Feedback.IsOpen = true;
-    }
+        => AIMemory.Windows.Services.FeedbackPresenter.Show(
+            Feedback,
+            message,
+            severity);
 }

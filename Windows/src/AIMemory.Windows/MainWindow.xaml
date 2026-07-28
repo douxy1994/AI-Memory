@@ -53,6 +53,8 @@
                                 Click="HelpMenu_Click" />
                 <MenuFlyoutItem Text="关于 AI Memory"
                                 Click="AboutMenu_Click" />
+                <MenuFlyoutItem Text="检查更新"
+                                Click="CheckUpdatesMenu_Click" />
             </MenuBarItem>
         </MenuBar>
 
