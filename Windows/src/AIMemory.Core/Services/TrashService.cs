@@ -6,10 +6,13 @@ namespace AIMemory.Core.Services;
 
 public sealed class TrashService(
     AIMemoryDatabase database,
-    string? trashDirectory = null)
+    string? trashDirectory = null,
+    Func<DateTimeOffset>? now = null)
 {
     private readonly string _trashDirectory =
         trashDirectory ?? DataPaths.TrashDirectory;
+    private readonly Func<DateTimeOffset> _now =
+        now ?? (() => DateTimeOffset.UtcNow);
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
@@ -24,7 +27,7 @@ public sealed class TrashService(
     {
         var messages = await new ConversationRepository(database)
             .ReadMessagesAsync(conversation.Id, cancellationToken);
-        var now = DateTimeOffset.UtcNow;
+        var now = _now();
         var record = new TrashRecord(
             $"{conversation.SourceAgent}-{conversation.Id}-{now.ToUnixTimeMilliseconds()}",
             conversation.SourceAgent,
@@ -70,7 +73,13 @@ public sealed class TrashService(
                     JsonOptions);
                 if (envelope is not null)
                 {
-                    records.Add(envelope.Record with { RecordPath = path });
+                    var record = envelope.Record with { RecordPath = path };
+                    if (record.ExpiresAt <= _now())
+                    {
+                        File.Delete(path);
+                        continue;
+                    }
+                    records.Add(record);
                 }
             }
             catch (JsonException)
@@ -138,6 +147,17 @@ public sealed class TrashService(
     }
 
     public void Delete(TrashRecord record) => File.Delete(record.RecordPath);
+
+    public async Task<int> EmptyAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var records = await ListAsync(cancellationToken);
+        foreach (var record in records)
+        {
+            File.Delete(record.RecordPath);
+        }
+        return records.Count;
+    }
 
     private static string SafeName(string value) =>
         string.Concat(value.Select(character =>

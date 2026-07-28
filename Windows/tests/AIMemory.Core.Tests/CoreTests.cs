@@ -219,6 +219,48 @@ public sealed class CoreTests : IDisposable
     }
 
     [Fact]
+    public async Task TrashPurgesExpiredRecordsAndCanBeEmptied()
+    {
+        var database = new AIMemoryDatabase(Path.Combine(_root, "trash-expiry.db"));
+        await database.InitializeAsync();
+        var createdAt = DateTimeOffset.Parse("2026-07-01T00:00:00Z");
+        await using (var connection = database.OpenConnection())
+        {
+            var insert = connection.CreateCommand();
+            insert.CommandText = """
+                INSERT INTO conversations VALUES(
+                  'expired','repo','codex','source','old',$now,$now,NULL);
+                """;
+            insert.Parameters.AddWithValue("$now", createdAt.ToString("O"));
+            await insert.ExecuteNonQueryAsync();
+        }
+        var repository = new ConversationRepository(database);
+        var trashDirectory = Path.Combine(_root, "trash-expiry");
+        var clock = createdAt;
+        var trash = new TrashService(database, trashDirectory, () => clock);
+        await trash.TrashAsync(
+            Assert.Single(await repository.ListAsync()), 1);
+        clock = createdAt.AddDays(2);
+        Assert.Empty(await trash.ListAsync());
+        Assert.Empty(Directory.EnumerateFiles(trashDirectory, "*.json"));
+
+        await using (var connection = database.OpenConnection())
+        {
+            var insert = connection.CreateCommand();
+            insert.CommandText = """
+                INSERT INTO conversations VALUES(
+                  'keep','repo','codex','source','keep',$now,$now,NULL);
+                """;
+            insert.Parameters.AddWithValue("$now", clock.ToString("O"));
+            await insert.ExecuteNonQueryAsync();
+        }
+        await trash.TrashAsync(
+            Assert.Single(await repository.ListAsync()), 14);
+        Assert.Equal(1, await trash.EmptyAsync());
+        Assert.Empty(await trash.ListAsync());
+    }
+
+    [Fact]
     public async Task WebDavSyncUploadsOnceThenSkipsUnchangedConversation()
     {
         var database = new AIMemoryDatabase(Path.Combine(_root, "webdav.db"));
