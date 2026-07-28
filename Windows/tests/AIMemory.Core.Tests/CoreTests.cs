@@ -373,6 +373,11 @@ public sealed class CoreTests : IDisposable
 
     public void Dispose()
     {
+        // Microsoft.Data.Sqlite pools native handles by default. Linux allows
+        // deleting an open SQLite file, while Windows correctly keeps it
+        // locked until the pool is cleared, so release idle test connections
+        // before removing the isolated fixture directory.
+        SqliteConnection.ClearAllPools();
         if (Directory.Exists(_root)) Directory.Delete(_root, true);
     }
 

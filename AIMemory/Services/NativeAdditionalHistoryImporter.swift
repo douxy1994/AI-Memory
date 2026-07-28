@@ -549,8 +549,12 @@ actor NativeAdditionalHistoryImporter {
                 case "tool":
                     let state = object["state"] as? [String: Any] ?? [:]
                     let status = string(state["status"]) == "error" ? "error" : "success"
-                    let output = string(state["output"]) ?? string(state["error"])
-                        ?? string((state["metadata"] as? [String: Any])?["output"])
+                    let stateOutput = string(state["output"])
+                    let stateError = string(state["error"])
+                    let metadataOutput = string(
+                        (state["metadata"] as? [String: Any])?["output"]
+                    )
+                    let output = stateOutput ?? stateError ?? metadataOutput
                     tools.append(ToolCall(
                         name: string(object["tool"]) ?? "tool",
                         input: jsonValue(state["input"]),
@@ -558,9 +562,12 @@ actor NativeAdditionalHistoryImporter {
                         status: status
                     ))
                 case "patch":
+                    let objectStart = number(
+                        (object["time"] as? [String: Any])?["start"]
+                    )
+                    let rowCreated = number(partRow["time_created"])
                     let timestamp = isoFromMilliseconds(
-                        number((object["time"] as? [String: Any])?["start"])
-                            ?? number(partRow["time_created"])
+                        objectStart ?? rowCreated
                     ) ?? ""
                     for path in object["files"] as? [String] ?? [] {
                         changes.append(FileChange(
@@ -571,7 +578,9 @@ actor NativeAdditionalHistoryImporter {
                         ))
                     }
                 case "file":
-                    if let label = string(object["filename"]) ?? string(object["url"]) {
+                    let filename = string(object["filename"])
+                    let fileURL = string(object["url"])
+                    if let label = filename ?? fileURL {
                         content.append("[file: \(label)]")
                     }
                 default:
@@ -683,14 +692,19 @@ actor NativeAdditionalHistoryImporter {
                 let raw = tool["raw"] as? [String: Any] ?? [:]
                 let claude = (raw["_meta"] as? [String: Any])?["claudeCode"]
                     as? [String: Any]
-                let name = string(tool["title"]) ?? string(tool["kind"])
-                    ?? string(claude?["toolName"]) ?? "tool \(toolIndex + 1)"
+                let toolTitle = string(tool["title"])
+                let toolKind = string(tool["kind"])
+                let claudeToolName = string(claude?["toolName"])
+                let name = toolTitle ?? toolKind ?? claudeToolName
+                    ?? "tool \(toolIndex + 1)"
                 let status = ["completed", "success", "succeeded"]
                     .contains(string(tool["status"]) ?? "") ? "success" : "error"
+                let toolOutput = string(tool["output"])
+                let rawOutput = string(raw["rawOutput"])
                 tools.append(ToolCall(
                     name: name,
                     input: jsonValue(tool["input"] ?? tool["raw"]),
-                    output: string(tool["output"]) ?? string(raw["rawOutput"]),
+                    output: toolOutput ?? rawOutput,
                     status: status
                 ))
             }
@@ -704,7 +718,9 @@ actor NativeAdditionalHistoryImporter {
                 "zcode_task_id": .string(taskID),
                 "zcode_storage_path": .string(url.path)
             ]
-            if let model = string(object["model"]) ?? string(meta["model"]) {
+            let objectModel = string(object["model"])
+            let metaModel = string(meta["model"])
+            if let model = objectModel ?? metaModel {
                 metadata["model"] = .string(model)
             }
             messages.append(ConversationMessage(
@@ -732,10 +748,12 @@ actor NativeAdditionalHistoryImporter {
         }
         let title = useful(string(meta["title"]))
             ?? messages.first(where: { $0.role == "user" })?.content
+        let workspacePath = string(meta["workspacePath"])
+        let currentDirectory = string(meta["cwd"])
         return ConversationDetail(
             id: id,
             sourceAgent: "zcode",
-            projectDir: string(meta["workspacePath"]) ?? string(meta["cwd"]) ?? "",
+            projectDir: workspacePath ?? currentDirectory ?? "",
             createdAt: created,
             updatedAt: updated,
             summary: title.map { String($0.prefix(100)) },
