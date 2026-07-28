@@ -279,8 +279,16 @@ actor NativeAdditionalHistoryImporter {
                     guard let callID = string(event["toolCallId"]), !callID.isEmpty else { continue }
                     let result = event["result"] as? [String: Any] ?? [:]
                     let outputObject = result["output"]
-                    let output = string(outputObject) ?? serialized(outputObject)
-                    let isError = bool(result["isError"]) ?? bool(result["is_error"]) ?? false
+                    let stringOutput = string(outputObject)
+                    let output: String
+                    if let stringOutput {
+                        output = stringOutput
+                    } else {
+                        output = serialized(outputObject)
+                    }
+                    let camelCaseError = bool(result["isError"])
+                    let snakeCaseError = bool(result["is_error"])
+                    let isError = camelCaseError ?? snakeCaseError ?? false
                     cachedResults[callID] = (output, isError)
                     if let location = pending[callID],
                        messages.indices.contains(location.message),
@@ -388,12 +396,14 @@ actor NativeAdditionalHistoryImporter {
             for rawTool in root["tool_calls"] as? [[String: Any]] ?? [] {
                 let name = string(rawTool["name"]) ?? "tool"
                 let input = jsonValue(rawTool["args"])
+                let rootType = string(root["type"])
+                let rootStatus = string(root["status"])
                 tools.append(ToolCall(
                     name: name,
                     input: input,
                     output: nil,
-                    status: (string(root["type"]) == "ERROR_MESSAGE"
-                             || string(root["status"]) == "ERROR") ? "error" : "success"
+                    status: (rootType == "ERROR_MESSAGE"
+                             || rootStatus == "ERROR") ? "error" : "success"
                 ))
                 for pair in namedStrings(rawTool["args"]) {
                     let path = normalizePath(pair.value)
@@ -800,7 +810,7 @@ actor NativeAdditionalHistoryImporter {
         )
     }
 
-    private func jsonValue(_ object: Any?) -> JSONValue {
+    nonisolated private func jsonValue(_ object: Any?) -> JSONValue {
         switch object {
         case nil, is NSNull: return .null
         case let value as Bool: return .bool(value)
@@ -814,7 +824,9 @@ actor NativeAdditionalHistoryImporter {
         }
     }
 
-    private func namedStrings(_ object: Any?) -> [(key: String, value: String)] {
+    nonisolated private func namedStrings(
+        _ object: Any?
+    ) -> [(key: String, value: String)] {
         var result: [(String, String)] = []
         func visit(_ value: Any?, key: String?) {
             if let text = value as? String, let key {
@@ -829,7 +841,7 @@ actor NativeAdditionalHistoryImporter {
         return result
     }
 
-    private func cleanEncoded(_ value: String) -> String {
+    nonisolated private func cleanEncoded(_ value: String) -> String {
         var current = value.trimmingCharacters(in: .whitespacesAndNewlines)
         for _ in 0..<2 {
             guard current.first == "\"", current.last == "\"",
@@ -841,34 +853,34 @@ actor NativeAdditionalHistoryImporter {
         return current
     }
 
-    private func string(_ value: Any?) -> String? {
+    nonisolated private func string(_ value: Any?) -> String? {
         if let string = value as? String { return string }
         return nil
     }
 
-    private func number(_ value: Any?) -> Double? {
+    nonisolated private func number(_ value: Any?) -> Double? {
         if let number = value as? NSNumber { return number.doubleValue }
         if let string = value as? String { return Double(string) }
         return nil
     }
 
-    private func integer(_ value: Any?) -> Int? {
+    nonisolated private func integer(_ value: Any?) -> Int? {
         number(value).map(Int.init)
     }
 
-    private func bool(_ value: Any?) -> Bool? {
+    nonisolated private func bool(_ value: Any?) -> Bool? {
         if let bool = value as? Bool { return bool }
         if let number = value as? NSNumber { return number.boolValue }
         return nil
     }
 
-    private func useful(_ value: String?) -> String? {
+    nonisolated private func useful(_ value: String?) -> String? {
         guard let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines),
               !trimmed.isEmpty else { return nil }
         return trimmed
     }
 
-    private func serialized(_ value: Any?) -> String {
+    nonisolated private func serialized(_ value: Any?) -> String {
         guard let value, JSONSerialization.isValidJSONObject(value),
               let data = try? JSONSerialization.data(withJSONObject: value),
               let string = String(data: data, encoding: .utf8) else {
@@ -877,33 +889,33 @@ actor NativeAdditionalHistoryImporter {
         return string
     }
 
-    private func isoFromMilliseconds(_ value: Double?) -> String? {
+    nonisolated private func isoFromMilliseconds(_ value: Double?) -> String? {
         guard let value, value > 0 else { return nil }
         let seconds = value > 10_000_000_000 ? value / 1_000 : value
         return ISO8601DateFormatter().string(from: Date(timeIntervalSince1970: seconds))
     }
 
-    private func normalizePath(_ value: String) -> String {
+    nonisolated private func normalizePath(_ value: String) -> String {
         let cleaned = cleanEncoded(value)
         return cleaned.hasPrefix("file://") ? String(cleaned.dropFirst(7)) : cleaned
     }
 
-    private func isAbsolute(_ value: String) -> Bool {
+    nonisolated private func isAbsolute(_ value: String) -> Bool {
         value.hasPrefix("/") || value.hasPrefix("~/")
             || (value.count > 2 && value[value.index(after: value.startIndex)] == ":")
     }
 
-    private func isProjectKey(_ value: String) -> Bool {
+    nonisolated private func isProjectKey(_ value: String) -> Bool {
         ["cwd", "currentworkingdirectory", "workingdirectory", "workdir",
          "projectpath", "projectdir"].contains(value.lowercased())
     }
 
-    private func isFileKey(_ value: String) -> Bool {
+    nonisolated private func isFileKey(_ value: String) -> Bool {
         ["absolutepath", "absolute_path", "filepath", "file_path", "path"]
             .contains(value.lowercased())
     }
 
-    private func isControlText(_ value: String) -> Bool {
+    nonisolated private func isControlText(_ value: String) -> Bool {
         let text = value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         return text.isEmpty || text == "no response requested."
             || text.hasPrefix("<local-command-")
@@ -911,7 +923,7 @@ actor NativeAdditionalHistoryImporter {
             || text.hasPrefix("<system-reminder")
     }
 
-    private func sqlLiteral(_ value: String) -> String {
+    nonisolated private func sqlLiteral(_ value: String) -> String {
         value.replacingOccurrences(of: "'", with: "''")
     }
 }
