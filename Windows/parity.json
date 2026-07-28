@@ -14,7 +14,7 @@
     { "id": "approved-memory-reader", "status": "implemented", "evidence": "MemoryPage" },
     { "id": "favorites", "status": "implemented", "evidence": "create/remove, pin, note/tag editing, continuation-card copy and source conversation navigation with persistence tests" },
     { "id": "trash-restore-delete", "status": "implemented", "evidence": "recoverable delete, restore, permanent delete, empty, retention setting and expiry purge with round-trip tests" },
-    { "id": "agent-catalog", "status": "implemented", "evidence": "41 products, detected-first and missing-disabled" },
+    { "id": "agent-catalog", "status": "implemented", "evidence": "45 products, detected-first and missing-disabled" },
     { "id": "credential-storage", "status": "implemented", "evidence": "Windows PasswordVault" },
     { "id": "webdav-verification", "status": "implemented", "evidence": "PROPFIND verification with visible result" },
     { "id": "backup", "status": "implemented", "evidence": "SQLite online backup and settings copy" },
@@ -28,7 +28,7 @@
     { "id": "menu-and-shortcut-parity", "status": "implemented", "evidence": "MainWindow MenuBar and keyboard accelerator map" },
     { "id": "settings-navigation", "status": "implemented", "evidence": "Windows 11 category navigation for General, Agent integrations, Data sync and backup, Updates and diagnostics" },
     { "id": "update-and-diagnostics", "status": "implemented", "evidence": "About-centered update flow, UpdateService, DiagnosticsService and five-second success feedback" },
-    { "id": "x64-arm64-builds", "status": "pending", "evidence": "x64 is CI-proven; ARM64 step was previously skipped behind the MCP smoke failure and must run independently" },
-    { "id": "mcp-runtime-smoke", "status": "blocked", "evidence": "three distinct packaging-copy attempts still leave aimemory-mcp.exe outside the WinUI output directory; helper publish and compile succeed but installed output is not proven" }
+    { "id": "x64-arm64-builds", "status": "implemented", "evidence": "GitHub Actions run 30336546942 built WinUI 3 x64 and ARM64 successfully" },
+    { "id": "mcp-runtime-smoke", "status": "implemented", "evidence": "GitHub Actions run 30336546942 successfully exercised the packaged aimemory-mcp helper" }
   ]
 }

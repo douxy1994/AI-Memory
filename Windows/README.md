@@ -2,7 +2,7 @@
 
 AI Memory 的 Windows 11 原生版本，使用 C#、WinUI 3 与 Windows App SDK 构建。它与 macOS 版本共享产品行为和数据语义，但不使用跨平台 UI，也不会覆盖 macOS 应用或 ChatMem。
 
-> 当前状态：**Preview**。核心层和主要页面已进入仓库，仍需在真实 Windows 11 x64/ARM64 主机完成完整 MSIX 构建、安装与交互验收。
+> 当前状态：**Preview**。核心层、主要页面及 x64/ARM64 构建均已通过 CI，仍需在真实 Windows 11 桌面会话完成安装与交互验收。
 
 ## 原生技术栈
 
@@ -28,7 +28,7 @@ AI Memory 的 Windows 11 原生版本，使用 C#、WinUI 3 与 Windows App SDK 
 - 备份、恢复、更新检查与诊断；
 - Windows Credential Locker 保存 WebDAV 密码；
 - 登录启动开关；
-- 41 种主流 Agent/CLI 安装检测，已安装项优先，未安装项默认关闭；
+- 45 种主流 Agent/CLI 安装检测，已安装项优先，未安装项默认关闭；
 - Claude、Codex、Gemini、Kimi、Hermes、Antigravity、OpenCode 与 ZCode
   本地历史只读导入；
 - 记忆复核、检查点与交接核心流程；
@@ -38,10 +38,9 @@ AI Memory 的 Windows 11 原生版本，使用 C#、WinUI 3 与 Windows App SDK 
 
 八类本地历史均通过共享核心层测试；Windows 桌面端的完整安装与交互状态见
 [功能矩阵](../docs/FEATURE_MATRIX.md)。
-CI 已持续验证 x64 WinUI 3 目标，并将继续独立验证 ARM64。MCP helper
-本身可以发布和编译，但三轮不同的输出复制方案后仍未进入 WinUI
-输出目录；CI 保留该诊断且不再阻塞其他平台构建。此项在
-[功能矩阵](../docs/FEATURE_MATRIX.md) 中保持 Preview，不会伪装成已完成。
+CI 已验证 x64 与 ARM64 WinUI 3 目标，并对 WinUI 输出目录中的 MCP helper
+执行了真实协议冒烟测试。桌面端仍保持 Preview，直到完成真实 Windows 11
+安装、启动、窗口和交互验收。
 
 ## 构建
 

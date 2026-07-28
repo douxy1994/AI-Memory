@@ -69,6 +69,10 @@ public sealed class AgentCatalog
         new("gptme", "gptme", ["gptme"], [".config\\gptme", ".local\\share\\gptme"], false),
         new("mini-swe-agent", "mini-SWE-agent", ["mini", "mini-extra"], [".config\\mini-swe-agent", "AppData\\Local\\mini-swe-agent"], false),
         new("google-agents-cli", "Google Agents CLI", ["agents-cli"], [".config\\google-agents-cli", "AppData\\Local\\google-agents-cli"], false),
+        new("rovo-dev", "Atlassian Rovo Dev", ["acli.exe", "acli.cmd"], [".rovodev"], false),
+        new("gitlab-duo", "GitLab Duo CLI", ["duo.exe", "duo.cmd"], [".gitlab\\storage.json"], false),
+        new("grok-build", "xAI Grok Build", ["grok.exe", "grok.cmd"], [".grok"], false),
+        new("jules", "Google Jules Tools", ["jules.exe", "jules.cmd"], [], false),
     ];
 
     public IReadOnlyList<AgentIntegrationStatus> Detect()

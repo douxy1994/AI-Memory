@@ -548,6 +548,14 @@ actor NativeAgentIntegrationStore {
             return home.appendingPathComponent(".config/mini-swe-agent/config.yml")
         case .googleAgentsCLI:
             return home.appendingPathComponent(".config/google-agents-cli/config.yml")
+        case .rovoDev:
+            return home.appendingPathComponent(".rovodev/mcp_config.json")
+        case .gitlabDuo:
+            return home.appendingPathComponent(".gitlab/storage.json")
+        case .grokBuild:
+            return home.appendingPathComponent(".grok/config.toml")
+        case .jules:
+            return home.appendingPathComponent(".aimemory/integrations/jules")
         }
     }
 
@@ -591,7 +599,7 @@ actor NativeAgentIntegrationStore {
              .trae, .junie, .crush, .augment, .cody, .tabby,
              .openhands, .openInterpreter, .openclaw, .codebuddy, .devin,
              .vibe, .pi, .kilo, .plandex, .gptme, .miniSweAgent,
-             .googleAgentsCLI:
+             .googleAgentsCLI, .rovoDev, .gitlabDuo, .grokBuild, .jules:
             return home.appendingPathComponent(".aimemory/integrations/\(agent.rawValue)")
         }
     }
@@ -852,6 +860,10 @@ private enum IntegrationAgent: String, CaseIterable {
     case openclaw, codebuddy, devin, vibe, pi, kilo, plandex, gptme
     case miniSweAgent = "mini-swe-agent"
     case googleAgentsCLI = "google-agents-cli"
+    case rovoDev = "rovo-dev"
+    case gitlabDuo = "gitlab-duo"
+    case grokBuild = "grok-build"
+    case jules
 
     static func catalogIndex(_ rawValue: String) -> Int {
         allCases.firstIndex { $0.rawValue == rawValue } ?? Int.max
@@ -900,6 +912,10 @@ private enum IntegrationAgent: String, CaseIterable {
         case .gptme: "gptme"
         case .miniSweAgent: "mini-SWE-agent"
         case .googleAgentsCLI: "Google Agents CLI"
+        case .rovoDev: "Atlassian Rovo Dev"
+        case .gitlabDuo: "GitLab Duo CLI"
+        case .grokBuild: "xAI Grok Build"
+        case .jules: "Google Jules Tools"
         }
     }
 
@@ -923,7 +939,7 @@ private enum IntegrationAgent: String, CaseIterable {
             .trae, .junie, .crush, .augment, .cody, .tabby,
             .openhands, .openInterpreter, .openclaw, .codebuddy, .devin,
             .vibe, .pi, .kilo, .plandex, .gptme, .miniSweAgent,
-            .googleAgentsCLI,
+            .googleAgentsCLI, .rovoDev, .gitlabDuo, .grokBuild, .jules,
         ].contains(self)
     }
 
@@ -933,7 +949,7 @@ private enum IntegrationAgent: String, CaseIterable {
              .trae, .junie, .crush, .augment, .cody, .tabby,
              .openhands, .openInterpreter, .openclaw, .codebuddy, .devin,
              .vibe, .pi, .kilo, .plandex, .gptme, .miniSweAgent,
-             .googleAgentsCLI:
+             .googleAgentsCLI, .rovoDev, .gitlabDuo, .grokBuild, .jules:
             false
         default:
             true
@@ -983,6 +999,10 @@ private enum IntegrationAgent: String, CaseIterable {
         case .gptme: ["gptme"]
         case .miniSweAgent: ["mini", "mini-extra"]
         case .googleAgentsCLI: ["agents-cli"]
+        case .rovoDev: ["acli"]
+        case .gitlabDuo: ["duo"]
+        case .grokBuild: ["grok"]
+        case .jules: ["jules"]
         }
     }
 
@@ -1060,6 +1080,14 @@ private enum IntegrationAgent: String, CaseIterable {
                     "Library/Application Support/google-agents-cli"
                 ),
             ]
+        case .rovoDev:
+            [home.appendingPathComponent(".rovodev")]
+        case .gitlabDuo:
+            [home.appendingPathComponent(".gitlab/storage.json")]
+        case .grokBuild:
+            [home.appendingPathComponent(".grok")]
+        case .jules:
+            []
         default:
             [defaultDetectionPath(home: home)]
         }
@@ -1128,6 +1156,10 @@ private enum IntegrationAgent: String, CaseIterable {
             home.appendingPathComponent(".config/mini-swe-agent")
         case .googleAgentsCLI:
             home.appendingPathComponent(".config/google-agents-cli")
+        case .rovoDev: home.appendingPathComponent(".rovodev")
+        case .gitlabDuo: home.appendingPathComponent(".gitlab/storage.json")
+        case .grokBuild: home.appendingPathComponent(".grok")
+        case .jules: home.appendingPathComponent(".config/jules")
         }
     }
 }
