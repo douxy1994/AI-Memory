@@ -1,0 +1,393 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="LanguageSystem" xml:space="preserve"><value>跟随 Windows</value></data>
+  <data name="AppDescription" xml:space="preserve"><value>跨 Agent 的本地记忆、历史和接续工作台</value></data>
+  <data name="LanguageChineseSimplified" xml:space="preserve"><value>简体中文</value></data>
+  <data name="LanguageEnglish" xml:space="preserve"><value>English</value></data>
+  <data name="LanguageRestartRequired" xml:space="preserve"><value>语言更改将在重新启动 AI Memory 后生效。</value></data>
+  <data name="LanguageSavedRestartRequired" xml:space="preserve"><value>界面语言已保存；重新启动 AI Memory 后生效。</value></data>
+  <data name="LanguageSaveFailed" xml:space="preserve"><value>保存语言设置失败：{0}</value></data>
+  <data name="UpdateAvailableAtLaunch" xml:space="preserve"><value>发现 AI Memory {0}，请在设置中查看并安装。</value></data>
+  <data name="FontSystem" xml:space="preserve"><value>系统默认</value></data>
+  <data name="FontSourceSans" xml:space="preserve"><value>思源黑体</value></data>
+  <data name="FontSourceSerif" xml:space="preserve"><value>思源宋体</value></data>
+  <data name="FontWenkai" xml:space="preserve"><value>霞鹜文楷</value></data>
+  <data name="FontApplied" xml:space="preserve"><value>已应用{0}。</value></data>
+  <data name="FontSaveFailed" xml:space="preserve"><value>保存字体设置失败：{0}</value></data>
+  <data name="DataDirectoryPath" xml:space="preserve"><value>数据目录：{0}</value></data>
+  <data name="StartupEnabled" xml:space="preserve"><value>已开启</value></data>
+  <data name="StartupDisabledByUser" xml:space="preserve"><value>已被系统或用户禁用，可在 Windows 设置中恢复</value></data>
+  <data name="StartupDisabledByPolicy" xml:space="preserve"><value>组织策略禁止开机启动</value></data>
+  <data name="StartupDisabled" xml:space="preserve"><value>已关闭</value></data>
+  <data name="StartupSettingUpdated" xml:space="preserve"><value>启动设置已更新。</value></data>
+  <data name="StartupSettingFailed" xml:space="preserve"><value>更新启动设置失败：{0}</value></data>
+  <data name="AutomaticBackupEnabled" xml:space="preserve"><value>自动备份已开启，每 {0} 分钟检查一次变化。</value></data>
+  <data name="AutomaticBackupDisabled" xml:space="preserve"><value>自动备份已关闭。</value></data>
+  <data name="AutomaticBackupSaveFailed" xml:space="preserve"><value>保存自动备份设置失败：{0}</value></data>
+  <data name="AgentIntegrationEnabled" xml:space="preserve"><value>{0} 集成已启用。</value></data>
+  <data name="AgentIntegrationDisabled" xml:space="preserve"><value>{0} 集成已关闭。</value></data>
+  <data name="AgentIntegrationUpdateFailed" xml:space="preserve"><value>更新 Agent 集成失败：{0}</value></data>
+  <data name="SettingsSaved" xml:space="preserve"><value>设置已保存。</value></data>
+  <data name="SettingsSaveFailed" xml:space="preserve"><value>保存失败：{0}</value></data>
+  <data name="WebDavVerificationSucceeded" xml:space="preserve"><value>连接验证成功（HTTP {0}）。</value></data>
+  <data name="WebDavVerificationFailed" xml:space="preserve"><value>连接验证失败：{0}</value></data>
+  <data name="SyncCompleted" xml:space="preserve"><value>同步完成：上传 {0}，下载 {1}，跳过 {2}。</value></data>
+  <data name="SyncFailed" xml:space="preserve"><value>同步失败：{0}</value></data>
+  <data name="RecoveryPointCreated" xml:space="preserve"><value>恢复点已创建：{0}</value></data>
+  <data name="RecoveryPointUnchanged" xml:space="preserve"><value>数据没有变化，已保留现有恢复点：{0}</value></data>
+  <data name="BackupFailed" xml:space="preserve"><value>备份失败：{0}</value></data>
+  <data name="NoRecoveryPoints" xml:space="preserve"><value>没有可用的恢复点。</value></data>
+  <data name="RestoreRecoveryPointPrompt" xml:space="preserve"><value>恢复前会自动备份当前数据库。请选择要恢复的时间点：</value></data>
+  <data name="RestoreRecoveryPointTitle" xml:space="preserve"><value>从恢复点恢复</value></data>
+  <data name="Restore" xml:space="preserve"><value>恢复</value></data>
+  <data name="Cancel" xml:space="preserve"><value>取消</value></data>
+  <data name="RestoreCompleted" xml:space="preserve"><value>恢复完成；恢复前的数据已备份到：{0}</value></data>
+  <data name="RestoreFailed" xml:space="preserve"><value>恢复失败：{0}</value></data>
+  <data name="LocalSyncFolderSaved" xml:space="preserve"><value>本地同步目录已保存。</value></data>
+  <data name="LocalSyncCompleted" xml:space="preserve"><value>本地同步完成：上传 {0}，下载 {1}，跳过 {2}。</value></data>
+  <data name="LocalSyncFailed" xml:space="preserve"><value>本地同步失败：{0}</value></data>
+  <data name="ChatMemDatabaseNotFound" xml:space="preserve"><value>没有找到可导入的 ChatMem 数据库。</value></data>
+  <data name="ChatMemImportCompleted" xml:space="preserve"><value>ChatMem 数据已导入。</value></data>
+  <data name="ChatMemImportCompletedWithBackup" xml:space="preserve"><value>ChatMem 数据已导入，原数据备份：{0}</value></data>
+  <data name="ImportFailed" xml:space="preserve"><value>导入失败：{0}</value></data>
+  <data name="NativeHistoryImportCompleted" xml:space="preserve"><value>本机历史导入完成：{0}。</value></data>
+  <data name="NativeHistoryImportCompletedWithWarnings" xml:space="preserve"><value>本机历史导入完成：{0}；{1} 项警告。</value></data>
+  <data name="NativeHistoryImportFailed" xml:space="preserve"><value>本机历史导入失败：{0}</value></data>
+  <data name="UpdateSettingsSaved" xml:space="preserve"><value>更新设置已保存。</value></data>
+  <data name="UpdateSettingsSaveFailed" xml:space="preserve"><value>保存更新设置失败：{0}</value></data>
+  <data name="OpenedAboutCheckingUpdates" xml:space="preserve"><value>已打开“关于 AI Memory”并开始检查更新。</value></data>
+  <data name="DiagnosticsReadFailed" xml:space="preserve"><value>读取诊断失败：{0}</value></data>
+  <data name="DiagnosticsCopied" xml:space="preserve"><value>诊断信息已复制。</value></data>
+  <data name="DataDirectory" xml:space="preserve"><value>数据目录</value></data>
+  <data name="BackupDirectory" xml:space="preserve"><value>备份目录</value></data>
+  <data name="WindowsCannotOpenLocation" xml:space="preserve"><value>Windows 无法打开{0}。</value></data>
+  <data name="OpenLocationFailed" xml:space="preserve"><value>打开{0}失败：{1}</value></data>
+  <data name="AutomaticBackupRunFailed" xml:space="preserve"><value>自动备份失败：{0}</value></data>
+  <data name="RefreshingAllSources" xml:space="preserve"><value>正在刷新全部来源…</value></data>
+  <data name="ListSeparator" xml:space="preserve"><value>，</value></data>
+  <data name="SourcesRefreshCompleted" xml:space="preserve"><value>来源刷新完成：{0}。</value></data>
+  <data name="SourcesRefreshCompletedWithWarnings" xml:space="preserve"><value>来源刷新完成：{0}；{1} 项警告。</value></data>
+  <data name="SourcesRefreshFailed" xml:space="preserve"><value>刷新来源失败：{0}</value></data>
+  <data name="SyncingChanges" xml:space="preserve"><value>正在同步变化内容…</value></data>
+  <data name="ConfigureSyncFirst" xml:space="preserve"><value>请先在“数据同步与备份”中配置同步服务。</value></data>
+  <data name="HelpTitle" xml:space="preserve"><value>AI Memory 帮助</value></data>
+  <data name="HelpContent" xml:space="preserve"><value>Ctrl+1 返回工作台&#x0a;Ctrl+2 打开记忆与待复核&#x0a;Ctrl+3 打开历史&#x0a;Ctrl+R 刷新全部来源&#x0a;Ctrl+Shift+S 增量同步&#x0a;Ctrl+, 打开设置</value></data>
+  <data name="Done" xml:space="preserve"><value>完成</value></data>
+  <data name="AboutWindowTitle" xml:space="preserve"><value>关于 AI Memory</value></data>
+  <data name="ReleaseVersion" xml:space="preserve"><value>正式版本 {0}</value></data>
+  <data name="DevelopmentVersion" xml:space="preserve"><value>开发版本 {0}</value></data>
+  <data name="AgentCoverage" xml:space="preserve"><value>✓ Agent 覆盖扩展&#x0a;支持 {0} 种主流 Agent 与 CLI 检测，已安装项目优先显示。</value></data>
+  <data name="CheckingUpdates" xml:space="preserve"><value>正在检查…</value></data>
+  <data name="CheckingGitHubReleases" xml:space="preserve"><value>正在检查 GitHub Releases…</value></data>
+  <data name="CurrentVersionLatest" xml:space="preserve"><value>当前版本已是最新；更新源最新版本为 {0}。</value></data>
+  <data name="NewVersionFound" xml:space="preserve"><value>发现新版本 {0}：{1}</value></data>
+  <data name="DownloadingNewVersion" xml:space="preserve"><value>发现新版本 {0}，正在下载安装包…</value></data>
+  <data name="WindowsCannotOpenInstaller" xml:space="preserve"><value>Windows 无法打开安装包。</value></data>
+  <data name="InstallerLaunched" xml:space="preserve"><value>安装包已下载并交给 Windows 安装器。</value></data>
+  <data name="UpdateCheckFailed" xml:space="preserve"><value>检查更新失败：{0}</value></data>
+  <data name="CheckForUpdates" xml:space="preserve"><value>检查更新</value></data>
+  <data name="UncommittedBuild" xml:space="preserve"><value>未提交构建</value></data>
+  <data name="AgentStateIntegratedDetail" xml:space="preserve"><value>AI Memory 集成已启用。</value></data>
+  <data name="AgentStatePartialDetail" xml:space="preserve"><value>AI Memory 集成仅部分安装；点击启用可自动修复。</value></data>
+  <data name="AgentStateDetectedManualDetail" xml:space="preserve"><value>已检测到本机安装；暂无安全自动配置格式。</value></data>
+  <data name="AgentStateDetectedDetail" xml:space="preserve"><value>已检测到本机安装；尚未启用 AI Memory 集成。</value></data>
+  <data name="AgentStateMissingDetail" xml:space="preserve"><value>本机未安装，默认不启用。</value></data>
+  <data name="AgentStateIntegrated" xml:space="preserve"><value>已集成</value></data>
+  <data name="AgentStatePartial" xml:space="preserve"><value>待修复</value></data>
+  <data name="AgentStateDetected" xml:space="preserve"><value>已安装</value></data>
+  <data name="AgentStateMissing" xml:space="preserve"><value>未安装</value></data>
+  <data name="Enable" xml:space="preserve"><value>启用</value></data>
+  <data name="Disable" xml:space="preserve"><value>关闭</value></data>
+  <data name="DetectedAgentSummary" xml:space="preserve"><value>{0} / {1} 项已安装；已安装项目优先显示。</value></data>
+  <data name="AllSources" xml:space="preserve"><value>全部来源</value></data>
+  <data name="RefreshCompletedTitle" xml:space="preserve"><value>刷新完成</value></data>
+  <data name="RefreshCompletedBody" xml:space="preserve"><value>已重新读取本地数据库和 Agent 安装状态。</value></data>
+  <data name="ComputerGroupsTitle" xml:space="preserve"><value>电脑分组</value></data>
+  <data name="NoProjectsToManage" xml:space="preserve"><value>当前没有可管理的项目。</value></data>
+  <data name="ComputerGroupsDescription" xml:space="preserve"><value>重命名电脑，或把项目移动到另一个电脑分组。这里只改变 AI Memory 的展示，不修改原始路径。</value></data>
+  <data name="ComputerName" xml:space="preserve"><value>电脑名称</value></data>
+  <data name="DoNotMerge" xml:space="preserve"><value>不合并</value></data>
+  <data name="MergeComputer" xml:space="preserve"><value>合并电脑</value></data>
+  <data name="ProjectConversationCount" xml:space="preserve"><value>{0} · {1} 条</value></data>
+  <data name="AssignedComputer" xml:space="preserve"><value>所属电脑</value></data>
+  <data name="ManageComputerGroups" xml:space="preserve"><value>管理电脑分组</value></data>
+  <data name="Save" xml:space="preserve"><value>保存</value></data>
+  <data name="RestoreAutomaticGrouping" xml:space="preserve"><value>恢复自动分组</value></data>
+  <data name="AutomaticGroupingRestored" xml:space="preserve"><value>已恢复按项目路径自动分组。</value></data>
+  <data name="ComputerGroupsSaved" xml:space="preserve"><value>电脑名称和项目分组已保存。</value></data>
+  <data name="SyncCompletedTitle" xml:space="preserve"><value>同步完成</value></data>
+  <data name="SyncFailedTitle" xml:space="preserve"><value>同步失败</value></data>
+  <data name="SyncTitle" xml:space="preserve"><value>同步</value></data>
+  <data name="ConfigureWebDavFirst" xml:space="preserve"><value>请先在设置中完成 WebDAV 配置。</value></data>
+  <data name="UnknownProject" xml:space="preserve"><value>未知项目</value></data>
+  <data name="UntitledConversation" xml:space="preserve"><value>未命名对话</value></data>
+  <data name="ConversationCount" xml:space="preserve"><value>{0} 条</value></data>
+  <data name="NotProvided" xml:space="preserve"><value>未提供</value></data>
+  <data name="Favorite" xml:space="preserve"><value>收藏</value></data>
+  <data name="RemoveFavorite" xml:space="preserve"><value>取消收藏</value></data>
+  <data name="ConversationFavorited" xml:space="preserve"><value>对话已收藏。</value></data>
+  <data name="ConversationUnfavorited" xml:space="preserve"><value>已取消收藏。</value></data>
+  <data name="FavoriteUpdateFailed" xml:space="preserve"><value>更新收藏失败：{0}</value></data>
+  <data name="ProjectPathCopied" xml:space="preserve"><value>项目路径已复制。</value></data>
+  <data name="ResumeCommandCopied" xml:space="preserve"><value>恢复命令已复制。</value></data>
+  <data name="FullConversationCopy" xml:space="preserve"><value>完整对话复制</value></data>
+  <data name="SummaryMigration" xml:space="preserve"><value>总结式迁移（复制继续卡片）</value></data>
+  <data name="TargetAgent" xml:space="preserve"><value>目标 Agent</value></data>
+  <data name="CopyKeepSource" xml:space="preserve"><value>复制（保留源）</value></data>
+  <data name="MoveAfterVerification" xml:space="preserve"><value>移动（验证后将源移入回收站）</value></data>
+  <data name="CopySourceCannotMove" xml:space="preserve"><value>复制（此来源不支持安全移动）</value></data>
+  <data name="FullMigrationDescription" xml:space="preserve"><value>完整迁移会写入目标 Agent 的真实本地历史，并在回读验证失败时撤销写入。</value></data>
+  <data name="MigrateConversation" xml:space="preserve"><value>迁移对话</value></data>
+  <data name="Continue" xml:space="preserve"><value>继续</value></data>
+  <data name="ContinuationCardCopied" xml:space="preserve"><value>继续卡片已复制。</value></data>
+  <data name="NoSafeWritableAgent" xml:space="preserve"><value>没有检测到可安全写入的目标 Agent。</value></data>
+  <data name="SelectTargetAgent" xml:space="preserve"><value>请选择目标 Agent。</value></data>
+  <data name="MigrationMoveSucceeded" xml:space="preserve"><value>移动成功：{0} · 源对话已进入回收站</value></data>
+  <data name="MigrationSucceeded" xml:space="preserve"><value>迁移成功：{0} · {1}…</value></data>
+  <data name="MigrationFailed" xml:space="preserve"><value>迁移失败：{0}</value></data>
+  <data name="MoveToTrashQuestion" xml:space="preserve"><value>移到回收站？</value></data>
+  <data name="MoveToTrashDescription" xml:space="preserve"><value>对话会从 AI Memory 数据库移除，并保留可恢复副本。</value></data>
+  <data name="MoveToTrash" xml:space="preserve"><value>移到回收站</value></data>
+  <data name="MoveToTrashFailed" xml:space="preserve"><value>移到回收站失败：{0}</value></data>
+  <data name="CheckpointCreated" xml:space="preserve"><value>检查点已创建。</value></data>
+  <data name="CheckpointCreationFailed" xml:space="preserve"><value>创建检查点失败：{0}</value></data>
+  <data name="HandoffCreated" xml:space="preserve"><value>已创建发往 {0} 的交接包。</value></data>
+  <data name="HandoffCreationFailed" xml:space="preserve"><value>创建交接失败：{0}</value></data>
+  <data name="FavoriteUnpinned" xml:space="preserve"><value>已取消置顶。</value></data>
+  <data name="FavoritePinned" xml:space="preserve"><value>收藏已置顶。</value></data>
+  <data name="FavoritePinUpdateFailed" xml:space="preserve"><value>更新置顶状态失败：{0}</value></data>
+  <data name="FavoriteMetadataSaved" xml:space="preserve"><value>收藏备注与标签已保存。</value></data>
+  <data name="FavoriteSaveFailed" xml:space="preserve"><value>保存收藏失败：{0}</value></data>
+  <data name="FavoriteSourceUnavailable" xml:space="preserve"><value>原始对话当前不可用；收藏快照仍会保留。</value></data>
+  <data name="FavoriteCardCopied" xml:space="preserve"><value>收藏继续卡片已复制。</value></data>
+  <data name="Pinned" xml:space="preserve"><value>已置顶</value></data>
+  <data name="Unpin" xml:space="preserve"><value>取消置顶</value></data>
+  <data name="Pin" xml:space="preserve"><value>置顶</value></data>
+  <data name="Title" xml:space="preserve"><value>标题</value></data>
+  <data name="RuleContent" xml:space="preserve"><value>规则内容</value></data>
+  <data name="UsageHint" xml:space="preserve"><value>使用提示</value></data>
+  <data name="ApproveCandidateRule" xml:space="preserve"><value>批准候选规则</value></data>
+  <data name="Approve" xml:space="preserve"><value>批准</value></data>
+  <data name="CandidateApproved" xml:space="preserve"><value>候选已批准并写入项目记忆。</value></data>
+  <data name="ApprovalFailed" xml:space="preserve"><value>批准失败：{0}</value></data>
+  <data name="CandidateSnoozed" xml:space="preserve"><value>候选已暂缓。</value></data>
+  <data name="CandidateRejected" xml:space="preserve"><value>候选已拒绝，证据仍保留。</value></data>
+  <data name="CandidateUpdateFailed" xml:space="preserve"><value>更新候选失败：{0}</value></data>
+  <data name="EditApprovedRule" xml:space="preserve"><value>编辑已批准规则</value></data>
+  <data name="RuleUpdated" xml:space="preserve"><value>规则已更新。</value></data>
+  <data name="RuleReverified" xml:space="preserve"><value>规则已重新验证。</value></data>
+  <data name="RuleDisabled" xml:space="preserve"><value>规则已停用。</value></data>
+  <data name="RuleUpdateFailed" xml:space="preserve"><value>更新规则失败：{0}</value></data>
+  <data name="TargetProfileOptional" xml:space="preserve"><value>目标配置（可选）</value></data>
+  <data name="CreateHandoff" xml:space="preserve"><value>创建交接包</value></data>
+  <data name="Create" xml:space="preserve"><value>创建</value></data>
+  <data name="HandoffConsumed" xml:space="preserve"><value>交接包已标记为已消费。</value></data>
+  <data name="HandoffUpdateFailed" xml:space="preserve"><value>更新交接包失败：{0}</value></data>
+  <data name="TrashSummaryWithCount" xml:space="preserve"><value>已删除对话的可恢复记录（{0} 条，保留 {1:0} 天）。</value></data>
+  <data name="TrashSummaryRetention" xml:space="preserve"><value>已删除对话的可恢复记录（保留 {0} 天）。</value></data>
+  <data name="TrashRetentionUpdated" xml:space="preserve"><value>回收站保留天数已更新。</value></data>
+  <data name="EmptyTrashQuestion" xml:space="preserve"><value>清空回收站？</value></data>
+  <data name="EmptyTrashDescription" xml:space="preserve"><value>将永久删除全部 {0} 条回收站记录，此操作无法撤销。</value></data>
+  <data name="EmptyPermanently" xml:space="preserve"><value>永久清空</value></data>
+  <data name="TrashRecordsDeleted" xml:space="preserve"><value>已永久删除 {0} 条回收站记录。</value></data>
+  <data name="EmptyTrashFailed" xml:space="preserve"><value>清空回收站失败：{0}</value></data>
+  <data name="ConversationRestored" xml:space="preserve"><value>对话已恢复。</value></data>
+  <data name="DeletePermanentlyQuestion" xml:space="preserve"><value>永久删除？</value></data>
+  <data name="CannotUndo" xml:space="preserve"><value>此操作无法撤销。</value></data>
+  <data name="DeletePermanently" xml:space="preserve"><value>永久删除</value></data>
+  <data name="TrashRecordDeleted" xml:space="preserve"><value>回收站记录已永久删除。</value></data>
+  <data name="DeletePermanentlyFailed" xml:space="preserve"><value>永久删除失败：{0}</value></data>
+  <data name="HistoryRefreshed" xml:space="preserve"><value>历史已刷新。</value></data>
+  <data name="HandoffSourceCheckpointUnavailable" xml:space="preserve"><value>该交接包没有可用的来源检查点。</value></data>
+  <data name="HistorySourceUnavailable" xml:space="preserve"><value>来源对话当前不可用；历史条目仍会保留。</value></data>
+  <data name="SelectConversationToTrash" xml:space="preserve"><value>请先选择要移到回收站的对话。</value></data>
+  <data name="ConversationMovedToTrash" xml:space="preserve"><value>对话已移到回收站。</value></data>
+
+  <data name="MenuWorkbench.Title" xml:space="preserve"><value>工作台</value></data>
+  <data name="MenuReturnWorkbench.Text" xml:space="preserve"><value>返回工作台</value></data>
+  <data name="MenuReview.Text" xml:space="preserve"><value>待复核</value></data>
+  <data name="MenuHistory.Text" xml:space="preserve"><value>历史</value></data>
+  <data name="MenuSyncNow.Text" xml:space="preserve"><value>立即同步</value></data>
+  <data name="MenuRefreshSources.Text" xml:space="preserve"><value>刷新全部来源</value></data>
+  <data name="MenuWindow.Title" xml:space="preserve"><value>窗口</value></data>
+  <data name="MenuBack.Text" xml:space="preserve"><value>返回上一页</value></data>
+  <data name="MenuSettings.Text" xml:space="preserve"><value>设置</value></data>
+  <data name="MenuHelp.Title" xml:space="preserve"><value>帮助</value></data>
+  <data name="MenuHelpItem.Text" xml:space="preserve"><value>AI Memory 帮助</value></data>
+  <data name="MenuAbout.Text" xml:space="preserve"><value>关于 AI Memory</value></data>
+  <data name="MenuCheckUpdates.Text" xml:space="preserve"><value>检查更新</value></data>
+  <data name="NavigationWorkbench.Content" xml:space="preserve"><value>工作台</value></data>
+  <data name="NavigationHistory.Content" xml:space="preserve"><value>历史</value></data>
+  <data name="NavigationMemory.Content" xml:space="preserve"><value>记忆</value></data>
+  <data name="NavigationFavorites.Content" xml:space="preserve"><value>收藏</value></data>
+  <data name="NavigationTrash.Content" xml:space="preserve"><value>回收站</value></data>
+
+  <data name="SettingsTitle.Text" xml:space="preserve"><value>设置</value></data>
+  <data name="SettingsSubtitle.Text" xml:space="preserve"><value>管理启动、Agent 集成、数据同步与备份以及软件更新。</value></data>
+  <data name="SettingsCategoryGeneral.Text" xml:space="preserve"><value>常规</value></data>
+  <data name="SettingsCategoryAgents.Text" xml:space="preserve"><value>Agent 集成</value></data>
+  <data name="SettingsCategorySync.Text" xml:space="preserve"><value>数据同步与备份</value></data>
+  <data name="SettingsCategoryUpdates.Text" xml:space="preserve"><value>更新与诊断</value></data>
+  <data name="SettingsGeneralTitle.Text" xml:space="preserve"><value>常规</value></data>
+  <data name="SettingsGeneralSubtitle.Text" xml:space="preserve"><value>控制字体、登录启动和自动备份。</value></data>
+  <data name="SettingsLanguageFontTitle.Text" xml:space="preserve"><value>语言与字体</value></data>
+  <data name="SettingsLanguage.Header" xml:space="preserve"><value>界面语言</value></data>
+  <data name="SettingsLanguageRestartHint.Text" xml:space="preserve"><value>语言更改将在重新启动 AI Memory 后生效。</value></data>
+  <data name="SettingsFont.Header" xml:space="preserve"><value>字体</value></data>
+  <data name="SettingsFontHint.Text" xml:space="preserve"><value>字体会立即应用；所选字体未安装时由 Windows 自动回退到系统字体。</value></data>
+  <data name="SettingsStartupTitle.Text" xml:space="preserve"><value>登录时自动启动</value></data>
+  <data name="SettingsStartupLoading.Text" xml:space="preserve"><value>正在读取系统状态…</value></data>
+  <data name="SettingsAutoBackupTitle.Text" xml:space="preserve"><value>自动备份</value></data>
+  <data name="SettingsAutoBackupToggleTitle.Text" xml:space="preserve"><value>定时备份数据库与设置</value></data>
+  <data name="SettingsAutoBackupHint.Text" xml:space="preserve"><value>没有变化时不会生成重复恢复点；未变化的文件使用 NTFS 硬链接复用。</value></data>
+  <data name="SettingsBackupInterval.Header" xml:space="preserve"><value>备份间隔（分钟）</value></data>
+  <data name="SettingsSaveAutoBackup.Content" xml:space="preserve"><value>保存自动备份设置</value></data>
+  <data name="SettingsAgentsTitle.Text" xml:space="preserve"><value>Agent 集成</value></data>
+  <data name="SettingsAgentsSubtitle.Text" xml:space="preserve"><value>已安装项目优先显示；未安装项目保持关闭。</value></data>
+  <data name="SettingsDetectAgents.Content" xml:space="preserve"><value>重新检测</value></data>
+  <data name="SettingsSyncTitle.Text" xml:space="preserve"><value>数据同步与备份</value></data>
+  <data name="SettingsSyncSubtitle.Text" xml:space="preserve"><value>集中管理本地目录、WebDAV、历史导入和恢复点。</value></data>
+  <data name="SettingsLocalSyncTitle.Text" xml:space="preserve"><value>本地同步目录</value></data>
+  <data name="SettingsLocalSyncHint.Text" xml:space="preserve"><value>适用于 OneDrive、Dropbox、Google Drive 等共享目录；只传输变化的对话文件。</value></data>
+  <data name="SettingsLocalSyncFolder.PlaceholderText" xml:space="preserve"><value>例如 D:\OneDrive\AI Memory</value></data>
+  <data name="SettingsSaveFolder.Label" xml:space="preserve"><value>保存目录</value></data>
+  <data name="SettingsSyncFolderNow.Label" xml:space="preserve"><value>立即同步</value></data>
+  <data name="SettingsWebDavTitle.Text" xml:space="preserve"><value>WebDAV</value></data>
+  <data name="SettingsWebDavServerPath.PlaceholderText" xml:space="preserve"><value>服务器路径，例如 webdav</value></data>
+  <data name="SettingsWebDavRemotePath.PlaceholderText" xml:space="preserve"><value>远程目录，例如 aimemory</value></data>
+  <data name="SettingsWebDavUsername.PlaceholderText" xml:space="preserve"><value>用户名</value></data>
+  <data name="SettingsWebDavPassword.PlaceholderText" xml:space="preserve"><value>密码</value></data>
+  <data name="SettingsVerifyWebDav.Label" xml:space="preserve"><value>验证连接</value></data>
+  <data name="SettingsSyncWebDavNow.Label" xml:space="preserve"><value>立即同步</value></data>
+  <data name="SettingsSaveWebDav.Label" xml:space="preserve"><value>保存</value></data>
+  <data name="SettingsRecoveryTitle.Text" xml:space="preserve"><value>数据与恢复</value></data>
+  <data name="SettingsCreateRecoveryPoint.Label" xml:space="preserve"><value>创建恢复点</value></data>
+  <data name="SettingsRestoreRecoveryPoint.Label" xml:space="preserve"><value>从恢复点恢复</value></data>
+  <data name="SettingsOpenBackupFolder.Label" xml:space="preserve"><value>打开备份目录</value></data>
+  <data name="SettingsImportAgentHistory.Label" xml:space="preserve"><value>导入本机 Agent 历史</value></data>
+  <data name="SettingsImportChatMem.Label" xml:space="preserve"><value>导入 ChatMem 数据</value></data>
+  <data name="SettingsUpdatesTitle.Text" xml:space="preserve"><value>更新与诊断</value></data>
+  <data name="SettingsUpdatesSubtitle.Text" xml:space="preserve"><value>配置自动检查更新，并查看当前本机运行状态。</value></data>
+  <data name="SettingsSoftwareUpdateTitle.Text" xml:space="preserve"><value>软件更新</value></data>
+  <data name="SettingsAutoUpdateTitle.Text" xml:space="preserve"><value>自动检查更新</value></data>
+  <data name="SettingsAutoUpdateHint.Text" xml:space="preserve"><value>从 AI Memory 的 GitHub Releases 获取正式版本。</value></data>
+  <data name="SettingsSaveUpdate.Label" xml:space="preserve"><value>保存更新设置</value></data>
+  <data name="SettingsCheckUpdateAbout.Label" xml:space="preserve"><value>在关于中检查更新</value></data>
+  <data name="SettingsUpdateStatus.Text" xml:space="preserve"><value>更新检查与安装统一在“关于 AI Memory”窗口中完成。</value></data>
+  <data name="SettingsDiagnosticsTitle.Text" xml:space="preserve"><value>运行诊断</value></data>
+  <data name="SettingsDiagnosticsHint.Text" xml:space="preserve"><value>以下内容来自当前数据库与本机环境，可用于核对版本、数据和 Agent 状态。</value></data>
+  <data name="SettingsRefreshDiagnostics.Label" xml:space="preserve"><value>刷新诊断</value></data>
+  <data name="SettingsCopyDiagnostics.Label" xml:space="preserve"><value>复制诊断</value></data>
+  <data name="SettingsOpenDataFolder.Label" xml:space="preserve"><value>打开数据目录</value></data>
+  <data name="WorkbenchTitle.Text" xml:space="preserve"><value>继续工作</value></data>
+  <data name="WorkbenchSubtitle.Text" xml:space="preserve"><value>最近进度、项目分组、恢复命令和下一步集中在一个工作台。</value></data>
+  <data name="WorkbenchSync.Label" xml:space="preserve"><value>立即同步</value></data>
+  <data name="WorkbenchRefresh.Label" xml:space="preserve"><value>刷新来源</value></data>
+  <data name="WorkbenchHistory.Label" xml:space="preserve"><value>历史</value></data>
+  <data name="WorkbenchCurrentSourceCount.Text" xml:space="preserve"><value>本来源对话</value></data>
+  <data name="WorkbenchAllAgentCount.Text" xml:space="preserve"><value>全 Agent 对话</value></data>
+  <data name="WorkbenchPendingCount.Text" xml:space="preserve"><value>待审候选</value></data>
+  <data name="WorkbenchCheckpointCount.Text" xml:space="preserve"><value>检查点</value></data>
+  <data name="WorkbenchRecentTasks.Text" xml:space="preserve"><value>最近任务</value></data>
+  <data name="WorkbenchNoRecent.Text" xml:space="preserve"><value>该来源还没有对话。</value></data>
+  <data name="WorkbenchProjects.Text" xml:space="preserve"><value>项目</value></data>
+  <data name="WorkbenchManageMachines.Content" xml:space="preserve"><value>管理电脑分组</value></data>
+  <data name="WorkbenchNoProjects.Text" xml:space="preserve"><value>该来源还没有项目。</value></data>
+  <data name="WorkbenchInstalledAgents.Text" xml:space="preserve"><value>已安装的 Agent / CLI</value></data>
+  <data name="WorkbenchNoAgents.Text" xml:space="preserve"><value>没有检测到本机 Agent；所有集成保持关闭。</value></data>
+
+  <data name="ConversationBack.Label" xml:space="preserve"><value>返回</value></data>
+  <data name="ConversationFavorite.Label" xml:space="preserve"><value>收藏</value></data>
+  <data name="ConversationCopyPath.Label" xml:space="preserve"><value>复制路径</value></data>
+  <data name="ConversationMigrate.Label" xml:space="preserve"><value>迁移</value></data>
+  <data name="ConversationTrash.Label" xml:space="preserve"><value>移到回收站</value></data>
+  <data name="ConversationCheckpoint.Label" xml:space="preserve"><value>创建检查点</value></data>
+  <data name="ConversationMessages.Text" xml:space="preserve"><value>消息</value></data>
+  <data name="ConversationFileChangesMetric.Text" xml:space="preserve"><value>文件变更</value></data>
+  <data name="ConversationToolCalls.Text" xml:space="preserve"><value>工具调用</value></data>
+  <data name="ConversationResumeTitle.Text" xml:space="preserve"><value>可恢复进度</value></data>
+  <data name="ConversationResumeCommand.Text" xml:space="preserve"><value>恢复命令</value></data>
+  <data name="ConversationCopyResume.Content" xml:space="preserve"><value>复制恢复命令</value></data>
+  <data name="ConversationStorageLocation.Text" xml:space="preserve"><value>存储位置</value></data>
+  <data name="ConversationFileChangesTitle.Text" xml:space="preserve"><value>文件变更</value></data>
+  <data name="ConversationNoFileChanges.Text" xml:space="preserve"><value>这段对话没有记录文件变更。</value></data>
+  <data name="ConversationHandoffTitle.Text" xml:space="preserve"><value>Agent 交接</value></data>
+  <data name="ConversationTargetAgent.PlaceholderText" xml:space="preserve"><value>目标 Agent</value></data>
+  <data name="ConversationCreateHandoff.Content" xml:space="preserve"><value>创建交接包</value></data>
+
+  <data name="HistoryTitle.Text" xml:space="preserve"><value>历史</value></data>
+  <data name="HistorySubtitle.Text" xml:space="preserve"><value>对话、记忆、检查点、交接、运行、产物与经历的统一资料库。</value></data>
+  <data name="HistoryRefresh.Content" xml:space="preserve"><value>刷新</value></data>
+  <data name="HistoryConversationsTab.Header" xml:space="preserve"><value>对话</value></data>
+  <data name="HistorySearch.PlaceholderText" xml:space="preserve"><value>搜索本地历史</value></data>
+  <data name="HistoryTrashSelected.Content" xml:space="preserve"><value>移到回收站</value></data>
+  <data name="HistoryNoConversations.Text" xml:space="preserve"><value>还没有可显示的对话。</value></data>
+  <data name="HistoryMemoryTab.Header" xml:space="preserve"><value>记忆</value></data>
+  <data name="HistoryOpenMemory.Text" xml:space="preserve"><value>打开记忆管理</value></data>
+  <data name="HistoryCheckpointsTab.Header" xml:space="preserve"><value>检查点</value></data>
+  <data name="HistoryOpenSourceCheckpoint.Text" xml:space="preserve"><value>打开来源对话</value></data>
+  <data name="HistoryHandoffsTab.Header" xml:space="preserve"><value>交接</value></data>
+  <data name="HistoryOpenSourceHandoff.Text" xml:space="preserve"><value>打开来源对话</value></data>
+  <data name="HistoryRunsTab.Header" xml:space="preserve"><value>运行</value></data>
+  <data name="HistoryOpenSourceRun.Text" xml:space="preserve"><value>打开来源对话</value></data>
+  <data name="HistoryArtifactsTab.Header" xml:space="preserve"><value>产物</value></data>
+  <data name="HistoryOpenArtifactSource.Text" xml:space="preserve"><value>查看产生该产物的对话</value></data>
+  <data name="HistoryEpisodesTab.Header" xml:space="preserve"><value>经历</value></data>
+  <data name="HistoryOpenSourceEpisode.Text" xml:space="preserve"><value>打开来源对话</value></data>
+  <data name="HistoryWikiTab.Header" xml:space="preserve"><value>Wiki</value></data>
+  <data name="HistoryOpenWiki.Text" xml:space="preserve"><value>查看完整页面</value></data>
+
+  <data name="FavoritesTitle.Text" xml:space="preserve"><value>收藏</value></data>
+  <data name="FavoritesSubtitle.Text" xml:space="preserve"><value>收藏保存轻量快照，不复制或移动原始对话。</value></data>
+  <data name="FavoritesNote.Header" xml:space="preserve"><value>备注</value></data>
+  <data name="FavoritesNote.PlaceholderText" xml:space="preserve"><value>这段对话为什么重要？</value></data>
+  <data name="FavoritesTags.Header" xml:space="preserve"><value>标签</value></data>
+  <data name="FavoritesTags.PlaceholderText" xml:space="preserve"><value>例如：发布, 修复</value></data>
+  <data name="FavoritesSaveMetadata.Label" xml:space="preserve"><value>保存备注与标签</value></data>
+  <data name="FavoritesOpenConversation.Label" xml:space="preserve"><value>打开对话</value></data>
+  <data name="FavoritesCopyCard.Label" xml:space="preserve"><value>复制继续卡片</value></data>
+  <data name="FavoritesRemove.Label" xml:space="preserve"><value>取消收藏</value></data>
+  <data name="FavoritesEmpty.Text" xml:space="preserve"><value>暂无收藏。在对话详情中点击“收藏”后，对话会显示在这里。</value></data>
+
+  <data name="MemoryTitle.Text" xml:space="preserve"><value>记忆与接续</value></data>
+  <data name="MemorySubtitle.Text" xml:space="preserve"><value>审批候选规则、维护已批准记忆，并管理检查点与 Agent 交接。</value></data>
+  <data name="MemoryRefresh.Content" xml:space="preserve"><value>刷新</value></data>
+  <data name="MemoryReviewTab.Header" xml:space="preserve"><value>待复核</value></data>
+  <data name="MemoryApprove.Content" xml:space="preserve"><value>批准/编辑</value></data>
+  <data name="MemorySnooze.Content" xml:space="preserve"><value>暂缓</value></data>
+  <data name="MemoryReject.Content" xml:space="preserve"><value>拒绝</value></data>
+  <data name="MemoryApprovedTab.Header" xml:space="preserve"><value>已批准规则</value></data>
+  <data name="MemoryEdit.Content" xml:space="preserve"><value>编辑</value></data>
+  <data name="MemoryReverify.Content" xml:space="preserve"><value>重新验证</value></data>
+  <data name="MemoryRetire.Content" xml:space="preserve"><value>停用</value></data>
+  <data name="MemoryRecoveryTab.Header" xml:space="preserve"><value>检查点与交接</value></data>
+  <data name="MemoryCheckpoints.Text" xml:space="preserve"><value>检查点</value></data>
+  <data name="MemoryCreateHandoff.Content" xml:space="preserve"><value>创建交接包</value></data>
+  <data name="MemoryHandoffs.Text" xml:space="preserve"><value>交接包</value></data>
+  <data name="MemoryConsumeHandoff.Content" xml:space="preserve"><value>标记已消费</value></data>
+
+  <data name="TrashTitle.Text" xml:space="preserve"><value>回收站</value></data>
+  <data name="TrashSummary.Text" xml:space="preserve"><value>已删除对话的可恢复记录。</value></data>
+  <data name="TrashRetentionDays.Text" xml:space="preserve"><value>保留天数</value></data>
+  <data name="TrashEmptyButton.Content" xml:space="preserve"><value>清空</value></data>
+  <data name="TrashRefresh.Content" xml:space="preserve"><value>刷新</value></data>
+  <data name="TrashRestore.Label" xml:space="preserve"><value>恢复</value></data>
+  <data name="TrashDelete.Label" xml:space="preserve"><value>永久删除</value></data>
+  <data name="TrashEmpty.Text" xml:space="preserve"><value>回收站为空。在对话详情点击“移到回收站”后，对话会在此保留并可恢复。</value></data>
+
+  <data name="AboutSubtitle.Text" xml:space="preserve"><value>面向 AI Agent 与 CLI 的本地优先记忆、历史检索和工作接续工具。</value></data>
+  <data name="AboutGitHub.Text" xml:space="preserve"><value>GitHub</value></data>
+  <data name="AboutCheckUpdate.Text" xml:space="preserve"><value>检查更新</value></data>
+  <data name="AboutUpdateStatus.Message" xml:space="preserve"><value>尚未检查更新</value></data>
+  <data name="AboutLatestRelease.Text" xml:space="preserve"><value>最近版本更新</value></data>
+  <data name="AboutChangelogSync.Text" xml:space="preserve"><value>✓ 增量同步更可靠&#x0a;WebDAV 与本地备份只传输发生变化的内容。</value></data>
+  <data name="AboutChangelogData.Text" xml:space="preserve"><value>✓ 数据管理更清晰&#x0a;同步、数据位置、导入、备份与恢复集中管理。</value></data>
+  <data name="AboutChangelogNative.Text" xml:space="preserve"><value>✓ Windows 原生体验&#x0a;使用 WinUI 3、Windows App SDK 与系统凭据保险箱。</value></data>
+  <data name="AboutSoftwareTitle.Text" xml:space="preserve"><value>关于本软件</value></data>
+  <data name="AboutSoftwareBody.Text" xml:space="preserve"><value>AI Memory 是一款本地优先的 AI 工作记忆工具。它将不同 AI Agent 与命令行工具产生的对话历史、记忆规则、检查点和交接信息集中到一个原生工作台，帮助你快速找回上下文、检索过去的工作，并从上次中断的位置继续。&#x0a;&#x0a;所有核心数据均由本机管理，兼顾隐私、可靠性与长期可用性。</value></data>
+  <data name="AboutFooter.Text" xml:space="preserve"><value>本地优先 · 独立数据 · 原生 Windows 11</value></data>
+</root>

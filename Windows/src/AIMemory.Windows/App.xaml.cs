@@ -3,6 +3,7 @@ using AIMemory.Core.Services;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.Windows.AppLifecycle;
+using Microsoft.Windows.Globalization;
 
 namespace AIMemory.Windows;
 
@@ -28,6 +29,7 @@ public sealed partial class App : Application
         var database = new AIMemoryDatabase();
         await database.InitializeAsync();
         var settings = await new SettingsStore().LoadAsync();
+        ApplyApplicationLanguage(settings.Language);
         ApplyApplicationFont(settings.FontFamily);
         _window = new MainWindow(database);
         _window.ApplyFontFamily(settings.FontFamily);
@@ -41,6 +43,12 @@ public sealed partial class App : Application
         Current.Resources["ContentControlThemeFontFamily"] =
             new FontFamily(
                 FontPreferenceService.ResolveWindowsFamily(preference));
+    }
+
+    public static void ApplyApplicationLanguage(string preference)
+    {
+        ApplicationLanguages.PrimaryLanguageOverride =
+            LanguagePreferenceService.ResolveWindowsLanguageTag(preference);
     }
 
     private async Task CheckForUpdatesAtLaunchAsync()
@@ -62,7 +70,9 @@ public sealed partial class App : Application
             if (result.IsUpdateAvailable)
             {
                 _window.ShowFeedback(
-                    $"发现 AI Memory {result.Release.Version}，请在设置中查看并安装。",
+                    Services.LocalizationService.Format(
+                        "UpdateAvailableAtLaunch",
+                        result.Release.Version),
                     Microsoft.UI.Xaml.Controls.InfoBarSeverity.Informational);
             }
         }

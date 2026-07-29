@@ -2,6 +2,7 @@ using AIMemory.Core.Models;
 using AIMemory.Core.Persistence;
 using AIMemory.Core.Services;
 using AIMemory.Windows.Pages;
+using AIMemory.Windows.Services;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -96,7 +97,9 @@ public sealed partial class MainWindow : Window
             {
                 DispatcherQueue.TryEnqueue(() =>
                     ShowFeedback(
-                        $"自动备份失败：{exception.Message}",
+                        LocalizationService.Format(
+                            "AutomaticBackupRunFailed",
+                            exception.Message),
                         InfoBarSeverity.Error));
             }
         }
@@ -207,18 +210,25 @@ public sealed partial class MainWindow : Window
     public async Task RefreshAllSourcesAsync()
     {
         GlobalProgress.Visibility = Visibility.Visible;
-        ShowFeedback("正在刷新全部来源…", InfoBarSeverity.Informational);
+        ShowFeedback(
+            LocalizationService.Get("RefreshingAllSources"),
+            InfoBarSeverity.Informational);
         try
         {
             var report = await new NativeHistoryImportService(Conversations)
                 .ImportAllAsync();
             var details = string.Join(
-                "，",
+                LocalizationService.Get("ListSeparator"),
                 report.Imported.Select(value => $"{value.Key} {value.Value}"));
             ShowFeedback(
                 report.Warnings.Count == 0
-                    ? $"来源刷新完成：{details}。"
-                    : $"来源刷新完成：{details}；{report.Warnings.Count} 项警告。",
+                    ? LocalizationService.Format(
+                        "SourcesRefreshCompleted",
+                        details)
+                    : LocalizationService.Format(
+                        "SourcesRefreshCompletedWithWarnings",
+                        details,
+                        report.Warnings.Count),
                 report.Warnings.Count == 0
                     ? InfoBarSeverity.Success
                     : InfoBarSeverity.Warning);
@@ -226,7 +236,9 @@ public sealed partial class MainWindow : Window
         }
         catch (Exception exception)
         {
-            ShowFeedback($"刷新来源失败：{exception.Message}",
+            ShowFeedback(LocalizationService.Format(
+                    "SourcesRefreshFailed",
+                    exception.Message),
                 InfoBarSeverity.Error);
         }
         finally
@@ -238,37 +250,48 @@ public sealed partial class MainWindow : Window
     public async Task SyncNowAsync()
     {
         GlobalProgress.Visibility = Visibility.Visible;
-        ShowFeedback("正在同步变化内容…", InfoBarSeverity.Informational);
+        ShowFeedback(
+            LocalizationService.Get("SyncingChanges"),
+            InfoBarSeverity.Informational);
         try
         {
             var settings = await Settings.LoadAsync();
-            string message;
+            SyncProgress result;
             if (settings.Sync.Provider == "local"
                 && !string.IsNullOrWhiteSpace(settings.Sync.SyncFolder))
             {
-                message = (await new LocalFolderSyncService(Conversations)
-                    .SyncAsync(settings.Sync.SyncFolder)).Message;
+                result = await new LocalFolderSyncService(Conversations)
+                    .SyncAsync(settings.Sync.SyncFolder);
             }
             else if (settings.Sync.Provider == "webdav"
                      && !string.IsNullOrWhiteSpace(settings.Sync.WebdavHost))
             {
                 var credentials = new Services.CredentialService().Load();
-                message = (await new WebDavService(Conversations).SyncAsync(
+                result = await new WebDavService(Conversations).SyncAsync(
                     WebDavService.BuildCollectionUri(settings.Sync),
                     credentials?.Username ?? settings.Sync.Username,
-                    credentials?.Password)).Message;
+                    credentials?.Password);
             }
             else
             {
-                ShowFeedback("请先在“数据同步与备份”中配置同步服务。",
+                ShowFeedback(
+                    LocalizationService.Get("ConfigureSyncFirst"),
                     InfoBarSeverity.Warning);
                 return;
             }
-            ShowFeedback(message, InfoBarSeverity.Success);
+            ShowFeedback(
+                LocalizationService.Format(
+                    "SyncCompleted",
+                    result.Uploaded,
+                    result.Downloaded,
+                    result.Skipped),
+                InfoBarSeverity.Success);
         }
         catch (Exception exception)
         {
-            ShowFeedback($"同步失败：{exception.Message}",
+            ShowFeedback(LocalizationService.Format(
+                    "SyncFailed",
+                    exception.Message),
                 InfoBarSeverity.Error);
         }
         finally
@@ -288,16 +311,9 @@ public sealed partial class MainWindow : Window
         var dialog = new ContentDialog
         {
             XamlRoot = RootLayout.XamlRoot,
-            Title = "AI Memory 帮助",
-            Content = """
-                Ctrl+1 返回工作台
-                Ctrl+2 打开记忆与待复核
-                Ctrl+3 打开历史
-                Ctrl+R 刷新全部来源
-                Ctrl+Shift+S 增量同步
-                Ctrl+, 打开设置
-                """,
-            CloseButtonText = "完成",
+            Title = LocalizationService.Get("HelpTitle"),
+            Content = LocalizationService.Get("HelpContent"),
+            CloseButtonText = LocalizationService.Get("Done"),
         };
         await dialog.ShowAsync();
     }

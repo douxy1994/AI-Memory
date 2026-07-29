@@ -8,8 +8,8 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <StackPanel Spacing="4">
-            <TextBlock Text="收藏" Style="{StaticResource PageTitleStyle}" />
-            <TextBlock Text="收藏保存轻量快照，不复制或移动原始对话。"
+            <TextBlock x:Uid="FavoritesTitle" Text="收藏" Style="{StaticResource PageTitleStyle}" />
+            <TextBlock x:Uid="FavoritesSubtitle" Text="收藏保存轻量快照，不复制或移动原始对话。"
                        Opacity="0.65" />
         </StackPanel>
 
@@ -44,10 +44,12 @@
                             </Grid>
 
                             <StackPanel Spacing="8">
-                                <TextBox Header="备注"
+                                <TextBox x:Uid="FavoritesNote"
+                                         Header="备注"
                                          PlaceholderText="这段对话为什么重要？"
                                          Text="{Binding Note, Mode=TwoWay}" />
-                                <TextBox Header="标签"
+                                <TextBox x:Uid="FavoritesTags"
+                                         Header="标签"
                                          PlaceholderText="例如：发布, 修复"
                                          Text="{Binding TagsText, Mode=TwoWay}" />
                             </StackPanel>
@@ -59,19 +61,23 @@
                                               Label="{Binding PinActionLabel}"
                                               Tag="{Binding}"
                                               Click="TogglePin_Click" />
-                                <AppBarButton Icon="Save"
+                                <AppBarButton x:Uid="FavoritesSaveMetadata"
+                                              Icon="Save"
                                               Label="保存备注与标签"
                                               Tag="{Binding}"
                                               Click="SaveMetadata_Click" />
-                                <AppBarButton Icon="OpenFile"
+                                <AppBarButton x:Uid="FavoritesOpenConversation"
+                                              Icon="OpenFile"
                                               Label="打开对话"
                                               Tag="{Binding}"
                                               Click="OpenConversation_Click" />
-                                <AppBarButton Icon="Copy"
+                                <AppBarButton x:Uid="FavoritesCopyCard"
+                                              Icon="Copy"
                                               Label="复制继续卡片"
                                               Tag="{Binding}"
                                               Click="CopyCard_Click" />
-                                <AppBarButton Icon="Remove"
+                                <AppBarButton x:Uid="FavoritesRemove"
+                                              Icon="Remove"
                                               Label="取消收藏"
                                               Tag="{Binding}"
                                               Click="RemoveFavorite_Click" />
@@ -83,6 +89,7 @@
         </ListView>
 
         <TextBlock x:Name="EmptyText"
+                   x:Uid="FavoritesEmpty"
                    Grid.Row="1"
                    Text="暂无收藏。在对话详情中点击“收藏”后，对话会显示在这里。"
                    HorizontalAlignment="Center"

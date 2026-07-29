@@ -33,7 +33,7 @@
                                        FontSize="12" />
                         </Border>
                     </StackPanel>
-                    <TextBlock Text="面向 AI Agent 与 CLI 的本地优先记忆、历史检索和工作接续工具。"
+                    <TextBlock x:Uid="AboutSubtitle" Text="面向 AI Agent 与 CLI 的本地优先记忆、历史检索和工作接续工具。"
                                MaxWidth="460"
                                TextAlignment="Center"
                                TextWrapping="Wrap"
@@ -48,7 +48,7 @@
                             <Image Source="Assets/GitHubMark.svg"
                                    Width="16"
                                    Height="16" />
-                            <TextBlock Text="GitHub" />
+                            <TextBlock x:Uid="AboutGitHub" Text="GitHub" />
                         </StackPanel>
                     </Button>
                     <Button x:Name="CheckUpdateButton"
@@ -57,12 +57,14 @@
                         <StackPanel Orientation="Horizontal" Spacing="7">
                             <FontIcon Glyph="&#xE72C;" FontSize="14" />
                             <TextBlock x:Name="CheckUpdateLabel"
+                                       x:Uid="AboutCheckUpdate"
                                        Text="检查更新" />
                         </StackPanel>
                     </Button>
                 </StackPanel>
 
                 <InfoBar x:Name="UpdateStatus"
+                         x:Uid="AboutUpdateStatus"
                          IsOpen="True"
                          IsClosable="False"
                          Severity="Informational"
@@ -71,7 +73,7 @@
                 <Border Style="{StaticResource CardStyle}">
                     <StackPanel Spacing="12">
                         <Grid>
-                            <TextBlock Text="最近版本更新"
+                            <TextBlock x:Uid="AboutLatestRelease" Text="最近版本更新"
                                        FontSize="17"
                                        FontWeight="SemiBold" />
                             <TextBlock x:Name="ReleaseTagText"
@@ -79,11 +81,11 @@
                                        Foreground="{StaticResource AIMemoryGreenBrush}"
                                        FontWeight="SemiBold" />
                         </Grid>
-                        <TextBlock Text="✓ 增量同步更可靠&#x0a;WebDAV 与本地备份只传输发生变化的内容。"
+                        <TextBlock x:Uid="AboutChangelogSync" Text="✓ 增量同步更可靠&#x0a;WebDAV 与本地备份只传输发生变化的内容。"
                                    TextWrapping="Wrap"
                                    LineHeight="22"
                                    LineStackingStrategy="BlockLineHeight" />
-                        <TextBlock Text="✓ 数据管理更清晰&#x0a;同步、数据位置、导入、备份与恢复集中管理。"
+                        <TextBlock x:Uid="AboutChangelogData" Text="✓ 数据管理更清晰&#x0a;同步、数据位置、导入、备份与恢复集中管理。"
                                    TextWrapping="Wrap"
                                    LineHeight="22"
                                    LineStackingStrategy="BlockLineHeight" />
@@ -91,7 +93,7 @@
                                    TextWrapping="Wrap"
                                    LineHeight="22"
                                    LineStackingStrategy="BlockLineHeight" />
-                        <TextBlock Text="✓ Windows 原生体验&#x0a;使用 WinUI 3、Windows App SDK 与系统凭据保险箱。"
+                        <TextBlock x:Uid="AboutChangelogNative" Text="✓ Windows 原生体验&#x0a;使用 WinUI 3、Windows App SDK 与系统凭据保险箱。"
                                    TextWrapping="Wrap"
                                    LineHeight="22"
                                    LineStackingStrategy="BlockLineHeight" />
@@ -100,10 +102,10 @@
 
                 <Border Style="{StaticResource CardStyle}">
                     <StackPanel Spacing="14">
-                        <TextBlock Text="关于本软件"
+                        <TextBlock x:Uid="AboutSoftwareTitle" Text="关于本软件"
                                    FontSize="17"
                                    FontWeight="SemiBold" />
-                        <TextBlock Text="AI Memory 是一款本地优先的 AI 工作记忆工具。它将不同 AI Agent 与命令行工具产生的对话历史、记忆规则、检查点和交接信息集中到一个原生工作台，帮助你快速找回上下文、检索过去的工作，并从上次中断的位置继续。&#x0a;&#x0a;所有核心数据均由本机管理，兼顾隐私、可靠性与长期可用性。"
+                        <TextBlock x:Uid="AboutSoftwareBody" Text="AI Memory 是一款本地优先的 AI 工作记忆工具。它将不同 AI Agent 与命令行工具产生的对话历史、记忆规则、检查点和交接信息集中到一个原生工作台，帮助你快速找回上下文、检索过去的工作，并从上次中断的位置继续。&#x0a;&#x0a;所有核心数据均由本机管理，兼顾隐私、可靠性与长期可用性。"
                                    FontSize="14"
                                    TextWrapping="Wrap"
                                    LineHeight="24"
@@ -113,7 +115,7 @@
                 </Border>
 
                 <StackPanel HorizontalAlignment="Center" Spacing="4">
-                    <TextBlock Text="本地优先 · 独立数据 · 原生 Windows 11"
+                    <TextBlock x:Uid="AboutFooter" Text="本地优先 · 独立数据 · 原生 Windows 11"
                                FontWeight="SemiBold"
                                Opacity="0.7" />
                     <TextBlock Text="Package  com.aimemory.windows"

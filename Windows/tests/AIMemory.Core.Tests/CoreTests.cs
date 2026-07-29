@@ -16,6 +16,28 @@ public sealed class CoreTests : IDisposable
 
     public CoreTests() => Directory.CreateDirectory(_root);
 
+    [Theory]
+    [InlineData(null, "system", "")]
+    [InlineData("", "system", "")]
+    [InlineData("system", "system", "")]
+    [InlineData("zh-CN", "zh-Hans", "zh-CN")]
+    [InlineData("zh-Hans", "zh-Hans", "zh-CN")]
+    [InlineData("en-US", "en", "en-US")]
+    [InlineData("en", "en", "en-US")]
+    [InlineData("unsupported", "system", "")]
+    public void LanguagePreferenceNormalizesCompatibleValues(
+        string? value,
+        string expectedId,
+        string expectedTag)
+    {
+        Assert.Equal(
+            expectedId,
+            LanguagePreferenceService.NormalizeId(value));
+        Assert.Equal(
+            expectedTag,
+            LanguagePreferenceService.ResolveWindowsLanguageTag(value));
+    }
+
     [Fact]
     public async Task DatabaseCreatesMacCompatibleVersionOneSchema()
     {

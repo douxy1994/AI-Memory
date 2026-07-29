@@ -2,6 +2,7 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 Push-Location $root
 try {
+    node .\scripts\verify-localization.mjs
     dotnet restore .\AIMemory.Windows.slnx
     dotnet test .\tests\AIMemory.Core.Tests\AIMemory.Core.Tests.csproj `
         --configuration Release --no-restore

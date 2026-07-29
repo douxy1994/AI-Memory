@@ -14,8 +14,9 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <StackPanel Spacing="4">
-                <TextBlock Text="回收站" Style="{StaticResource PageTitleStyle}" />
+                <TextBlock x:Uid="TrashTitle" Text="回收站" Style="{StaticResource PageTitleStyle}" />
                 <TextBlock x:Name="TrashSummaryText"
+                           x:Uid="TrashSummary"
                            Text="已删除对话的可恢复记录。"
                            TextWrapping="Wrap"
                            Opacity="0.65" />
@@ -24,7 +25,7 @@
                         Orientation="Horizontal"
                         Spacing="8"
                         VerticalAlignment="Center">
-                <TextBlock Text="保留天数" VerticalAlignment="Center" />
+                <TextBlock x:Uid="TrashRetentionDays" Text="保留天数" VerticalAlignment="Center" />
                 <NumberBox x:Name="TrashRetentionBox"
                            Width="100"
                            Minimum="1"
@@ -33,9 +34,10 @@
                            SpinButtonPlacementMode="Compact"
                            ValueChanged="TrashRetentionBox_ValueChanged" />
                 <Button x:Name="EmptyTrashButton"
+                        x:Uid="TrashEmptyButton"
                         Content="清空"
                         Click="EmptyTrash_Click" />
-                <Button Content="刷新" Click="Refresh_Click" />
+                <Button x:Uid="TrashRefresh" Content="刷新" Click="Refresh_Click" />
             </StackPanel>
         </Grid>
 
@@ -61,11 +63,13 @@
                             <CommandBar Grid.Column="1"
                                         Background="Transparent"
                                         DefaultLabelPosition="Right">
-                                <AppBarButton Icon="Undo"
+                                <AppBarButton x:Uid="TrashRestore"
+                                              Icon="Undo"
                                               Label="恢复"
                                               Tag="{Binding}"
                                               Click="Restore_Click" />
-                                <AppBarButton Icon="Delete"
+                                <AppBarButton x:Uid="TrashDelete"
+                                              Icon="Delete"
                                               Label="永久删除"
                                               Tag="{Binding}"
                                               Click="Delete_Click" />
@@ -77,6 +81,7 @@
         </ListView>
 
         <TextBlock x:Name="EmptyText"
+                   x:Uid="TrashEmpty"
                    Grid.Row="1"
                    Text="回收站为空。在对话详情点击“移到回收站”后，对话会在此保留并可恢复。"
                    HorizontalAlignment="Center"

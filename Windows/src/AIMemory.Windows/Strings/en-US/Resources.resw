@@ -1,0 +1,393 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="LanguageSystem" xml:space="preserve"><value>Use Windows language</value></data>
+  <data name="AppDescription" xml:space="preserve"><value>Local memory, history, and continuation workbench across AI Agents</value></data>
+  <data name="LanguageChineseSimplified" xml:space="preserve"><value>简体中文</value></data>
+  <data name="LanguageEnglish" xml:space="preserve"><value>English</value></data>
+  <data name="LanguageRestartRequired" xml:space="preserve"><value>Restart AI Memory to apply the language change.</value></data>
+  <data name="LanguageSavedRestartRequired" xml:space="preserve"><value>Language saved. Restart AI Memory to apply it.</value></data>
+  <data name="LanguageSaveFailed" xml:space="preserve"><value>Could not save the language setting: {0}</value></data>
+  <data name="UpdateAvailableAtLaunch" xml:space="preserve"><value>AI Memory {0} is available. Open Settings to review and install it.</value></data>
+  <data name="FontSystem" xml:space="preserve"><value>System default</value></data>
+  <data name="FontSourceSans" xml:space="preserve"><value>Noto Sans CJK SC</value></data>
+  <data name="FontSourceSerif" xml:space="preserve"><value>Noto Serif CJK SC</value></data>
+  <data name="FontWenkai" xml:space="preserve"><value>LXGW WenKai</value></data>
+  <data name="FontApplied" xml:space="preserve"><value>Applied {0}.</value></data>
+  <data name="FontSaveFailed" xml:space="preserve"><value>Could not save the font setting: {0}</value></data>
+  <data name="DataDirectoryPath" xml:space="preserve"><value>Data folder: {0}</value></data>
+  <data name="StartupEnabled" xml:space="preserve"><value>Enabled</value></data>
+  <data name="StartupDisabledByUser" xml:space="preserve"><value>Disabled by Windows or the user. You can restore it in Windows Settings.</value></data>
+  <data name="StartupDisabledByPolicy" xml:space="preserve"><value>Your organization’s policy prevents startup at login.</value></data>
+  <data name="StartupDisabled" xml:space="preserve"><value>Disabled</value></data>
+  <data name="StartupSettingUpdated" xml:space="preserve"><value>Startup setting updated.</value></data>
+  <data name="StartupSettingFailed" xml:space="preserve"><value>Could not update the startup setting: {0}</value></data>
+  <data name="AutomaticBackupEnabled" xml:space="preserve"><value>Automatic backup is enabled and checks for changes every {0} minutes.</value></data>
+  <data name="AutomaticBackupDisabled" xml:space="preserve"><value>Automatic backup is disabled.</value></data>
+  <data name="AutomaticBackupSaveFailed" xml:space="preserve"><value>Could not save automatic backup settings: {0}</value></data>
+  <data name="AgentIntegrationEnabled" xml:space="preserve"><value>{0} integration enabled.</value></data>
+  <data name="AgentIntegrationDisabled" xml:space="preserve"><value>{0} integration disabled.</value></data>
+  <data name="AgentIntegrationUpdateFailed" xml:space="preserve"><value>Could not update the Agent integration: {0}</value></data>
+  <data name="SettingsSaved" xml:space="preserve"><value>Settings saved.</value></data>
+  <data name="SettingsSaveFailed" xml:space="preserve"><value>Could not save settings: {0}</value></data>
+  <data name="WebDavVerificationSucceeded" xml:space="preserve"><value>Connection verified (HTTP {0}).</value></data>
+  <data name="WebDavVerificationFailed" xml:space="preserve"><value>Connection verification failed: {0}</value></data>
+  <data name="SyncCompleted" xml:space="preserve"><value>Sync complete: {0} uploaded, {1} downloaded, {2} unchanged.</value></data>
+  <data name="SyncFailed" xml:space="preserve"><value>Sync failed: {0}</value></data>
+  <data name="RecoveryPointCreated" xml:space="preserve"><value>Recovery point created: {0}</value></data>
+  <data name="RecoveryPointUnchanged" xml:space="preserve"><value>No data changed. Existing recovery point kept: {0}</value></data>
+  <data name="BackupFailed" xml:space="preserve"><value>Backup failed: {0}</value></data>
+  <data name="NoRecoveryPoints" xml:space="preserve"><value>No recovery points are available.</value></data>
+  <data name="RestoreRecoveryPointPrompt" xml:space="preserve"><value>The current database is backed up automatically before restoration. Choose a recovery point:</value></data>
+  <data name="RestoreRecoveryPointTitle" xml:space="preserve"><value>Restore from Recovery Point</value></data>
+  <data name="Restore" xml:space="preserve"><value>Restore</value></data>
+  <data name="Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="RestoreCompleted" xml:space="preserve"><value>Restore complete. Pre-restore data was backed up to: {0}</value></data>
+  <data name="RestoreFailed" xml:space="preserve"><value>Restore failed: {0}</value></data>
+  <data name="LocalSyncFolderSaved" xml:space="preserve"><value>Local sync folder saved.</value></data>
+  <data name="LocalSyncCompleted" xml:space="preserve"><value>Local sync complete: {0} uploaded, {1} downloaded, {2} unchanged.</value></data>
+  <data name="LocalSyncFailed" xml:space="preserve"><value>Local sync failed: {0}</value></data>
+  <data name="ChatMemDatabaseNotFound" xml:space="preserve"><value>No ChatMem database is available to import.</value></data>
+  <data name="ChatMemImportCompleted" xml:space="preserve"><value>ChatMem data imported.</value></data>
+  <data name="ChatMemImportCompletedWithBackup" xml:space="preserve"><value>ChatMem data imported. Original data backup: {0}</value></data>
+  <data name="ImportFailed" xml:space="preserve"><value>Import failed: {0}</value></data>
+  <data name="NativeHistoryImportCompleted" xml:space="preserve"><value>Local history import complete: {0}.</value></data>
+  <data name="NativeHistoryImportCompletedWithWarnings" xml:space="preserve"><value>Local history import complete: {0}; {1} warnings.</value></data>
+  <data name="NativeHistoryImportFailed" xml:space="preserve"><value>Local history import failed: {0}</value></data>
+  <data name="UpdateSettingsSaved" xml:space="preserve"><value>Update settings saved.</value></data>
+  <data name="UpdateSettingsSaveFailed" xml:space="preserve"><value>Could not save update settings: {0}</value></data>
+  <data name="OpenedAboutCheckingUpdates" xml:space="preserve"><value>Opened About AI Memory and started checking for updates.</value></data>
+  <data name="DiagnosticsReadFailed" xml:space="preserve"><value>Could not read diagnostics: {0}</value></data>
+  <data name="DiagnosticsCopied" xml:space="preserve"><value>Diagnostics copied.</value></data>
+  <data name="DataDirectory" xml:space="preserve"><value>the data folder</value></data>
+  <data name="BackupDirectory" xml:space="preserve"><value>the backup folder</value></data>
+  <data name="WindowsCannotOpenLocation" xml:space="preserve"><value>Windows could not open {0}.</value></data>
+  <data name="OpenLocationFailed" xml:space="preserve"><value>Could not open {0}: {1}</value></data>
+  <data name="AutomaticBackupRunFailed" xml:space="preserve"><value>Automatic backup failed: {0}</value></data>
+  <data name="RefreshingAllSources" xml:space="preserve"><value>Refreshing all sources…</value></data>
+  <data name="ListSeparator" xml:space="preserve"><value>, </value></data>
+  <data name="SourcesRefreshCompleted" xml:space="preserve"><value>Source refresh complete: {0}.</value></data>
+  <data name="SourcesRefreshCompletedWithWarnings" xml:space="preserve"><value>Source refresh complete: {0}; {1} warnings.</value></data>
+  <data name="SourcesRefreshFailed" xml:space="preserve"><value>Could not refresh sources: {0}</value></data>
+  <data name="SyncingChanges" xml:space="preserve"><value>Syncing changed content…</value></data>
+  <data name="ConfigureSyncFirst" xml:space="preserve"><value>Configure a sync service in Data Sync &amp; Backup first.</value></data>
+  <data name="HelpTitle" xml:space="preserve"><value>AI Memory Help</value></data>
+  <data name="HelpContent" xml:space="preserve"><value>Ctrl+1 Return to Workbench&#x0a;Ctrl+2 Open Memory and Review Queue&#x0a;Ctrl+3 Open History&#x0a;Ctrl+R Refresh All Sources&#x0a;Ctrl+Shift+S Incremental Sync&#x0a;Ctrl+, Open Settings</value></data>
+  <data name="Done" xml:space="preserve"><value>Done</value></data>
+  <data name="AboutWindowTitle" xml:space="preserve"><value>About AI Memory</value></data>
+  <data name="ReleaseVersion" xml:space="preserve"><value>Release {0}</value></data>
+  <data name="DevelopmentVersion" xml:space="preserve"><value>Development {0}</value></data>
+  <data name="AgentCoverage" xml:space="preserve"><value>✓ Broader Agent coverage&#x0a;Detects {0} popular Agents and CLIs, with installed products shown first.</value></data>
+  <data name="CheckingUpdates" xml:space="preserve"><value>Checking…</value></data>
+  <data name="CheckingGitHubReleases" xml:space="preserve"><value>Checking GitHub Releases…</value></data>
+  <data name="CurrentVersionLatest" xml:space="preserve"><value>You are up to date. The newest release is {0}.</value></data>
+  <data name="NewVersionFound" xml:space="preserve"><value>New version {0}: {1}</value></data>
+  <data name="DownloadingNewVersion" xml:space="preserve"><value>Version {0} is available. Downloading the installer…</value></data>
+  <data name="WindowsCannotOpenInstaller" xml:space="preserve"><value>Windows could not open the installer.</value></data>
+  <data name="InstallerLaunched" xml:space="preserve"><value>The installer was downloaded and opened with Windows Installer.</value></data>
+  <data name="UpdateCheckFailed" xml:space="preserve"><value>Update check failed: {0}</value></data>
+  <data name="CheckForUpdates" xml:space="preserve"><value>Check for Updates</value></data>
+  <data name="UncommittedBuild" xml:space="preserve"><value>Uncommitted build</value></data>
+  <data name="AgentStateIntegratedDetail" xml:space="preserve"><value>AI Memory integration is enabled.</value></data>
+  <data name="AgentStatePartialDetail" xml:space="preserve"><value>The AI Memory integration is only partially installed. Enable it to repair automatically.</value></data>
+  <data name="AgentStateDetectedManualDetail" xml:space="preserve"><value>Installed locally. A safe automatic configuration format is not available.</value></data>
+  <data name="AgentStateDetectedDetail" xml:space="preserve"><value>Installed locally. AI Memory integration is not enabled yet.</value></data>
+  <data name="AgentStateMissingDetail" xml:space="preserve"><value>Not installed locally, so it remains disabled.</value></data>
+  <data name="AgentStateIntegrated" xml:space="preserve"><value>Integrated</value></data>
+  <data name="AgentStatePartial" xml:space="preserve"><value>Repair needed</value></data>
+  <data name="AgentStateDetected" xml:space="preserve"><value>Installed</value></data>
+  <data name="AgentStateMissing" xml:space="preserve"><value>Not installed</value></data>
+  <data name="Enable" xml:space="preserve"><value>Enable</value></data>
+  <data name="Disable" xml:space="preserve"><value>Disable</value></data>
+  <data name="DetectedAgentSummary" xml:space="preserve"><value>{0} of {1} installed; installed products appear first.</value></data>
+  <data name="AllSources" xml:space="preserve"><value>All sources</value></data>
+  <data name="RefreshCompletedTitle" xml:space="preserve"><value>Refresh Complete</value></data>
+  <data name="RefreshCompletedBody" xml:space="preserve"><value>Reloaded the local database and Agent installation status.</value></data>
+  <data name="ComputerGroupsTitle" xml:space="preserve"><value>Computer Groups</value></data>
+  <data name="NoProjectsToManage" xml:space="preserve"><value>There are no projects to manage.</value></data>
+  <data name="ComputerGroupsDescription" xml:space="preserve"><value>Rename computers or move projects into another computer group. This changes only how AI Memory displays them and does not modify original paths.</value></data>
+  <data name="ComputerName" xml:space="preserve"><value>Computer name</value></data>
+  <data name="DoNotMerge" xml:space="preserve"><value>Do not merge</value></data>
+  <data name="MergeComputer" xml:space="preserve"><value>Merge computer</value></data>
+  <data name="ProjectConversationCount" xml:space="preserve"><value>{0} · {1} conversations</value></data>
+  <data name="AssignedComputer" xml:space="preserve"><value>Assigned computer</value></data>
+  <data name="ManageComputerGroups" xml:space="preserve"><value>Manage Computer Groups</value></data>
+  <data name="Save" xml:space="preserve"><value>Save</value></data>
+  <data name="RestoreAutomaticGrouping" xml:space="preserve"><value>Restore Automatic Grouping</value></data>
+  <data name="AutomaticGroupingRestored" xml:space="preserve"><value>Automatic grouping by project path was restored.</value></data>
+  <data name="ComputerGroupsSaved" xml:space="preserve"><value>Computer names and project groups saved.</value></data>
+  <data name="SyncCompletedTitle" xml:space="preserve"><value>Sync Complete</value></data>
+  <data name="SyncFailedTitle" xml:space="preserve"><value>Sync Failed</value></data>
+  <data name="SyncTitle" xml:space="preserve"><value>Sync</value></data>
+  <data name="ConfigureWebDavFirst" xml:space="preserve"><value>Configure WebDAV in Settings first.</value></data>
+  <data name="UnknownProject" xml:space="preserve"><value>Unknown project</value></data>
+  <data name="UntitledConversation" xml:space="preserve"><value>Untitled conversation</value></data>
+  <data name="ConversationCount" xml:space="preserve"><value>{0} conversations</value></data>
+  <data name="NotProvided" xml:space="preserve"><value>Not provided</value></data>
+  <data name="Favorite" xml:space="preserve"><value>Favorite</value></data>
+  <data name="RemoveFavorite" xml:space="preserve"><value>Remove Favorite</value></data>
+  <data name="ConversationFavorited" xml:space="preserve"><value>Conversation added to Favorites.</value></data>
+  <data name="ConversationUnfavorited" xml:space="preserve"><value>Conversation removed from Favorites.</value></data>
+  <data name="FavoriteUpdateFailed" xml:space="preserve"><value>Could not update the favorite: {0}</value></data>
+  <data name="ProjectPathCopied" xml:space="preserve"><value>Project path copied.</value></data>
+  <data name="ResumeCommandCopied" xml:space="preserve"><value>Resume command copied.</value></data>
+  <data name="FullConversationCopy" xml:space="preserve"><value>Copy full conversation</value></data>
+  <data name="SummaryMigration" xml:space="preserve"><value>Summary migration (copy continuation card)</value></data>
+  <data name="TargetAgent" xml:space="preserve"><value>Target Agent</value></data>
+  <data name="CopyKeepSource" xml:space="preserve"><value>Copy (keep source)</value></data>
+  <data name="MoveAfterVerification" xml:space="preserve"><value>Move (trash source after verification)</value></data>
+  <data name="CopySourceCannotMove" xml:space="preserve"><value>Copy (this source cannot be moved safely)</value></data>
+  <data name="FullMigrationDescription" xml:space="preserve"><value>Full migration writes to the target Agent’s real local history and rolls back if read-back verification fails.</value></data>
+  <data name="MigrateConversation" xml:space="preserve"><value>Migrate Conversation</value></data>
+  <data name="Continue" xml:space="preserve"><value>Continue</value></data>
+  <data name="ContinuationCardCopied" xml:space="preserve"><value>Continuation card copied.</value></data>
+  <data name="NoSafeWritableAgent" xml:space="preserve"><value>No safely writable target Agent was detected.</value></data>
+  <data name="SelectTargetAgent" xml:space="preserve"><value>Select a target Agent.</value></data>
+  <data name="MigrationMoveSucceeded" xml:space="preserve"><value>Moved to {0}. The source conversation is now in Trash.</value></data>
+  <data name="MigrationSucceeded" xml:space="preserve"><value>Migrated to {0} · {1}…</value></data>
+  <data name="MigrationFailed" xml:space="preserve"><value>Migration failed: {0}</value></data>
+  <data name="MoveToTrashQuestion" xml:space="preserve"><value>Move to Trash?</value></data>
+  <data name="MoveToTrashDescription" xml:space="preserve"><value>The conversation is removed from the AI Memory database and a recoverable copy is retained.</value></data>
+  <data name="MoveToTrash" xml:space="preserve"><value>Move to Trash</value></data>
+  <data name="MoveToTrashFailed" xml:space="preserve"><value>Could not move the conversation to Trash: {0}</value></data>
+  <data name="CheckpointCreated" xml:space="preserve"><value>Checkpoint created.</value></data>
+  <data name="CheckpointCreationFailed" xml:space="preserve"><value>Could not create the checkpoint: {0}</value></data>
+  <data name="HandoffCreated" xml:space="preserve"><value>Created a handoff for {0}.</value></data>
+  <data name="HandoffCreationFailed" xml:space="preserve"><value>Could not create the handoff: {0}</value></data>
+  <data name="FavoriteUnpinned" xml:space="preserve"><value>Favorite unpinned.</value></data>
+  <data name="FavoritePinned" xml:space="preserve"><value>Favorite pinned.</value></data>
+  <data name="FavoritePinUpdateFailed" xml:space="preserve"><value>Could not update the pin state: {0}</value></data>
+  <data name="FavoriteMetadataSaved" xml:space="preserve"><value>Favorite note and tags saved.</value></data>
+  <data name="FavoriteSaveFailed" xml:space="preserve"><value>Could not save the favorite: {0}</value></data>
+  <data name="FavoriteSourceUnavailable" xml:space="preserve"><value>The original conversation is unavailable. The favorite snapshot is retained.</value></data>
+  <data name="FavoriteCardCopied" xml:space="preserve"><value>Favorite continuation card copied.</value></data>
+  <data name="Pinned" xml:space="preserve"><value>Pinned</value></data>
+  <data name="Unpin" xml:space="preserve"><value>Unpin</value></data>
+  <data name="Pin" xml:space="preserve"><value>Pin</value></data>
+  <data name="Title" xml:space="preserve"><value>Title</value></data>
+  <data name="RuleContent" xml:space="preserve"><value>Rule content</value></data>
+  <data name="UsageHint" xml:space="preserve"><value>Usage hint</value></data>
+  <data name="ApproveCandidateRule" xml:space="preserve"><value>Approve Candidate Rule</value></data>
+  <data name="Approve" xml:space="preserve"><value>Approve</value></data>
+  <data name="CandidateApproved" xml:space="preserve"><value>Candidate approved and written to project memory.</value></data>
+  <data name="ApprovalFailed" xml:space="preserve"><value>Approval failed: {0}</value></data>
+  <data name="CandidateSnoozed" xml:space="preserve"><value>Candidate snoozed.</value></data>
+  <data name="CandidateRejected" xml:space="preserve"><value>Candidate rejected. Its evidence is retained.</value></data>
+  <data name="CandidateUpdateFailed" xml:space="preserve"><value>Could not update the candidate: {0}</value></data>
+  <data name="EditApprovedRule" xml:space="preserve"><value>Edit Approved Rule</value></data>
+  <data name="RuleUpdated" xml:space="preserve"><value>Rule updated.</value></data>
+  <data name="RuleReverified" xml:space="preserve"><value>Rule reverified.</value></data>
+  <data name="RuleDisabled" xml:space="preserve"><value>Rule disabled.</value></data>
+  <data name="RuleUpdateFailed" xml:space="preserve"><value>Could not update the rule: {0}</value></data>
+  <data name="TargetProfileOptional" xml:space="preserve"><value>Target profile (optional)</value></data>
+  <data name="CreateHandoff" xml:space="preserve"><value>Create Handoff</value></data>
+  <data name="Create" xml:space="preserve"><value>Create</value></data>
+  <data name="HandoffConsumed" xml:space="preserve"><value>Handoff marked as consumed.</value></data>
+  <data name="HandoffUpdateFailed" xml:space="preserve"><value>Could not update the handoff: {0}</value></data>
+  <data name="TrashSummaryWithCount" xml:space="preserve"><value>{0} recoverable deleted conversations, retained for {1:0} days.</value></data>
+  <data name="TrashSummaryRetention" xml:space="preserve"><value>Recoverable deleted conversations are retained for {0} days.</value></data>
+  <data name="TrashRetentionUpdated" xml:space="preserve"><value>Trash retention period updated.</value></data>
+  <data name="EmptyTrashQuestion" xml:space="preserve"><value>Empty Trash?</value></data>
+  <data name="EmptyTrashDescription" xml:space="preserve"><value>This permanently deletes all {0} Trash records and cannot be undone.</value></data>
+  <data name="EmptyPermanently" xml:space="preserve"><value>Empty Permanently</value></data>
+  <data name="TrashRecordsDeleted" xml:space="preserve"><value>Permanently deleted {0} Trash records.</value></data>
+  <data name="EmptyTrashFailed" xml:space="preserve"><value>Could not empty Trash: {0}</value></data>
+  <data name="ConversationRestored" xml:space="preserve"><value>Conversation restored.</value></data>
+  <data name="DeletePermanentlyQuestion" xml:space="preserve"><value>Delete Permanently?</value></data>
+  <data name="CannotUndo" xml:space="preserve"><value>This action cannot be undone.</value></data>
+  <data name="DeletePermanently" xml:space="preserve"><value>Delete Permanently</value></data>
+  <data name="TrashRecordDeleted" xml:space="preserve"><value>Trash record permanently deleted.</value></data>
+  <data name="DeletePermanentlyFailed" xml:space="preserve"><value>Permanent deletion failed: {0}</value></data>
+  <data name="HistoryRefreshed" xml:space="preserve"><value>History refreshed.</value></data>
+  <data name="HandoffSourceCheckpointUnavailable" xml:space="preserve"><value>This handoff has no available source checkpoint.</value></data>
+  <data name="HistorySourceUnavailable" xml:space="preserve"><value>The source conversation is unavailable. The history entry is retained.</value></data>
+  <data name="SelectConversationToTrash" xml:space="preserve"><value>Select a conversation to move to Trash.</value></data>
+  <data name="ConversationMovedToTrash" xml:space="preserve"><value>Conversation moved to Trash.</value></data>
+
+  <data name="MenuWorkbench.Title" xml:space="preserve"><value>Workbench</value></data>
+  <data name="MenuReturnWorkbench.Text" xml:space="preserve"><value>Return to Workbench</value></data>
+  <data name="MenuReview.Text" xml:space="preserve"><value>Review Queue</value></data>
+  <data name="MenuHistory.Text" xml:space="preserve"><value>History</value></data>
+  <data name="MenuSyncNow.Text" xml:space="preserve"><value>Sync Now</value></data>
+  <data name="MenuRefreshSources.Text" xml:space="preserve"><value>Refresh All Sources</value></data>
+  <data name="MenuWindow.Title" xml:space="preserve"><value>Window</value></data>
+  <data name="MenuBack.Text" xml:space="preserve"><value>Back</value></data>
+  <data name="MenuSettings.Text" xml:space="preserve"><value>Settings</value></data>
+  <data name="MenuHelp.Title" xml:space="preserve"><value>Help</value></data>
+  <data name="MenuHelpItem.Text" xml:space="preserve"><value>AI Memory Help</value></data>
+  <data name="MenuAbout.Text" xml:space="preserve"><value>About AI Memory</value></data>
+  <data name="MenuCheckUpdates.Text" xml:space="preserve"><value>Check for Updates</value></data>
+  <data name="NavigationWorkbench.Content" xml:space="preserve"><value>Workbench</value></data>
+  <data name="NavigationHistory.Content" xml:space="preserve"><value>History</value></data>
+  <data name="NavigationMemory.Content" xml:space="preserve"><value>Memory</value></data>
+  <data name="NavigationFavorites.Content" xml:space="preserve"><value>Favorites</value></data>
+  <data name="NavigationTrash.Content" xml:space="preserve"><value>Trash</value></data>
+
+  <data name="SettingsTitle.Text" xml:space="preserve"><value>Settings</value></data>
+  <data name="SettingsSubtitle.Text" xml:space="preserve"><value>Manage startup, Agent integrations, data sync, backups, and software updates.</value></data>
+  <data name="SettingsCategoryGeneral.Text" xml:space="preserve"><value>General</value></data>
+  <data name="SettingsCategoryAgents.Text" xml:space="preserve"><value>Agent Integrations</value></data>
+  <data name="SettingsCategorySync.Text" xml:space="preserve"><value>Data Sync &amp; Backup</value></data>
+  <data name="SettingsCategoryUpdates.Text" xml:space="preserve"><value>Updates &amp; Diagnostics</value></data>
+  <data name="SettingsGeneralTitle.Text" xml:space="preserve"><value>General</value></data>
+  <data name="SettingsGeneralSubtitle.Text" xml:space="preserve"><value>Control fonts, login startup, and automatic backups.</value></data>
+  <data name="SettingsLanguageFontTitle.Text" xml:space="preserve"><value>Language &amp; Font</value></data>
+  <data name="SettingsLanguage.Header" xml:space="preserve"><value>Display language</value></data>
+  <data name="SettingsLanguageRestartHint.Text" xml:space="preserve"><value>Restart AI Memory to apply language changes.</value></data>
+  <data name="SettingsFont.Header" xml:space="preserve"><value>Font</value></data>
+  <data name="SettingsFontHint.Text" xml:space="preserve"><value>Font changes apply immediately. Windows uses the system font when the selected font is unavailable.</value></data>
+  <data name="SettingsStartupTitle.Text" xml:space="preserve"><value>Start at login</value></data>
+  <data name="SettingsStartupLoading.Text" xml:space="preserve"><value>Reading system status…</value></data>
+  <data name="SettingsAutoBackupTitle.Text" xml:space="preserve"><value>Automatic Backup</value></data>
+  <data name="SettingsAutoBackupToggleTitle.Text" xml:space="preserve"><value>Back up the database and settings on a schedule</value></data>
+  <data name="SettingsAutoBackupHint.Text" xml:space="preserve"><value>Unchanged data does not create duplicate recovery points. Unchanged files are reused with NTFS hard links.</value></data>
+  <data name="SettingsBackupInterval.Header" xml:space="preserve"><value>Backup interval (minutes)</value></data>
+  <data name="SettingsSaveAutoBackup.Content" xml:space="preserve"><value>Save Automatic Backup</value></data>
+  <data name="SettingsAgentsTitle.Text" xml:space="preserve"><value>Agent Integrations</value></data>
+  <data name="SettingsAgentsSubtitle.Text" xml:space="preserve"><value>Installed products appear first. Missing products remain disabled.</value></data>
+  <data name="SettingsDetectAgents.Content" xml:space="preserve"><value>Detect Again</value></data>
+  <data name="SettingsSyncTitle.Text" xml:space="preserve"><value>Data Sync &amp; Backup</value></data>
+  <data name="SettingsSyncSubtitle.Text" xml:space="preserve"><value>Manage local folders, WebDAV, history import, and recovery points in one place.</value></data>
+  <data name="SettingsLocalSyncTitle.Text" xml:space="preserve"><value>Local Sync Folder</value></data>
+  <data name="SettingsLocalSyncHint.Text" xml:space="preserve"><value>Use a shared OneDrive, Dropbox, or Google Drive folder. Only changed conversation files are transferred.</value></data>
+  <data name="SettingsLocalSyncFolder.PlaceholderText" xml:space="preserve"><value>For example, D:\OneDrive\AI Memory</value></data>
+  <data name="SettingsSaveFolder.Label" xml:space="preserve"><value>Save Folder</value></data>
+  <data name="SettingsSyncFolderNow.Label" xml:space="preserve"><value>Sync Now</value></data>
+  <data name="SettingsWebDavTitle.Text" xml:space="preserve"><value>WebDAV</value></data>
+  <data name="SettingsWebDavServerPath.PlaceholderText" xml:space="preserve"><value>Server path, for example webdav</value></data>
+  <data name="SettingsWebDavRemotePath.PlaceholderText" xml:space="preserve"><value>Remote folder, for example aimemory</value></data>
+  <data name="SettingsWebDavUsername.PlaceholderText" xml:space="preserve"><value>Username</value></data>
+  <data name="SettingsWebDavPassword.PlaceholderText" xml:space="preserve"><value>Password</value></data>
+  <data name="SettingsVerifyWebDav.Label" xml:space="preserve"><value>Verify Connection</value></data>
+  <data name="SettingsSyncWebDavNow.Label" xml:space="preserve"><value>Sync Now</value></data>
+  <data name="SettingsSaveWebDav.Label" xml:space="preserve"><value>Save</value></data>
+  <data name="SettingsRecoveryTitle.Text" xml:space="preserve"><value>Data &amp; Recovery</value></data>
+  <data name="SettingsCreateRecoveryPoint.Label" xml:space="preserve"><value>Create Recovery Point</value></data>
+  <data name="SettingsRestoreRecoveryPoint.Label" xml:space="preserve"><value>Restore Recovery Point</value></data>
+  <data name="SettingsOpenBackupFolder.Label" xml:space="preserve"><value>Open Backup Folder</value></data>
+  <data name="SettingsImportAgentHistory.Label" xml:space="preserve"><value>Import Local Agent History</value></data>
+  <data name="SettingsImportChatMem.Label" xml:space="preserve"><value>Import ChatMem Data</value></data>
+  <data name="SettingsUpdatesTitle.Text" xml:space="preserve"><value>Updates &amp; Diagnostics</value></data>
+  <data name="SettingsUpdatesSubtitle.Text" xml:space="preserve"><value>Configure automatic update checks and inspect the current machine state.</value></data>
+  <data name="SettingsSoftwareUpdateTitle.Text" xml:space="preserve"><value>Software Update</value></data>
+  <data name="SettingsAutoUpdateTitle.Text" xml:space="preserve"><value>Automatically check for updates</value></data>
+  <data name="SettingsAutoUpdateHint.Text" xml:space="preserve"><value>Get stable releases from the AI Memory GitHub repository.</value></data>
+  <data name="SettingsSaveUpdate.Label" xml:space="preserve"><value>Save Update Settings</value></data>
+  <data name="SettingsCheckUpdateAbout.Label" xml:space="preserve"><value>Check in About</value></data>
+  <data name="SettingsUpdateStatus.Text" xml:space="preserve"><value>Update checking and installation are handled in the About AI Memory window.</value></data>
+  <data name="SettingsDiagnosticsTitle.Text" xml:space="preserve"><value>Diagnostics</value></data>
+  <data name="SettingsDiagnosticsHint.Text" xml:space="preserve"><value>This report reflects the current database and machine environment for checking versions, data, and Agent status.</value></data>
+  <data name="SettingsRefreshDiagnostics.Label" xml:space="preserve"><value>Refresh Diagnostics</value></data>
+  <data name="SettingsCopyDiagnostics.Label" xml:space="preserve"><value>Copy Diagnostics</value></data>
+  <data name="SettingsOpenDataFolder.Label" xml:space="preserve"><value>Open Data Folder</value></data>
+  <data name="WorkbenchTitle.Text" xml:space="preserve"><value>Continue Working</value></data>
+  <data name="WorkbenchSubtitle.Text" xml:space="preserve"><value>Recent progress, project groups, resume commands, and next steps in one workbench.</value></data>
+  <data name="WorkbenchSync.Label" xml:space="preserve"><value>Sync Now</value></data>
+  <data name="WorkbenchRefresh.Label" xml:space="preserve"><value>Refresh Sources</value></data>
+  <data name="WorkbenchHistory.Label" xml:space="preserve"><value>History</value></data>
+  <data name="WorkbenchCurrentSourceCount.Text" xml:space="preserve"><value>Conversations in this source</value></data>
+  <data name="WorkbenchAllAgentCount.Text" xml:space="preserve"><value>All Agent conversations</value></data>
+  <data name="WorkbenchPendingCount.Text" xml:space="preserve"><value>Review candidates</value></data>
+  <data name="WorkbenchCheckpointCount.Text" xml:space="preserve"><value>Checkpoints</value></data>
+  <data name="WorkbenchRecentTasks.Text" xml:space="preserve"><value>Recent Tasks</value></data>
+  <data name="WorkbenchNoRecent.Text" xml:space="preserve"><value>This source has no conversations yet.</value></data>
+  <data name="WorkbenchProjects.Text" xml:space="preserve"><value>Projects</value></data>
+  <data name="WorkbenchManageMachines.Content" xml:space="preserve"><value>Manage Computer Groups</value></data>
+  <data name="WorkbenchNoProjects.Text" xml:space="preserve"><value>This source has no projects yet.</value></data>
+  <data name="WorkbenchInstalledAgents.Text" xml:space="preserve"><value>Installed Agents / CLIs</value></data>
+  <data name="WorkbenchNoAgents.Text" xml:space="preserve"><value>No local Agent was detected. All integrations remain disabled.</value></data>
+
+  <data name="ConversationBack.Label" xml:space="preserve"><value>Back</value></data>
+  <data name="ConversationFavorite.Label" xml:space="preserve"><value>Favorite</value></data>
+  <data name="ConversationCopyPath.Label" xml:space="preserve"><value>Copy Path</value></data>
+  <data name="ConversationMigrate.Label" xml:space="preserve"><value>Migrate</value></data>
+  <data name="ConversationTrash.Label" xml:space="preserve"><value>Move to Trash</value></data>
+  <data name="ConversationCheckpoint.Label" xml:space="preserve"><value>Create Checkpoint</value></data>
+  <data name="ConversationMessages.Text" xml:space="preserve"><value>Messages</value></data>
+  <data name="ConversationFileChangesMetric.Text" xml:space="preserve"><value>File changes</value></data>
+  <data name="ConversationToolCalls.Text" xml:space="preserve"><value>Tool calls</value></data>
+  <data name="ConversationResumeTitle.Text" xml:space="preserve"><value>Resumable Progress</value></data>
+  <data name="ConversationResumeCommand.Text" xml:space="preserve"><value>Resume command</value></data>
+  <data name="ConversationCopyResume.Content" xml:space="preserve"><value>Copy Resume Command</value></data>
+  <data name="ConversationStorageLocation.Text" xml:space="preserve"><value>Storage location</value></data>
+  <data name="ConversationFileChangesTitle.Text" xml:space="preserve"><value>File Changes</value></data>
+  <data name="ConversationNoFileChanges.Text" xml:space="preserve"><value>No file changes were recorded in this conversation.</value></data>
+  <data name="ConversationHandoffTitle.Text" xml:space="preserve"><value>Agent Handoff</value></data>
+  <data name="ConversationTargetAgent.PlaceholderText" xml:space="preserve"><value>Target Agent</value></data>
+  <data name="ConversationCreateHandoff.Content" xml:space="preserve"><value>Create Handoff</value></data>
+
+  <data name="HistoryTitle.Text" xml:space="preserve"><value>History</value></data>
+  <data name="HistorySubtitle.Text" xml:space="preserve"><value>A unified library of conversations, memories, checkpoints, handoffs, runs, artifacts, and episodes.</value></data>
+  <data name="HistoryRefresh.Content" xml:space="preserve"><value>Refresh</value></data>
+  <data name="HistoryConversationsTab.Header" xml:space="preserve"><value>Conversations</value></data>
+  <data name="HistorySearch.PlaceholderText" xml:space="preserve"><value>Search local history</value></data>
+  <data name="HistoryTrashSelected.Content" xml:space="preserve"><value>Move to Trash</value></data>
+  <data name="HistoryNoConversations.Text" xml:space="preserve"><value>No conversations to display.</value></data>
+  <data name="HistoryMemoryTab.Header" xml:space="preserve"><value>Memory</value></data>
+  <data name="HistoryOpenMemory.Text" xml:space="preserve"><value>Open memory management</value></data>
+  <data name="HistoryCheckpointsTab.Header" xml:space="preserve"><value>Checkpoints</value></data>
+  <data name="HistoryOpenSourceCheckpoint.Text" xml:space="preserve"><value>Open source conversation</value></data>
+  <data name="HistoryHandoffsTab.Header" xml:space="preserve"><value>Handoffs</value></data>
+  <data name="HistoryOpenSourceHandoff.Text" xml:space="preserve"><value>Open source conversation</value></data>
+  <data name="HistoryRunsTab.Header" xml:space="preserve"><value>Runs</value></data>
+  <data name="HistoryOpenSourceRun.Text" xml:space="preserve"><value>Open source conversation</value></data>
+  <data name="HistoryArtifactsTab.Header" xml:space="preserve"><value>Artifacts</value></data>
+  <data name="HistoryOpenArtifactSource.Text" xml:space="preserve"><value>Open the conversation that produced this artifact</value></data>
+  <data name="HistoryEpisodesTab.Header" xml:space="preserve"><value>Episodes</value></data>
+  <data name="HistoryOpenSourceEpisode.Text" xml:space="preserve"><value>Open source conversation</value></data>
+  <data name="HistoryWikiTab.Header" xml:space="preserve"><value>Wiki</value></data>
+  <data name="HistoryOpenWiki.Text" xml:space="preserve"><value>View full page</value></data>
+
+  <data name="FavoritesTitle.Text" xml:space="preserve"><value>Favorites</value></data>
+  <data name="FavoritesSubtitle.Text" xml:space="preserve"><value>Favorites store lightweight snapshots without copying or moving the original conversations.</value></data>
+  <data name="FavoritesNote.Header" xml:space="preserve"><value>Note</value></data>
+  <data name="FavoritesNote.PlaceholderText" xml:space="preserve"><value>Why is this conversation important?</value></data>
+  <data name="FavoritesTags.Header" xml:space="preserve"><value>Tags</value></data>
+  <data name="FavoritesTags.PlaceholderText" xml:space="preserve"><value>For example: release, fix</value></data>
+  <data name="FavoritesSaveMetadata.Label" xml:space="preserve"><value>Save Note &amp; Tags</value></data>
+  <data name="FavoritesOpenConversation.Label" xml:space="preserve"><value>Open Conversation</value></data>
+  <data name="FavoritesCopyCard.Label" xml:space="preserve"><value>Copy Continuation Card</value></data>
+  <data name="FavoritesRemove.Label" xml:space="preserve"><value>Remove Favorite</value></data>
+  <data name="FavoritesEmpty.Text" xml:space="preserve"><value>No favorites yet. Select Favorite in a conversation to show it here.</value></data>
+
+  <data name="MemoryTitle.Text" xml:space="preserve"><value>Memory &amp; Continuation</value></data>
+  <data name="MemorySubtitle.Text" xml:space="preserve"><value>Review candidate rules, maintain approved memories, and manage checkpoints and Agent handoffs.</value></data>
+  <data name="MemoryRefresh.Content" xml:space="preserve"><value>Refresh</value></data>
+  <data name="MemoryReviewTab.Header" xml:space="preserve"><value>Review Queue</value></data>
+  <data name="MemoryApprove.Content" xml:space="preserve"><value>Approve / Edit</value></data>
+  <data name="MemorySnooze.Content" xml:space="preserve"><value>Snooze</value></data>
+  <data name="MemoryReject.Content" xml:space="preserve"><value>Reject</value></data>
+  <data name="MemoryApprovedTab.Header" xml:space="preserve"><value>Approved Rules</value></data>
+  <data name="MemoryEdit.Content" xml:space="preserve"><value>Edit</value></data>
+  <data name="MemoryReverify.Content" xml:space="preserve"><value>Reverify</value></data>
+  <data name="MemoryRetire.Content" xml:space="preserve"><value>Disable</value></data>
+  <data name="MemoryRecoveryTab.Header" xml:space="preserve"><value>Checkpoints &amp; Handoffs</value></data>
+  <data name="MemoryCheckpoints.Text" xml:space="preserve"><value>Checkpoints</value></data>
+  <data name="MemoryCreateHandoff.Content" xml:space="preserve"><value>Create Handoff</value></data>
+  <data name="MemoryHandoffs.Text" xml:space="preserve"><value>Handoff Packets</value></data>
+  <data name="MemoryConsumeHandoff.Content" xml:space="preserve"><value>Mark Consumed</value></data>
+
+  <data name="TrashTitle.Text" xml:space="preserve"><value>Trash</value></data>
+  <data name="TrashSummary.Text" xml:space="preserve"><value>Recoverable records of deleted conversations.</value></data>
+  <data name="TrashRetentionDays.Text" xml:space="preserve"><value>Retention days</value></data>
+  <data name="TrashEmptyButton.Content" xml:space="preserve"><value>Empty</value></data>
+  <data name="TrashRefresh.Content" xml:space="preserve"><value>Refresh</value></data>
+  <data name="TrashRestore.Label" xml:space="preserve"><value>Restore</value></data>
+  <data name="TrashDelete.Label" xml:space="preserve"><value>Delete Permanently</value></data>
+  <data name="TrashEmpty.Text" xml:space="preserve"><value>Trash is empty. Conversations moved to Trash remain recoverable here.</value></data>
+
+  <data name="AboutSubtitle.Text" xml:space="preserve"><value>A local-first memory, history search, and work-continuation tool for AI Agents and CLIs.</value></data>
+  <data name="AboutGitHub.Text" xml:space="preserve"><value>GitHub</value></data>
+  <data name="AboutCheckUpdate.Text" xml:space="preserve"><value>Check for Updates</value></data>
+  <data name="AboutUpdateStatus.Message" xml:space="preserve"><value>Updates have not been checked yet</value></data>
+  <data name="AboutLatestRelease.Text" xml:space="preserve"><value>Latest Release</value></data>
+  <data name="AboutChangelogSync.Text" xml:space="preserve"><value>✓ More reliable incremental sync&#x0a;WebDAV and local backup transfer only changed content.</value></data>
+  <data name="AboutChangelogData.Text" xml:space="preserve"><value>✓ Clearer data management&#x0a;Sync, data locations, import, backup, and recovery are managed together.</value></data>
+  <data name="AboutChangelogNative.Text" xml:space="preserve"><value>✓ Native Windows experience&#x0a;Built with WinUI 3, Windows App SDK, and the system Credential Locker.</value></data>
+  <data name="AboutSoftwareTitle.Text" xml:space="preserve"><value>About This App</value></data>
+  <data name="AboutSoftwareBody.Text" xml:space="preserve"><value>AI Memory is a local-first work-memory tool for AI. It brings conversation history, memory rules, checkpoints, and handoff information from different AI Agents and command-line tools into one native workbench, helping you recover context, find past work, and continue from where you stopped.&#x0a;&#x0a;All core data is managed locally for privacy, reliability, and long-term availability.</value></data>
+  <data name="AboutFooter.Text" xml:space="preserve"><value>Local first · Independent data · Native Windows 11</value></data>
+</root>

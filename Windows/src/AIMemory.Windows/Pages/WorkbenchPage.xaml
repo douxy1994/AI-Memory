@@ -13,9 +13,9 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <StackPanel Spacing="4">
-                    <TextBlock Text="继续工作"
+                    <TextBlock x:Uid="WorkbenchTitle" Text="继续工作"
                                Style="{StaticResource PageTitleStyle}" />
-                    <TextBlock Text="最近进度、项目分组、恢复命令和下一步集中在一个工作台。"
+                    <TextBlock x:Uid="WorkbenchSubtitle" Text="最近进度、项目分组、恢复命令和下一步集中在一个工作台。"
                                TextWrapping="Wrap"
                                Opacity="0.65" />
                 </StackPanel>
@@ -29,13 +29,16 @@
                               SelectionChanged="SourceFilterBox_SelectionChanged" />
                     <CommandBar Background="Transparent"
                                 DefaultLabelPosition="Right">
-                        <AppBarButton Icon="Sync"
+                        <AppBarButton x:Uid="WorkbenchSync"
+                                      Icon="Sync"
                                       Label="立即同步"
                                       Click="Sync_Click" />
-                        <AppBarButton Icon="Refresh"
+                        <AppBarButton x:Uid="WorkbenchRefresh"
+                                      Icon="Refresh"
                                       Label="刷新来源"
                                       Click="Refresh_Click" />
-                        <AppBarButton Icon="Clock"
+                        <AppBarButton x:Uid="WorkbenchHistory"
+                                      Icon="Clock"
                                       Label="历史"
                                       Click="History_Click" />
                     </CommandBar>
@@ -57,7 +60,7 @@
                                    Text="0"
                                    FontSize="30"
                                    FontWeight="SemiBold" />
-                        <TextBlock Text="本来源对话"
+                        <TextBlock x:Uid="WorkbenchCurrentSourceCount" Text="本来源对话"
                                    Opacity="0.65"
                                    TextWrapping="Wrap" />
                     </StackPanel>
@@ -72,7 +75,7 @@
                                    Text="0"
                                    FontSize="30"
                                    FontWeight="SemiBold" />
-                        <TextBlock Text="全 Agent 对话"
+                        <TextBlock x:Uid="WorkbenchAllAgentCount" Text="全 Agent 对话"
                                    Opacity="0.65"
                                    TextWrapping="Wrap" />
                     </StackPanel>
@@ -87,7 +90,7 @@
                                    Text="0"
                                    FontSize="30"
                                    FontWeight="SemiBold" />
-                        <TextBlock Text="待审候选"
+                        <TextBlock x:Uid="WorkbenchPendingCount" Text="待审候选"
                                    Opacity="0.65"
                                    TextWrapping="Wrap" />
                     </StackPanel>
@@ -102,7 +105,7 @@
                                    Text="0"
                                    FontSize="30"
                                    FontWeight="SemiBold" />
-                        <TextBlock Text="检查点"
+                        <TextBlock x:Uid="WorkbenchCheckpointCount" Text="检查点"
                                    Opacity="0.65"
                                    TextWrapping="Wrap" />
                     </StackPanel>
@@ -116,7 +119,7 @@
                 </Grid.ColumnDefinitions>
                 <Border Style="{StaticResource CardStyle}">
                     <StackPanel Spacing="12">
-                        <TextBlock Text="最近任务"
+                        <TextBlock x:Uid="WorkbenchRecentTasks" Text="最近任务"
                                    FontSize="18"
                                    FontWeight="SemiBold" />
                         <ListView x:Name="RecentConversationList"
@@ -146,6 +149,7 @@
                             </ListView.ItemTemplate>
                         </ListView>
                         <TextBlock x:Name="NoRecentText"
+                                   x:Uid="WorkbenchNoRecent"
                                    Text="该来源还没有对话。"
                                    Opacity="0.6"
                                    Visibility="Collapsed" />
@@ -159,11 +163,12 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="项目"
+                            <TextBlock x:Uid="WorkbenchProjects" Text="项目"
                                        FontSize="18"
                                        FontWeight="SemiBold"
                                        VerticalAlignment="Center" />
                             <Button x:Name="ManageMachineGroupsButton"
+                                    x:Uid="WorkbenchManageMachines"
                                     Grid.Column="1"
                                     Content="管理电脑分组"
                                     Click="ManageMachineGroups_Click"
@@ -200,6 +205,7 @@
                             </ListView.ItemTemplate>
                         </ListView>
                         <TextBlock x:Name="NoProjectsText"
+                                   x:Uid="WorkbenchNoProjects"
                                    Text="该来源还没有项目。"
                                    Opacity="0.6"
                                    Visibility="Collapsed" />
@@ -209,7 +215,7 @@
 
             <Border Style="{StaticResource CardStyle}">
                 <StackPanel Spacing="12">
-                    <TextBlock Text="已安装的 Agent / CLI"
+                    <TextBlock x:Uid="WorkbenchInstalledAgents" Text="已安装的 Agent / CLI"
                                FontSize="18"
                                FontWeight="SemiBold" />
                     <TextBlock x:Name="DetectedAgentSummary"
@@ -231,6 +237,7 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                     <TextBlock x:Name="NoAgentsText"
+                               x:Uid="WorkbenchNoAgents"
                                Text="没有检测到本机 Agent；所有集成保持关闭。"
                                Opacity="0.6"
                                Visibility="Collapsed" />

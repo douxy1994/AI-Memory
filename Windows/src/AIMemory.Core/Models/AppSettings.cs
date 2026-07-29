@@ -5,7 +5,7 @@ namespace AIMemory.Core.Models;
 public sealed class AppSettings
 {
     public int SettingsVersion { get; set; } = 1;
-    public string Language { get; set; } = "zh-Hans";
+    public string Language { get; set; } = "system";
     public string FontFamily { get; set; } = "system";
     public int TrashRetentionDays { get; set; } = 14;
     public bool AutoBackupEnabled { get; set; }
@@ -27,6 +27,7 @@ public sealed class AppSettings
         TrashRetentionDays = Math.Clamp(TrashRetentionDays, 1, 365);
         AutoBackupIntervalMinutes = Math.Clamp(
             AutoBackupIntervalMinutes, 5, 1_440);
+        Language = Services.LanguagePreferenceService.NormalizeId(Language);
         FontFamily = Services.FontPreferenceService.NormalizeId(FontFamily);
         UpdateFeedUrl = UpdateFeedUrl?.Trim() ?? "";
         if (string.IsNullOrWhiteSpace(UpdateFeedUrl))

@@ -41,9 +41,40 @@ public sealed partial class SettingsPage : Page
             AutoBackupToggle.IsOn = _settings.AutoBackupEnabled;
             AutoBackupIntervalBox.Value =
                 _settings.AutoBackupIntervalMinutes;
-            FontFamilyBox.ItemsSource = FontPreferenceService.Options;
-            FontFamilyBox.SelectedItem = FontPreferenceService.Options.First(
-                option => option.Id == FontPreferenceService.NormalizeId(
+            var languageOptions = new[]
+            {
+                new LocalizedOption(
+                    "system",
+                    LocalizationService.Get("LanguageSystem")),
+                new LocalizedOption(
+                    "zh-Hans",
+                    LocalizationService.Get("LanguageChineseSimplified")),
+                new LocalizedOption(
+                    "en",
+                    LocalizationService.Get("LanguageEnglish")),
+            };
+            LanguageBox.ItemsSource = languageOptions;
+            LanguageBox.SelectedItem = languageOptions.First(option =>
+                option.Id == LanguagePreferenceService.NormalizeId(
+                    _settings.Language));
+            var fontOptions = new[]
+            {
+                new LocalizedOption(
+                    "system",
+                    LocalizationService.Get("FontSystem")),
+                new LocalizedOption(
+                    "sourceSans",
+                    LocalizationService.Get("FontSourceSans")),
+                new LocalizedOption(
+                    "sourceSerif",
+                    LocalizationService.Get("FontSourceSerif")),
+                new LocalizedOption(
+                    "wenkai",
+                    LocalizationService.Get("FontWenkai")),
+            };
+            FontFamilyBox.ItemsSource = fontOptions;
+            FontFamilyBox.SelectedItem = fontOptions.First(option =>
+                option.Id == FontPreferenceService.NormalizeId(
                     _settings.FontFamily));
             if (_credentials.Load() is { } stored)
             {
@@ -52,7 +83,9 @@ public sealed partial class SettingsPage : Page
             }
             await ReloadStartupAsync();
             ReloadAgents();
-            DataPathText.Text = $"数据目录：{DataPaths.SupportDirectory}";
+            DataPathText.Text = LocalizationService.Format(
+                "DataDirectoryPath",
+                DataPaths.SupportDirectory);
             var importer = new ChatMemImportService(_window.Database);
             ImportChatMemButton.IsEnabled = importer.FindSource() is not null;
             await RefreshDiagnosticsAsync();
@@ -102,10 +135,13 @@ public sealed partial class SettingsPage : Page
         StartupToggle.IsOn = state == StartupTaskState.Enabled;
         StartupDetail.Text = state switch
         {
-            StartupTaskState.Enabled => "已开启",
-            StartupTaskState.DisabledByUser => "已被系统或用户禁用，可在 Windows 设置中恢复",
-            StartupTaskState.DisabledByPolicy => "组织策略禁止开机启动",
-            _ => "已关闭",
+            StartupTaskState.Enabled =>
+                LocalizationService.Get("StartupEnabled"),
+            StartupTaskState.DisabledByUser =>
+                LocalizationService.Get("StartupDisabledByUser"),
+            StartupTaskState.DisabledByPolicy =>
+                LocalizationService.Get("StartupDisabledByPolicy"),
+            _ => LocalizationService.Get("StartupDisabled"),
         };
         StartupToggle.IsEnabled = state != StartupTaskState.DisabledByPolicy;
     }
@@ -117,11 +153,17 @@ public sealed partial class SettingsPage : Page
         {
             await _startup.SetEnabledAsync(StartupToggle.IsOn);
             await ReloadStartupAsync();
-            Show("启动设置已更新。", InfoBarSeverity.Success);
+            Show(
+                LocalizationService.Get("StartupSettingUpdated"),
+                InfoBarSeverity.Success);
         }
         catch (Exception exception)
         {
-            Show($"更新启动设置失败：{exception.Message}", InfoBarSeverity.Error);
+            Show(
+                LocalizationService.Format(
+                    "StartupSettingFailed",
+                    exception.Message),
+                InfoBarSeverity.Error);
         }
     }
 
@@ -141,13 +183,17 @@ public sealed partial class SettingsPage : Page
             _window.ConfigureAutomaticBackup(_settings);
             Show(
                 _settings.AutoBackupEnabled
-                    ? $"自动备份已开启，每 {_settings.AutoBackupIntervalMinutes} 分钟检查一次变化。"
-                    : "自动备份已关闭。",
+                    ? LocalizationService.Format(
+                        "AutomaticBackupEnabled",
+                        _settings.AutoBackupIntervalMinutes)
+                    : LocalizationService.Get("AutomaticBackupDisabled"),
                 InfoBarSeverity.Success);
         }
         catch (Exception exception)
         {
-            Show($"保存自动备份设置失败：{exception.Message}",
+            Show(LocalizationService.Format(
+                    "AutomaticBackupSaveFailed",
+                    exception.Message),
                 InfoBarSeverity.Error);
         }
     }
@@ -158,7 +204,7 @@ public sealed partial class SettingsPage : Page
     {
         if (_loading
             || _window is null
-            || FontFamilyBox.SelectedItem is not FontPreferenceOption option)
+            || FontFamilyBox.SelectedItem is not LocalizedOption option)
         {
             return;
         }
@@ -167,11 +213,46 @@ public sealed partial class SettingsPage : Page
             _settings.FontFamily = option.Id;
             await _window.Settings.SaveAsync(_settings);
             _window.ApplyFontFamily(option.Id);
-            Show($"已应用{option.Label}。", InfoBarSeverity.Success);
+            Show(
+                LocalizationService.Format("FontApplied", option.Label),
+                InfoBarSeverity.Success);
         }
         catch (Exception exception)
         {
-            Show($"保存字体设置失败：{exception.Message}",
+            Show(LocalizationService.Format(
+                    "FontSaveFailed",
+                    exception.Message),
+                InfoBarSeverity.Error);
+        }
+    }
+
+    private async void LanguageBox_SelectionChanged(
+        object sender,
+        SelectionChangedEventArgs args)
+    {
+        if (_loading
+            || _window is null
+            || LanguageBox.SelectedItem is not LocalizedOption option)
+        {
+            return;
+        }
+        try
+        {
+            _settings.Language = option.Id;
+            await _window.Settings.SaveAsync(_settings);
+            App.ApplyApplicationLanguage(option.Id);
+            LanguageRestartHint.Text =
+                LocalizationService.Get("LanguageRestartRequired");
+            Show(
+                LocalizationService.Get("LanguageSavedRestartRequired"),
+                InfoBarSeverity.Success);
+        }
+        catch (Exception exception)
+        {
+            Show(
+                LocalizationService.Format(
+                    "LanguageSaveFailed",
+                    exception.Message),
                 InfoBarSeverity.Error);
         }
     }
@@ -180,17 +261,20 @@ public sealed partial class SettingsPage : Page
         ReloadAgents();
 
     private void ReloadAgents() =>
-        AgentList.ItemsSource = _agentIntegrations.Detect();
+        AgentList.ItemsSource = _agentIntegrations.Detect()
+            .Select(value => new LocalizedAgentIntegration(value))
+            .ToArray();
 
     private void ToggleAgent_Click(object sender, RoutedEventArgs args)
     {
         if (sender is not Button
             {
-                Tag: AgentIntegrationStatus integration,
+                Tag: LocalizedAgentIntegration row,
             })
         {
             return;
         }
+        var integration = row.Value;
         try
         {
             _agentIntegrations.SetEnabled(
@@ -199,13 +283,21 @@ public sealed partial class SettingsPage : Page
             ReloadAgents();
             Show(
                 integration.IsIntegrated
-                    ? $"{integration.Label} 集成已关闭。"
-                    : $"{integration.Label} 集成已启用。",
+                    ? LocalizationService.Format(
+                        "AgentIntegrationDisabled",
+                        integration.Label)
+                    : LocalizationService.Format(
+                        "AgentIntegrationEnabled",
+                        integration.Label),
                 InfoBarSeverity.Success);
         }
         catch (Exception exception)
         {
-            Show($"更新 Agent 集成失败：{exception.Message}", InfoBarSeverity.Error);
+            Show(
+                LocalizationService.Format(
+                    "AgentIntegrationUpdateFailed",
+                    exception.Message),
+                InfoBarSeverity.Error);
         }
     }
 
@@ -217,11 +309,17 @@ public sealed partial class SettingsPage : Page
         {
             await _window.Settings.SaveAsync(_settings);
             _credentials.Save(UsernameBox.Text.Trim(), PasswordBox.Password);
-            Show("设置已保存。", InfoBarSeverity.Success);
+            Show(
+                LocalizationService.Get("SettingsSaved"),
+                InfoBarSeverity.Success);
         }
         catch (Exception exception)
         {
-            Show($"保存失败：{exception.Message}", InfoBarSeverity.Error);
+            Show(
+                LocalizationService.Format(
+                    "SettingsSaveFailed",
+                    exception.Message),
+                InfoBarSeverity.Error);
         }
     }
 
@@ -235,11 +333,19 @@ public sealed partial class SettingsPage : Page
                 WebDavService.BuildCollectionUri(_settings.Sync),
                 UsernameBox.Text.Trim(),
                 PasswordBox.Password);
-            Show($"连接验证成功（HTTP {status}）。", InfoBarSeverity.Success);
+            Show(
+                LocalizationService.Format(
+                    "WebDavVerificationSucceeded",
+                    status),
+                InfoBarSeverity.Success);
         }
         catch (Exception exception)
         {
-            Show($"连接验证失败：{exception.Message}", InfoBarSeverity.Error);
+            Show(
+                LocalizationService.Format(
+                    "WebDavVerificationFailed",
+                    exception.Message),
+                InfoBarSeverity.Error);
         }
         finally
         {
@@ -259,11 +365,19 @@ public sealed partial class SettingsPage : Page
                 WebDavService.BuildCollectionUri(_settings.Sync),
                 UsernameBox.Text.Trim(),
                 PasswordBox.Password);
-            Show(result.Message, InfoBarSeverity.Success);
+            Show(
+                LocalizationService.Format(
+                    "SyncCompleted",
+                    result.Uploaded,
+                    result.Downloaded,
+                    result.Skipped),
+                InfoBarSeverity.Success);
         }
         catch (Exception exception)
         {
-            Show($"同步失败：{exception.Message}", InfoBarSeverity.Error);
+            Show(
+                LocalizationService.Format("SyncFailed", exception.Message),
+                InfoBarSeverity.Error);
         }
         finally
         {
@@ -280,13 +394,21 @@ public sealed partial class SettingsPage : Page
                 .CreateRecoveryPointDetailedAsync("manual");
             Show(
                 result.Created
-                    ? $"恢复点已创建：{result.Path}"
-                    : $"数据没有变化，已保留现有恢复点：{result.Path}",
+                    ? LocalizationService.Format(
+                        "RecoveryPointCreated",
+                        result.Path)
+                    : LocalizationService.Format(
+                        "RecoveryPointUnchanged",
+                        result.Path),
                 InfoBarSeverity.Success);
         }
         catch (Exception exception)
         {
-            Show($"备份失败：{exception.Message}", InfoBarSeverity.Error);
+            Show(
+                LocalizationService.Format(
+                    "BackupFailed",
+                    exception.Message),
+                InfoBarSeverity.Error);
         }
     }
 
@@ -297,7 +419,9 @@ public sealed partial class SettingsPage : Page
         var recoveryPoints = service.ListRecoveryPoints();
         if (recoveryPoints.Count == 0)
         {
-            Show("没有可用的恢复点。", InfoBarSeverity.Warning);
+            Show(
+                LocalizationService.Get("NoRecoveryPoints"),
+                InfoBarSeverity.Warning);
             return;
         }
 
@@ -310,17 +434,17 @@ public sealed partial class SettingsPage : Page
         var content = new StackPanel { Spacing = 12 };
         content.Children.Add(new TextBlock
         {
-            Text = "恢复前会自动备份当前数据库。请选择要恢复的时间点：",
+            Text = LocalizationService.Get("RestoreRecoveryPointPrompt"),
             TextWrapping = TextWrapping.Wrap,
         });
         content.Children.Add(picker);
         var dialog = new ContentDialog
         {
             XamlRoot = XamlRoot,
-            Title = "从恢复点恢复",
+            Title = LocalizationService.Get("RestoreRecoveryPointTitle"),
             Content = content,
-            PrimaryButtonText = "恢复",
-            CloseButtonText = "取消",
+            PrimaryButtonText = LocalizationService.Get("Restore"),
+            CloseButtonText = LocalizationService.Get("Cancel"),
             DefaultButton = ContentDialogButton.Close,
         };
         if (await dialog.ShowAsync() != ContentDialogResult.Primary
@@ -335,12 +459,18 @@ public sealed partial class SettingsPage : Page
             var safetyBackup = await service.RestoreRecoveryPointAsync(selected);
             await ReloadRestoredSettingsAsync();
             Show(
-                $"恢复完成；恢复前的数据已备份到：{safetyBackup}",
+                LocalizationService.Format(
+                    "RestoreCompleted",
+                    safetyBackup),
                 InfoBarSeverity.Success);
         }
         catch (Exception exception)
         {
-            Show($"恢复失败：{exception.Message}", InfoBarSeverity.Error);
+            Show(
+                LocalizationService.Format(
+                    "RestoreFailed",
+                    exception.Message),
+                InfoBarSeverity.Error);
         }
         finally
         {
@@ -378,7 +508,9 @@ public sealed partial class SettingsPage : Page
         _settings.Sync.Provider = "local";
         _settings.Sync.SyncFolder = SyncFolderBox.Text.Trim();
         await _window.Settings.SaveAsync(_settings);
-        Show("本地同步目录已保存。", InfoBarSeverity.Success);
+        Show(
+            LocalizationService.Get("LocalSyncFolderSaved"),
+            InfoBarSeverity.Success);
     }
 
     private async void SyncLocalFolder_Click(object sender, RoutedEventArgs args)
@@ -388,11 +520,21 @@ public sealed partial class SettingsPage : Page
         {
             var result = await new LocalFolderSyncService(_window.Conversations)
                 .SyncAsync(SyncFolderBox.Text.Trim());
-            Show(result.Message, InfoBarSeverity.Success);
+            Show(
+                LocalizationService.Format(
+                    "LocalSyncCompleted",
+                    result.Uploaded,
+                    result.Downloaded,
+                    result.Skipped),
+                InfoBarSeverity.Success);
         }
         catch (Exception exception)
         {
-            Show($"本地同步失败：{exception.Message}", InfoBarSeverity.Error);
+            Show(
+                LocalizationService.Format(
+                    "LocalSyncFailed",
+                    exception.Message),
+                InfoBarSeverity.Error);
         }
     }
 
@@ -403,7 +545,9 @@ public sealed partial class SettingsPage : Page
         var source = importer.FindSource();
         if (source is null)
         {
-            Show("没有找到可导入的 ChatMem 数据库。", InfoBarSeverity.Warning);
+            Show(
+                LocalizationService.Get("ChatMemDatabaseNotFound"),
+                InfoBarSeverity.Warning);
             return;
         }
         try
@@ -411,13 +555,19 @@ public sealed partial class SettingsPage : Page
             var backup = await importer.ImportAsync(source);
             Show(
                 string.IsNullOrWhiteSpace(backup)
-                    ? "ChatMem 数据已导入。"
-                    : $"ChatMem 数据已导入，原数据备份：{backup}",
+                    ? LocalizationService.Get("ChatMemImportCompleted")
+                    : LocalizationService.Format(
+                        "ChatMemImportCompletedWithBackup",
+                        backup),
                 InfoBarSeverity.Success);
         }
         catch (Exception exception)
         {
-            Show($"导入失败：{exception.Message}", InfoBarSeverity.Error);
+            Show(
+                LocalizationService.Format(
+                    "ImportFailed",
+                    exception.Message),
+                InfoBarSeverity.Error);
         }
     }
 
@@ -434,15 +584,24 @@ public sealed partial class SettingsPage : Page
                 report.Imported.Select(value => $"{value.Key} {value.Value}"));
             Show(
                 report.Warnings.Count == 0
-                    ? $"本机历史导入完成：{details}。"
-                    : $"本机历史导入完成：{details}；{report.Warnings.Count} 项警告。",
+                    ? LocalizationService.Format(
+                        "NativeHistoryImportCompleted",
+                        details)
+                    : LocalizationService.Format(
+                        "NativeHistoryImportCompletedWithWarnings",
+                        details,
+                        report.Warnings.Count),
                 report.Warnings.Count == 0
                     ? InfoBarSeverity.Success
                     : InfoBarSeverity.Warning);
         }
         catch (Exception exception)
         {
-            Show($"本机历史导入失败：{exception.Message}", InfoBarSeverity.Error);
+            Show(
+                LocalizationService.Format(
+                    "NativeHistoryImportFailed",
+                    exception.Message),
+                InfoBarSeverity.Error);
         }
         finally
         {
@@ -460,11 +619,17 @@ public sealed partial class SettingsPage : Page
         try
         {
             await _window.Settings.SaveAsync(_settings);
-            Show("更新设置已保存。", InfoBarSeverity.Success);
+            Show(
+                LocalizationService.Get("UpdateSettingsSaved"),
+                InfoBarSeverity.Success);
         }
         catch (Exception exception)
         {
-            Show($"保存更新设置失败：{exception.Message}", InfoBarSeverity.Error);
+            Show(
+                LocalizationService.Format(
+                    "UpdateSettingsSaveFailed",
+                    exception.Message),
+                InfoBarSeverity.Error);
         }
     }
 
@@ -476,12 +641,15 @@ public sealed partial class SettingsPage : Page
         try
         {
             await _window.Settings.SaveAsync(_settings);
-            UpdateStatusText.Text = "已打开“关于 AI Memory”并开始检查更新。";
+            UpdateStatusText.Text =
+                LocalizationService.Get("OpenedAboutCheckingUpdates");
             _window.OpenAboutAndCheckForUpdates();
         }
         catch (Exception exception)
         {
-            UpdateStatusText.Text = $"保存更新设置失败：{exception.Message}";
+            UpdateStatusText.Text = LocalizationService.Format(
+                "UpdateSettingsSaveFailed",
+                exception.Message);
             Show(UpdateStatusText.Text, InfoBarSeverity.Error);
         }
     }
@@ -502,7 +670,9 @@ public sealed partial class SettingsPage : Page
         }
         catch (Exception exception)
         {
-            DiagnosticsBox.Text = $"读取诊断失败：{exception.Message}";
+            DiagnosticsBox.Text = LocalizationService.Format(
+                "DiagnosticsReadFailed",
+                exception.Message);
         }
     }
 
@@ -512,7 +682,9 @@ public sealed partial class SettingsPage : Page
         package.SetText(DiagnosticsBox.Text ?? "");
         Clipboard.SetContent(package);
         Clipboard.Flush();
-        Show("诊断信息已复制。", InfoBarSeverity.Success);
+        Show(
+            LocalizationService.Get("DiagnosticsCopied"),
+            InfoBarSeverity.Success);
     }
 
     private async void OpenDataDirectory_Click(
@@ -520,14 +692,14 @@ public sealed partial class SettingsPage : Page
         RoutedEventArgs args)
         => await OpenDirectoryAsync(
             DataPaths.SupportDirectory,
-            "数据目录");
+            LocalizationService.Get("DataDirectory"));
 
     private async void OpenBackupDirectory_Click(
         object sender,
         RoutedEventArgs args)
         => await OpenDirectoryAsync(
             DataPaths.BackupDirectory,
-            "备份目录");
+            LocalizationService.Get("BackupDirectory"));
 
     private async Task OpenDirectoryAsync(
         string path,
@@ -540,12 +712,17 @@ public sealed partial class SettingsPage : Page
             if (!await Launcher.LaunchFolderAsync(folder))
             {
                 throw new InvalidOperationException(
-                    $"Windows 无法打开{label}。");
+                    LocalizationService.Format(
+                        "WindowsCannotOpenLocation",
+                        label));
             }
         }
         catch (Exception exception)
         {
-            Show($"打开{label}失败：{exception.Message}",
+            Show(LocalizationService.Format(
+                    "OpenLocationFailed",
+                    label,
+                    exception.Message),
                 InfoBarSeverity.Error);
         }
     }

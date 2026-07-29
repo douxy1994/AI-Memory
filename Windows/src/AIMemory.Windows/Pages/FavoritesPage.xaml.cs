@@ -1,5 +1,6 @@
 using AIMemory.Core.Models;
 using AIMemory.Core.Services;
+using AIMemory.Windows.Services;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
@@ -52,12 +53,18 @@ public sealed partial class FavoritesPage : Page
                 ParseTags(row.TagsText),
                 !row.Value.Pinned);
             await ReloadAsync();
-            Show(row.Value.Pinned ? "已取消置顶。" : "收藏已置顶。",
+            Show(
+                LocalizationService.Get(
+                    row.Value.Pinned
+                        ? "FavoriteUnpinned"
+                        : "FavoritePinned"),
                 InfoBarSeverity.Success);
         }
         catch (Exception exception)
         {
-            Show($"更新置顶状态失败：{exception.Message}",
+            Show(LocalizationService.Format(
+                    "FavoritePinUpdateFailed",
+                    exception.Message),
                 InfoBarSeverity.Error);
         }
     }
@@ -77,11 +84,17 @@ public sealed partial class FavoritesPage : Page
                 row.Note,
                 ParseTags(row.TagsText));
             await ReloadAsync();
-            Show("收藏备注与标签已保存。", InfoBarSeverity.Success);
+            Show(
+                LocalizationService.Get("FavoriteMetadataSaved"),
+                InfoBarSeverity.Success);
         }
         catch (Exception exception)
         {
-            Show($"保存收藏失败：{exception.Message}", InfoBarSeverity.Error);
+            Show(
+                LocalizationService.Format(
+                    "FavoriteSaveFailed",
+                    exception.Message),
+                InfoBarSeverity.Error);
         }
     }
 
@@ -98,7 +111,8 @@ public sealed partial class FavoritesPage : Page
             .FirstOrDefault(value => value.Id == row.Value.Id);
         if (conversation is null)
         {
-            Show("原始对话当前不可用；收藏快照仍会保留。",
+            Show(
+                LocalizationService.Get("FavoriteSourceUnavailable"),
                 InfoBarSeverity.Warning);
             return;
         }
@@ -119,7 +133,9 @@ public sealed partial class FavoritesPage : Page
         package.SetText(FavoriteService.ContinuationCard(current));
         Clipboard.SetContent(package);
         Clipboard.Flush();
-        Show("收藏继续卡片已复制。", InfoBarSeverity.Success);
+        Show(
+            LocalizationService.Get("FavoriteCardCopied"),
+            InfoBarSeverity.Success);
     }
 
     private async void RemoveFavorite_Click(object sender, RoutedEventArgs args)
@@ -131,7 +147,9 @@ public sealed partial class FavoritesPage : Page
         }
         await _favorites.RemoveAsync(row.Value.SourceAgent, row.Value.Id);
         await ReloadAsync();
-        Show("已取消收藏。", InfoBarSeverity.Success);
+        Show(
+            LocalizationService.Get("ConversationUnfavorited"),
+            InfoBarSeverity.Success);
     }
 
     private static string[] ParseTags(string value) =>
@@ -163,9 +181,11 @@ public sealed class FavoriteRow
     public FavoriteConversationSnapshot Value { get; }
     public string Title => Value.Title;
     public string SourceAndProject =>
-        $"{Value.SourceAgent} · {(string.IsNullOrWhiteSpace(Value.ProjectPath) ? "未知项目" : Value.ProjectPath)}";
-    public string PinLabel => Value.Pinned ? "已置顶" : "";
-    public string PinActionLabel => Value.Pinned ? "取消置顶" : "置顶";
+        $"{Value.SourceAgent} · {(string.IsNullOrWhiteSpace(Value.ProjectPath) ? LocalizationService.Get("UnknownProject") : Value.ProjectPath)}";
+    public string PinLabel =>
+        Value.Pinned ? LocalizationService.Get("Pinned") : "";
+    public string PinActionLabel => LocalizationService.Get(
+        Value.Pinned ? "Unpin" : "Pin");
     public string Note { get; set; }
     public string TagsText { get; set; }
 }

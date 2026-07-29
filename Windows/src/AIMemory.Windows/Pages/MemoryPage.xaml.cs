@@ -1,4 +1,5 @@
 using AIMemory.Core.Services;
+using AIMemory.Windows.Services;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
@@ -45,16 +46,23 @@ public sealed partial class MemoryPage : Page
         {
             return;
         }
-        var title = new TextBox { Header = "标题", Text = candidate.Summary };
+        var title = new TextBox
+        {
+            Header = LocalizationService.Get("Title"),
+            Text = candidate.Summary,
+        };
         var value = new TextBox
         {
-            Header = "规则内容",
+            Header = LocalizationService.Get("RuleContent"),
             Text = candidate.Value,
             AcceptsReturn = true,
             TextWrapping = TextWrapping.Wrap,
             MinHeight = 100,
         };
-        var hint = new TextBox { Header = "使用提示" };
+        var hint = new TextBox
+        {
+            Header = LocalizationService.Get("UsageHint"),
+        };
         var content = new StackPanel { Spacing = 12 };
         content.Children.Add(title);
         content.Children.Add(value);
@@ -62,10 +70,10 @@ public sealed partial class MemoryPage : Page
         var dialog = new ContentDialog
         {
             XamlRoot = XamlRoot,
-            Title = "批准候选规则",
+            Title = LocalizationService.Get("ApproveCandidateRule"),
             Content = content,
-            PrimaryButtonText = "批准",
-            CloseButtonText = "取消",
+            PrimaryButtonText = LocalizationService.Get("Approve"),
+            CloseButtonText = LocalizationService.Get("Cancel"),
             DefaultButton = ContentDialogButton.Primary,
         };
         if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
@@ -74,19 +82,31 @@ public sealed partial class MemoryPage : Page
             await _memory.ApproveCandidateAsync(
                 candidate.Id, title.Text, value.Text, hint.Text);
             await ReloadAsync();
-            Show("候选已批准并写入项目记忆。", InfoBarSeverity.Success);
+            Show(
+                LocalizationService.Get("CandidateApproved"),
+                InfoBarSeverity.Success);
         }
         catch (Exception exception)
         {
-            Show($"批准失败：{exception.Message}", InfoBarSeverity.Error);
+            Show(
+                LocalizationService.Format(
+                    "ApprovalFailed",
+                    exception.Message),
+                InfoBarSeverity.Error);
         }
     }
 
     private async void SnoozeCandidate_Click(object sender, RoutedEventArgs args) =>
-        await ReviewCandidateAsync(sender, "snooze", "候选已暂缓。");
+        await ReviewCandidateAsync(
+            sender,
+            "snooze",
+            LocalizationService.Get("CandidateSnoozed"));
 
     private async void RejectCandidate_Click(object sender, RoutedEventArgs args) =>
-        await ReviewCandidateAsync(sender, "reject", "候选已拒绝，证据仍保留。");
+        await ReviewCandidateAsync(
+            sender,
+            "reject",
+            LocalizationService.Get("CandidateRejected"));
 
     private async Task ReviewCandidateAsync(
         object sender,
@@ -106,7 +126,11 @@ public sealed partial class MemoryPage : Page
         }
         catch (Exception exception)
         {
-            Show($"更新候选失败：{exception.Message}", InfoBarSeverity.Error);
+            Show(
+                LocalizationService.Format(
+                    "CandidateUpdateFailed",
+                    exception.Message),
+                InfoBarSeverity.Error);
         }
     }
 
@@ -117,16 +141,24 @@ public sealed partial class MemoryPage : Page
         {
             return;
         }
-        var title = new TextBox { Header = "标题", Text = memory.Title };
+        var title = new TextBox
+        {
+            Header = LocalizationService.Get("Title"),
+            Text = memory.Title,
+        };
         var value = new TextBox
         {
-            Header = "规则内容",
+            Header = LocalizationService.Get("RuleContent"),
             Text = memory.Value,
             AcceptsReturn = true,
             TextWrapping = TextWrapping.Wrap,
             MinHeight = 100,
         };
-        var hint = new TextBox { Header = "使用提示", Text = memory.UsageHint };
+        var hint = new TextBox
+        {
+            Header = LocalizationService.Get("UsageHint"),
+            Text = memory.UsageHint,
+        };
         var content = new StackPanel { Spacing = 12 };
         content.Children.Add(title);
         content.Children.Add(value);
@@ -134,10 +166,10 @@ public sealed partial class MemoryPage : Page
         var dialog = new ContentDialog
         {
             XamlRoot = XamlRoot,
-            Title = "编辑已批准规则",
+            Title = LocalizationService.Get("EditApprovedRule"),
             Content = content,
-            PrimaryButtonText = "保存",
-            CloseButtonText = "取消",
+            PrimaryButtonText = LocalizationService.Get("Save"),
+            CloseButtonText = LocalizationService.Get("Cancel"),
             DefaultButton = ContentDialogButton.Primary,
         };
         if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
@@ -146,11 +178,17 @@ public sealed partial class MemoryPage : Page
             await _memory.UpdateApprovedAsync(
                 memory.Id, title.Text, value.Text, hint.Text);
             await ReloadAsync();
-            Show("规则已更新。", InfoBarSeverity.Success);
+            Show(
+                LocalizationService.Get("RuleUpdated"),
+                InfoBarSeverity.Success);
         }
         catch (Exception exception)
         {
-            Show($"保存失败：{exception.Message}", InfoBarSeverity.Error);
+            Show(
+                LocalizationService.Format(
+                    "SettingsSaveFailed",
+                    exception.Message),
+                InfoBarSeverity.Error);
         }
     }
 
@@ -172,12 +210,17 @@ public sealed partial class MemoryPage : Page
             await _memory.SetApprovedStateAsync(memory.Id, active);
             await ReloadAsync();
             Show(
-                active ? "规则已重新验证。" : "规则已停用。",
+                LocalizationService.Get(
+                    active ? "RuleReverified" : "RuleDisabled"),
                 InfoBarSeverity.Success);
         }
         catch (Exception exception)
         {
-            Show($"更新规则失败：{exception.Message}", InfoBarSeverity.Error);
+            Show(
+                LocalizationService.Format(
+                    "RuleUpdateFailed",
+                    exception.Message),
+                InfoBarSeverity.Error);
         }
     }
 
@@ -196,23 +239,26 @@ public sealed partial class MemoryPage : Page
             : new AgentCatalog().Detect().ToArray();
         var picker = new ComboBox
         {
-            Header = "目标 Agent",
+            Header = LocalizationService.Get("TargetAgent"),
             ItemsSource = targets,
             DisplayMemberPath = "Label",
             SelectedIndex = 0,
             MinWidth = 320,
         };
-        var profile = new TextBox { Header = "目标配置（可选）" };
+        var profile = new TextBox
+        {
+            Header = LocalizationService.Get("TargetProfileOptional"),
+        };
         var content = new StackPanel { Spacing = 12 };
         content.Children.Add(picker);
         content.Children.Add(profile);
         var dialog = new ContentDialog
         {
             XamlRoot = XamlRoot,
-            Title = "创建交接包",
+            Title = LocalizationService.Get("CreateHandoff"),
             Content = content,
-            PrimaryButtonText = "创建",
-            CloseButtonText = "取消",
+            PrimaryButtonText = LocalizationService.Get("Create"),
+            CloseButtonText = LocalizationService.Get("Cancel"),
             DefaultButton = ContentDialogButton.Primary,
         };
         if (await dialog.ShowAsync() != ContentDialogResult.Primary
@@ -225,11 +271,19 @@ public sealed partial class MemoryPage : Page
             await _recovery.CreateHandoffAsync(
                 checkpoint, target.Id, profile.Text);
             await ReloadAsync();
-            Show($"已创建发往 {target.Label} 的交接包。", InfoBarSeverity.Success);
+            Show(
+                LocalizationService.Format(
+                    "HandoffCreated",
+                    target.Label),
+                InfoBarSeverity.Success);
         }
         catch (Exception exception)
         {
-            Show($"创建交接包失败：{exception.Message}", InfoBarSeverity.Error);
+            Show(
+                LocalizationService.Format(
+                    "HandoffCreationFailed",
+                    exception.Message),
+                InfoBarSeverity.Error);
         }
     }
 
@@ -244,11 +298,17 @@ public sealed partial class MemoryPage : Page
         {
             await _recovery.MarkHandoffConsumedAsync(handoff.Value.Id);
             await ReloadAsync();
-            Show("交接包已标记为已消费。", InfoBarSeverity.Success);
+            Show(
+                LocalizationService.Get("HandoffConsumed"),
+                InfoBarSeverity.Success);
         }
         catch (Exception exception)
         {
-            Show($"更新交接包失败：{exception.Message}", InfoBarSeverity.Error);
+            Show(
+                LocalizationService.Format(
+                    "HandoffUpdateFailed",
+                    exception.Message),
+                InfoBarSeverity.Error);
         }
     }
 

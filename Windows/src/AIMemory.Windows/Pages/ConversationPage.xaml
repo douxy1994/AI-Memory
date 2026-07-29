@@ -25,24 +25,30 @@
             <CommandBar Grid.Column="1"
                         Background="Transparent"
                         DefaultLabelPosition="Right">
-                <AppBarButton Icon="Back"
+                <AppBarButton x:Uid="ConversationBack"
+                              Icon="Back"
                               Label="返回"
                               Click="Back_Click" />
                 <AppBarButton x:Name="FavoriteButton"
+                              x:Uid="ConversationFavorite"
                               Icon="Favorite"
                               Label="收藏"
                               Click="Favorite_Click" />
-                <AppBarButton Icon="Copy"
+                <AppBarButton x:Uid="ConversationCopyPath"
+                              Icon="Copy"
                               Label="复制路径"
                               Click="CopyPath_Click" />
-                <AppBarButton Icon="Forward"
+                <AppBarButton x:Uid="ConversationMigrate"
+                              Icon="Forward"
                               Label="迁移"
                               Click="Migrate_Click" />
-                <AppBarButton Icon="Delete"
+                <AppBarButton x:Uid="ConversationTrash"
+                              Icon="Delete"
                               Label="移到回收站"
                               Click="Trash_Click" />
                 <AppBarSeparator />
-                <AppBarButton Icon="SaveLocal"
+                <AppBarButton x:Uid="ConversationCheckpoint"
+                              Icon="SaveLocal"
                               Label="创建检查点"
                               Click="CreateCheckpoint_Click" />
             </CommandBar>
@@ -59,7 +65,7 @@
                     <TextBlock x:Name="MessageCountText"
                                FontSize="20"
                                FontWeight="SemiBold" />
-                    <TextBlock Text="消息" Opacity="0.6" />
+                    <TextBlock x:Uid="ConversationMessages" Text="消息" Opacity="0.6" />
                 </StackPanel>
             </Border>
             <Border Grid.Column="1"
@@ -69,7 +75,7 @@
                     <TextBlock x:Name="FileCountText"
                                FontSize="20"
                                FontWeight="SemiBold" />
-                    <TextBlock Text="文件变更" Opacity="0.6" />
+                    <TextBlock x:Uid="ConversationFileChangesMetric" Text="文件变更" Opacity="0.6" />
                 </StackPanel>
             </Border>
             <Border Grid.Column="2"
@@ -79,7 +85,7 @@
                     <TextBlock x:Name="ToolCallCountText"
                                FontSize="20"
                                FontWeight="SemiBold" />
-                    <TextBlock Text="工具调用" Opacity="0.6" />
+                    <TextBlock x:Uid="ConversationToolCalls" Text="工具调用" Opacity="0.6" />
                 </StackPanel>
             </Border>
         </Grid>
@@ -113,22 +119,22 @@
                 <StackPanel Spacing="12">
                     <Border Style="{StaticResource CardStyle}">
                         <StackPanel Spacing="10">
-                            <TextBlock Text="可恢复进度"
+                            <TextBlock x:Uid="ConversationResumeTitle" Text="可恢复进度"
                                        FontSize="17"
                                        FontWeight="SemiBold" />
                             <StackPanel x:Name="ResumePanel"
                                         Spacing="8"
                                         Visibility="Collapsed">
-                                <TextBlock Text="恢复命令" Opacity="0.6" />
+                                <TextBlock x:Uid="ConversationResumeCommand" Text="恢复命令" Opacity="0.6" />
                                 <TextBox x:Name="ResumeCommandBox"
                                          IsReadOnly="True"
                                          TextWrapping="Wrap"
                                          FontFamily="Cascadia Mono" />
-                                <Button Content="复制恢复命令"
+                                <Button x:Uid="ConversationCopyResume" Content="复制恢复命令"
                                         HorizontalAlignment="Right"
                                         Click="CopyResume_Click" />
                             </StackPanel>
-                            <TextBlock Text="存储位置" Opacity="0.6" />
+                            <TextBlock x:Uid="ConversationStorageLocation" Text="存储位置" Opacity="0.6" />
                             <TextBlock x:Name="StoragePathText"
                                        TextWrapping="Wrap"
                                        IsTextSelectionEnabled="True" />
@@ -137,7 +143,7 @@
 
                     <Border Style="{StaticResource CardStyle}">
                         <StackPanel Spacing="10">
-                            <TextBlock Text="文件变更"
+                            <TextBlock x:Uid="ConversationFileChangesTitle" Text="文件变更"
                                        FontSize="17"
                                        FontWeight="SemiBold" />
                             <ListView x:Name="FileChangeList"
@@ -156,6 +162,7 @@
                                 </ListView.ItemTemplate>
                             </ListView>
                             <TextBlock x:Name="NoFileChangesText"
+                                       x:Uid="ConversationNoFileChanges"
                                        Text="这段对话没有记录文件变更。"
                                        TextWrapping="Wrap"
                                        Opacity="0.6"
@@ -165,13 +172,14 @@
 
                     <Border Style="{StaticResource CardStyle}">
                         <StackPanel Spacing="10">
-                            <TextBlock Text="Agent 交接"
+                            <TextBlock x:Uid="ConversationHandoffTitle" Text="Agent 交接"
                                        FontSize="17"
                                        FontWeight="SemiBold" />
                             <ComboBox x:Name="TargetAgentBox"
+                                      x:Uid="ConversationTargetAgent"
                                       PlaceholderText="目标 Agent"
                                       DisplayMemberPath="Label" />
-                            <Button Content="创建交接包"
+                            <Button x:Uid="ConversationCreateHandoff" Content="创建交接包"
                                     HorizontalAlignment="Right"
                                     Click="CreateHandoff_Click" />
                         </StackPanel>

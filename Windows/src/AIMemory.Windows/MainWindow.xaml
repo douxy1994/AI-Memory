@@ -21,39 +21,39 @@
         </Grid>
 
         <MenuBar x:Name="MainMenuBar" Grid.Row="1">
-            <MenuBarItem Title="工作台">
-                <MenuFlyoutItem Text="返回工作台"
+            <MenuBarItem x:Uid="MenuWorkbench" Title="工作台">
+                <MenuFlyoutItem x:Uid="MenuReturnWorkbench" Text="返回工作台"
                                 KeyboardAcceleratorTextOverride="Ctrl+1"
                                 Click="WorkbenchMenu_Click" />
-                <MenuFlyoutItem Text="待复核"
+                <MenuFlyoutItem x:Uid="MenuReview" Text="待复核"
                                 KeyboardAcceleratorTextOverride="Ctrl+2"
                                 Click="ReviewMenu_Click" />
-                <MenuFlyoutItem Text="历史"
+                <MenuFlyoutItem x:Uid="MenuHistory" Text="历史"
                                 KeyboardAcceleratorTextOverride="Ctrl+3"
                                 Click="HistoryMenu_Click" />
                 <MenuFlyoutSeparator />
-                <MenuFlyoutItem Text="立即同步"
+                <MenuFlyoutItem x:Uid="MenuSyncNow" Text="立即同步"
                                 KeyboardAcceleratorTextOverride="Ctrl+Shift+S"
                                 Click="SyncMenu_Click" />
-                <MenuFlyoutItem Text="刷新全部来源"
+                <MenuFlyoutItem x:Uid="MenuRefreshSources" Text="刷新全部来源"
                                 KeyboardAcceleratorTextOverride="Ctrl+R"
                                 Click="RefreshSourcesMenu_Click" />
             </MenuBarItem>
-            <MenuBarItem Title="窗口">
-                <MenuFlyoutItem Text="返回上一页"
+            <MenuBarItem x:Uid="MenuWindow" Title="窗口">
+                <MenuFlyoutItem x:Uid="MenuBack" Text="返回上一页"
                                 KeyboardAcceleratorTextOverride="Alt+Left"
                                 Click="BackMenu_Click" />
-                <MenuFlyoutItem Text="设置"
+                <MenuFlyoutItem x:Uid="MenuSettings" Text="设置"
                                 KeyboardAcceleratorTextOverride="Ctrl+,"
                                 Click="SettingsMenu_Click" />
             </MenuBarItem>
-            <MenuBarItem Title="帮助">
-                <MenuFlyoutItem Text="AI Memory 帮助"
+            <MenuBarItem x:Uid="MenuHelp" Title="帮助">
+                <MenuFlyoutItem x:Uid="MenuHelpItem" Text="AI Memory 帮助"
                                 KeyboardAcceleratorTextOverride="F1"
                                 Click="HelpMenu_Click" />
-                <MenuFlyoutItem Text="关于 AI Memory"
+                <MenuFlyoutItem x:Uid="MenuAbout" Text="关于 AI Memory"
                                 Click="AboutMenu_Click" />
-                <MenuFlyoutItem Text="检查更新"
+                <MenuFlyoutItem x:Uid="MenuCheckUpdates" Text="检查更新"
                                 Click="CheckUpdatesMenu_Click" />
             </MenuBarItem>
         </MenuBar>
@@ -65,21 +65,21 @@
                             PaneDisplayMode="Left"
                             SelectionChanged="Navigation_SelectionChanged">
                 <NavigationView.MenuItems>
-                    <NavigationViewItem Content="工作台" Tag="workbench">
+                    <NavigationViewItem x:Uid="NavigationWorkbench" Content="工作台" Tag="workbench">
                         <NavigationViewItem.Icon><SymbolIcon Symbol="Home" /></NavigationViewItem.Icon>
                     </NavigationViewItem>
-                    <NavigationViewItem Content="历史" Tag="history">
+                    <NavigationViewItem x:Uid="NavigationHistory" Content="历史" Tag="history">
                         <NavigationViewItem.Icon><SymbolIcon Symbol="Clock" /></NavigationViewItem.Icon>
                     </NavigationViewItem>
-                    <NavigationViewItem Content="记忆" Tag="memory">
+                    <NavigationViewItem x:Uid="NavigationMemory" Content="记忆" Tag="memory">
                         <NavigationViewItem.Icon><SymbolIcon Symbol="Library" /></NavigationViewItem.Icon>
                     </NavigationViewItem>
                 </NavigationView.MenuItems>
                 <NavigationView.FooterMenuItems>
-                    <NavigationViewItem Content="收藏" Tag="favorites">
+                    <NavigationViewItem x:Uid="NavigationFavorites" Content="收藏" Tag="favorites">
                         <NavigationViewItem.Icon><SymbolIcon Symbol="Favorite" /></NavigationViewItem.Icon>
                     </NavigationViewItem>
-                    <NavigationViewItem Content="回收站" Tag="trash">
+                    <NavigationViewItem x:Uid="NavigationTrash" Content="回收站" Tag="trash">
                         <NavigationViewItem.Icon><SymbolIcon Symbol="Delete" /></NavigationViewItem.Icon>
                     </NavigationViewItem>
                 </NavigationView.FooterMenuItems>

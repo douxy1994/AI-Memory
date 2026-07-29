@@ -1,5 +1,6 @@
 using AIMemory.Core.Models;
 using AIMemory.Core.Services;
+using AIMemory.Windows.Services;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
@@ -21,7 +22,7 @@ public sealed partial class ConversationPage : Page
         _context = context;
         _favorites = new FavoriteService(context.Window.Settings);
         TitleText.Text = string.IsNullOrWhiteSpace(context.Conversation.Summary)
-            ? "未命名对话"
+            ? LocalizationService.Get("UntitledConversation")
             : context.Conversation.Summary;
         _detail = await context.Window.Conversations.ExportAsync(
             context.Conversation.Id);
@@ -42,7 +43,7 @@ public sealed partial class ConversationPage : Page
             ? Visibility.Collapsed
             : Visibility.Visible;
         StoragePathText.Text = string.IsNullOrWhiteSpace(_detail.StoragePath)
-            ? "未提供"
+            ? LocalizationService.Get("NotProvided")
             : _detail.StoragePath;
         await ReloadFavoriteStateAsync();
         var detected = new AgentCatalog().Detect()
@@ -60,8 +61,8 @@ public sealed partial class ConversationPage : Page
         FavoriteButton.Label = await _favorites.IsFavoriteAsync(
             _context.Conversation.SourceAgent,
             _context.Conversation.Id)
-            ? "取消收藏"
-            : "收藏";
+            ? LocalizationService.Get("RemoveFavorite")
+            : LocalizationService.Get("Favorite");
     }
 
     private void Back_Click(object sender, RoutedEventArgs args)
@@ -78,12 +79,20 @@ public sealed partial class ConversationPage : Page
                 _context.Conversation,
                 _detail.ProjectDir);
             await ReloadFavoriteStateAsync();
-            Show(enabled ? "对话已收藏。" : "已取消收藏。",
+            Show(
+                LocalizationService.Get(
+                    enabled
+                        ? "ConversationFavorited"
+                        : "ConversationUnfavorited"),
                 InfoBarSeverity.Success);
         }
         catch (Exception exception)
         {
-            Show($"更新收藏失败：{exception.Message}", InfoBarSeverity.Error);
+            Show(
+                LocalizationService.Format(
+                    "FavoriteUpdateFailed",
+                    exception.Message),
+                InfoBarSeverity.Error);
         }
     }
 
@@ -91,14 +100,18 @@ public sealed partial class ConversationPage : Page
     {
         if (_detail is null) return;
         CopyText(_detail.ProjectDir);
-        Show("项目路径已复制。", InfoBarSeverity.Success);
+        Show(
+            LocalizationService.Get("ProjectPathCopied"),
+            InfoBarSeverity.Success);
     }
 
     private void CopyResume_Click(object sender, RoutedEventArgs args)
     {
         if (string.IsNullOrWhiteSpace(_detail?.ResumeCommand)) return;
         CopyText(_detail.ResumeCommand);
-        Show("恢复命令已复制。", InfoBarSeverity.Success);
+        Show(
+            LocalizationService.Get("ResumeCommandCopied"),
+            InfoBarSeverity.Success);
     }
 
     private async void Migrate_Click(object sender, RoutedEventArgs args)
@@ -117,14 +130,14 @@ public sealed partial class ConversationPage : Page
         {
             ItemsSource = new[]
             {
-                "完整对话复制",
-                "总结式迁移（复制继续卡片）",
+                LocalizationService.Get("FullConversationCopy"),
+                LocalizationService.Get("SummaryMigration"),
             },
             SelectedIndex = 0,
         };
         var target = new ComboBox
         {
-            Header = "目标 Agent",
+            Header = LocalizationService.Get("TargetAgent"),
             ItemsSource = targets,
             DisplayMemberPath = "Label",
             SelectedIndex = targets.Length > 0 ? 0 : -1,
@@ -137,16 +150,19 @@ public sealed partial class ConversationPage : Page
                     _context.Conversation.SourceAgent)
                     ? new[]
                     {
-                        "复制（保留源）",
-                        "移动（验证后将源移入回收站）",
+                        LocalizationService.Get("CopyKeepSource"),
+                        LocalizationService.Get("MoveAfterVerification"),
                     }
-                    : new[] { "复制（此来源不支持安全移动）" },
+                    : new[]
+                    {
+                        LocalizationService.Get("CopySourceCannotMove"),
+                    },
             SelectedIndex = 0,
         };
         var content = new StackPanel { Spacing = 12 };
         content.Children.Add(new TextBlock
         {
-            Text = "完整迁移会写入目标 Agent 的真实本地历史，并在回读验证失败时撤销写入。",
+            Text = LocalizationService.Get("FullMigrationDescription"),
             TextWrapping = TextWrapping.Wrap,
         });
         content.Children.Add(kind);
@@ -163,10 +179,10 @@ public sealed partial class ConversationPage : Page
         var dialog = new ContentDialog
         {
             XamlRoot = XamlRoot,
-            Title = "迁移对话",
+            Title = LocalizationService.Get("MigrateConversation"),
             Content = content,
-            PrimaryButtonText = "继续",
-            CloseButtonText = "取消",
+            PrimaryButtonText = LocalizationService.Get("Continue"),
+            CloseButtonText = LocalizationService.Get("Cancel"),
             DefaultButton = ContentDialogButton.Primary,
         };
         if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
@@ -174,15 +190,17 @@ public sealed partial class ConversationPage : Page
         if (kind.SelectedIndex == 1)
         {
             CopyText(ConversationMigrationService.ContinuationCard(_detail));
-            Show("继续卡片已复制。", InfoBarSeverity.Success);
+            Show(
+                LocalizationService.Get("ContinuationCardCopied"),
+                InfoBarSeverity.Success);
             return;
         }
         if (target.SelectedItem is not AgentIntegrationStatus selected)
         {
             Show(
                 targets.Length == 0
-                    ? "没有检测到可安全写入的目标 Agent。"
-                    : "请选择目标 Agent。",
+                    ? LocalizationService.Get("NoSafeWritableAgent")
+                    : LocalizationService.Get("SelectTargetAgent"),
                 InfoBarSeverity.Warning);
             return;
         }
@@ -202,18 +220,27 @@ public sealed partial class ConversationPage : Page
             if (result.CutDeletedSource)
             {
                 _context.Window.ShowFeedback(
-                    $"移动成功：{selected.Label} · 源对话已进入回收站",
+                    LocalizationService.Format(
+                        "MigrationMoveSucceeded",
+                        selected.Label),
                     InfoBarSeverity.Success);
                 _context.Window.NavigateTo("trash");
                 return;
             }
             Show(
-                $"迁移成功：{selected.Label} · {result.NewId[..8]}…",
+                LocalizationService.Format(
+                    "MigrationSucceeded",
+                    selected.Label,
+                    result.NewId[..8]),
                 InfoBarSeverity.Success);
         }
         catch (Exception exception)
         {
-            Show($"迁移失败：{exception.Message}", InfoBarSeverity.Error);
+            Show(
+                LocalizationService.Format(
+                    "MigrationFailed",
+                    exception.Message),
+                InfoBarSeverity.Error);
         }
     }
 
@@ -223,10 +250,10 @@ public sealed partial class ConversationPage : Page
         var dialog = new ContentDialog
         {
             XamlRoot = XamlRoot,
-            Title = "移到回收站？",
-            Content = "对话会从 AI Memory 数据库移除，并保留可恢复副本。",
-            PrimaryButtonText = "移到回收站",
-            CloseButtonText = "取消",
+            Title = LocalizationService.Get("MoveToTrashQuestion"),
+            Content = LocalizationService.Get("MoveToTrashDescription"),
+            PrimaryButtonText = LocalizationService.Get("MoveToTrash"),
+            CloseButtonText = LocalizationService.Get("Cancel"),
             DefaultButton = ContentDialogButton.Close,
         };
         if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
@@ -240,7 +267,9 @@ public sealed partial class ConversationPage : Page
         }
         catch (Exception exception)
         {
-            Show($"移到回收站失败：{exception.Message}",
+            Show(LocalizationService.Format(
+                    "MoveToTrashFailed",
+                    exception.Message),
                 InfoBarSeverity.Error);
         }
     }
@@ -254,11 +283,17 @@ public sealed partial class ConversationPage : Page
                 _context.Conversation.Id)).Count;
             await new RecoveryService(_context.Window.Database)
                 .CreateCheckpointAsync(_context.Conversation, messageCount);
-            Show("检查点已创建。", InfoBarSeverity.Success);
+            Show(
+                LocalizationService.Get("CheckpointCreated"),
+                InfoBarSeverity.Success);
         }
         catch (Exception exception)
         {
-            Show($"创建检查点失败：{exception.Message}", InfoBarSeverity.Error);
+            Show(
+                LocalizationService.Format(
+                    "CheckpointCreationFailed",
+                    exception.Message),
+                InfoBarSeverity.Error);
         }
     }
 
@@ -267,7 +302,9 @@ public sealed partial class ConversationPage : Page
         if (_context is null
             || TargetAgentBox.SelectedItem is not AgentIntegrationStatus target)
         {
-            Show("请选择目标 Agent。", InfoBarSeverity.Warning);
+            Show(
+                LocalizationService.Get("SelectTargetAgent"),
+                InfoBarSeverity.Warning);
             return;
         }
         try
@@ -278,11 +315,19 @@ public sealed partial class ConversationPage : Page
             var checkpoint = await service.CreateCheckpointAsync(
                 _context.Conversation, messages.Count);
             await service.CreateHandoffAsync(checkpoint, target.Id);
-            Show($"已创建发往 {target.Label} 的交接包。", InfoBarSeverity.Success);
+            Show(
+                LocalizationService.Format(
+                    "HandoffCreated",
+                    target.Label),
+                InfoBarSeverity.Success);
         }
         catch (Exception exception)
         {
-            Show($"创建交接失败：{exception.Message}", InfoBarSeverity.Error);
+            Show(
+                LocalizationService.Format(
+                    "HandoffCreationFailed",
+                    exception.Message),
+                InfoBarSeverity.Error);
         }
     }
 

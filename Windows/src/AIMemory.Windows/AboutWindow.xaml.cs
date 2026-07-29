@@ -1,5 +1,6 @@
 using AIMemory.Core.Persistence;
 using AIMemory.Core.Services;
+using AIMemory.Windows.Services;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -21,12 +22,18 @@ public sealed partial class AboutWindow : Window
     {
         _settings = settings;
         InitializeComponent();
-        Title = "关于 AI Memory";
-        ReleaseVersionText.Text = $"正式版本 {CurrentVersion()}";
-        DevelopmentVersionText.Text = $"开发版本 {DevelopmentVersion()}";
+        Title = LocalizationService.Get("AboutWindowTitle");
+        ReleaseVersionText.Text = LocalizationService.Format(
+            "ReleaseVersion",
+            CurrentVersion());
+        DevelopmentVersionText.Text = LocalizationService.Format(
+            "DevelopmentVersion",
+            DevelopmentVersion());
         ReleaseTagText.Text = $"v{CurrentVersion()}";
         AgentCoverageText.Text =
-            $"✓ Agent 覆盖扩展\n支持 {AgentCatalog.All.Count} 种主流 Agent 与 CLI 检测，已安装项目优先显示。";
+            LocalizationService.Format(
+                "AgentCoverage",
+                AgentCatalog.All.Count);
 
         var handle = WindowNative.GetWindowHandle(this);
         var id = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(handle);
@@ -39,10 +46,12 @@ public sealed partial class AboutWindow : Window
         if (_checking) return;
         _checking = true;
         CheckUpdateButton.IsEnabled = false;
-        CheckUpdateLabel.Text = "正在检查…";
+        CheckUpdateLabel.Text =
+            LocalizationService.Get("CheckingUpdates");
         UpdateStatus.IsOpen = true;
         UpdateStatus.Severity = InfoBarSeverity.Informational;
-        UpdateStatus.Message = "正在检查 GitHub Releases…";
+        UpdateStatus.Message =
+            LocalizationService.Get("CheckingGitHubReleases");
         try
         {
             var settings = await _settings.LoadAsync();
@@ -52,39 +61,48 @@ public sealed partial class AboutWindow : Window
             if (!result.IsUpdateAvailable)
             {
                 UpdateStatus.Severity = InfoBarSeverity.Success;
-                UpdateStatus.Message =
-                    $"当前版本已是最新；更新源最新版本为 {result.Release.Version}。";
+                UpdateStatus.Message = LocalizationService.Format(
+                    "CurrentVersionLatest",
+                    result.Release.Version);
                 return;
             }
 
             UpdateStatus.Severity = InfoBarSeverity.Informational;
-            UpdateStatus.Message =
-                $"发现新版本 {result.Release.Version}：{result.Release.Title}";
+            UpdateStatus.Message = LocalizationService.Format(
+                "NewVersionFound",
+                result.Release.Version,
+                result.Release.Title);
             if (!automaticInstall) return;
 
-            UpdateStatus.Message =
-                $"发现新版本 {result.Release.Version}，正在下载安装包…";
+            UpdateStatus.Message = LocalizationService.Format(
+                "DownloadingNewVersion",
+                result.Release.Version);
             var path = await new UpdateService().DownloadAsync(
                 result.Release,
                 DataPaths.UpdateDirectory);
             var file = await StorageFile.GetFileFromPathAsync(path);
             if (!await Launcher.LaunchFileAsync(file))
             {
-                throw new InvalidOperationException("Windows 无法打开安装包。");
+                throw new InvalidOperationException(
+                    LocalizationService.Get("WindowsCannotOpenInstaller"));
             }
             UpdateStatus.Severity = InfoBarSeverity.Success;
-            UpdateStatus.Message = "安装包已下载并交给 Windows 安装器。";
+            UpdateStatus.Message =
+                LocalizationService.Get("InstallerLaunched");
         }
         catch (Exception exception)
         {
             UpdateStatus.Severity = InfoBarSeverity.Error;
-            UpdateStatus.Message = $"检查更新失败：{exception.Message}";
+            UpdateStatus.Message = LocalizationService.Format(
+                "UpdateCheckFailed",
+                exception.Message);
         }
         finally
         {
             _checking = false;
             CheckUpdateButton.IsEnabled = true;
-            CheckUpdateLabel.Text = "检查更新";
+            CheckUpdateLabel.Text =
+                LocalizationService.Get("CheckForUpdates");
         }
     }
 
@@ -117,12 +135,12 @@ public sealed partial class AboutWindow : Window
                 "AIMemorySourceRevision.txt");
             var revision = File.ReadAllText(path).Trim();
             return string.IsNullOrWhiteSpace(revision)
-                ? "未提交构建"
+                ? LocalizationService.Get("UncommittedBuild")
                 : revision;
         }
         catch
         {
-            return "未提交构建";
+            return LocalizationService.Get("UncommittedBuild");
         }
     }
 }

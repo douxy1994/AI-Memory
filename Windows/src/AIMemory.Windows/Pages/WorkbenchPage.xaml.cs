@@ -1,5 +1,6 @@
 using AIMemory.Core.Models;
 using AIMemory.Core.Services;
+using AIMemory.Windows.Services;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
@@ -33,9 +34,13 @@ public sealed partial class WorkbenchPage : Page
 
         var agents = new AgentCatalog().Detect();
         var detected = agents.Where(value => value.IsDetected).ToArray();
-        AgentList.ItemsSource = detected;
-        DetectedAgentSummary.Text =
-            $"{detected.Length} / {agents.Count} 项已安装；已安装项目优先显示。";
+        AgentList.ItemsSource = detected
+            .Select(value => new LocalizedAgentIntegration(value))
+            .ToArray();
+        DetectedAgentSummary.Text = LocalizationService.Format(
+            "DetectedAgentSummary",
+            detected.Length,
+            agents.Count);
         NoAgentsText.Visibility = detected.Length == 0
             ? Visibility.Visible
             : Visibility.Collapsed;
@@ -57,7 +62,9 @@ public sealed partial class WorkbenchPage : Page
             ?? "all";
         var options = new[]
             {
-                new SourceFilter("all", "全部来源"),
+                new SourceFilter(
+                    "all",
+                    LocalizationService.Get("AllSources")),
             }
             .Concat(_allConversations
                 .Select(value => value.SourceAgent)
@@ -151,7 +158,9 @@ public sealed partial class WorkbenchPage : Page
     private async void Refresh_Click(object sender, RoutedEventArgs args)
     {
         await ReloadAsync();
-        ShowStatus("刷新完成", "已重新读取本地数据库和 Agent 安装状态。");
+        ShowStatus(
+            LocalizationService.Get("RefreshCompletedTitle"),
+            LocalizationService.Get("RefreshCompletedBody"));
     }
 
     private void History_Click(object sender, RoutedEventArgs args) =>
@@ -165,7 +174,9 @@ public sealed partial class WorkbenchPage : Page
         var groups = _machineGrouping.Build(_allConversations, _settings);
         if (groups.Count == 0)
         {
-            ShowStatus("电脑分组", "当前没有可管理的项目。");
+            ShowStatus(
+                LocalizationService.Get("ComputerGroupsTitle"),
+                LocalizationService.Get("NoProjectsToManage"));
             return;
         }
 
@@ -191,8 +202,7 @@ public sealed partial class WorkbenchPage : Page
         var content = new StackPanel { Spacing = 16 };
         content.Children.Add(new TextBlock
         {
-            Text = "重命名电脑，或把项目移动到另一个电脑分组。"
-                + "这里只改变 AI Memory 的展示，不修改原始路径。",
+            Text = LocalizationService.Get("ComputerGroupsDescription"),
             TextWrapping = TextWrapping.Wrap,
             Opacity = 0.65,
         });
@@ -202,7 +212,7 @@ public sealed partial class WorkbenchPage : Page
             var section = new StackPanel { Spacing = 10 };
             var nameField = new TextBox
             {
-                Header = "电脑名称",
+                Header = LocalizationService.Get("ComputerName"),
                 Text = group.Label,
                 PlaceholderText = group.Label,
             };
@@ -212,7 +222,9 @@ public sealed partial class WorkbenchPage : Page
             {
                 var mergeChoices = new[]
                     {
-                        new MachineChoice("", "不合并"),
+                        new MachineChoice(
+                            "",
+                            LocalizationService.Get("DoNotMerge")),
                     }
                     .Concat(choices.Where(choice => !choice.Id.Equals(
                         group.Id,
@@ -220,7 +232,7 @@ public sealed partial class WorkbenchPage : Page
                     .ToArray();
                 var mergeField = new ComboBox
                 {
-                    Header = "合并电脑",
+                    Header = LocalizationService.Get("MergeComputer"),
                     ItemsSource = mergeChoices,
                     DisplayMemberPath = nameof(MachineChoice.Label),
                     SelectedIndex = 0,
@@ -235,7 +247,10 @@ public sealed partial class WorkbenchPage : Page
                 var row = new StackPanel { Spacing = 5 };
                 row.Children.Add(new TextBlock
                 {
-                    Text = $"{project.Label} · {project.Count} 条",
+                    Text = LocalizationService.Format(
+                        "ProjectConversationCount",
+                        project.Label,
+                        project.Count),
                     FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
                     TextTrimming = TextTrimming.CharacterEllipsis,
                 });
@@ -247,7 +262,7 @@ public sealed partial class WorkbenchPage : Page
                 });
                 var target = new ComboBox
                 {
-                    Header = "所属电脑",
+                    Header = LocalizationService.Get("AssignedComputer"),
                     ItemsSource = choices,
                     DisplayMemberPath = nameof(MachineChoice.Label),
                     HorizontalAlignment = HorizontalAlignment.Stretch,
@@ -267,7 +282,7 @@ public sealed partial class WorkbenchPage : Page
         var dialog = new ContentDialog
         {
             XamlRoot = XamlRoot,
-            Title = "管理电脑分组",
+            Title = LocalizationService.Get("ManageComputerGroups"),
             Content = new ScrollViewer
             {
                 Content = content,
@@ -275,9 +290,10 @@ public sealed partial class WorkbenchPage : Page
                 MinWidth = 620,
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
             },
-            PrimaryButtonText = "保存",
-            SecondaryButtonText = "恢复自动分组",
-            CloseButtonText = "取消",
+            PrimaryButtonText = LocalizationService.Get("Save"),
+            SecondaryButtonText =
+                LocalizationService.Get("RestoreAutomaticGrouping"),
+            CloseButtonText = LocalizationService.Get("Cancel"),
             DefaultButton = ContentDialogButton.Primary,
         };
         var result = await dialog.ShowAsync();
@@ -288,7 +304,9 @@ public sealed partial class WorkbenchPage : Page
             _settings.MachineGroupOverrides.Clear();
             await _window.Settings.SaveAsync(_settings);
             await ReloadAsync();
-            ShowStatus("电脑分组", "已恢复按项目路径自动分组。");
+            ShowStatus(
+                LocalizationService.Get("ComputerGroupsTitle"),
+                LocalizationService.Get("AutomaticGroupingRestored"));
             return;
         }
 
@@ -334,7 +352,9 @@ public sealed partial class WorkbenchPage : Page
         }
         await _window.Settings.SaveAsync(_settings);
         await ReloadAsync();
-        ShowStatus("电脑分组", "电脑名称和项目分组已保存。");
+        ShowStatus(
+            LocalizationService.Get("ComputerGroupsTitle"),
+            LocalizationService.Get("ComputerGroupsSaved"));
     }
 
     private async void Sync_Click(object sender, RoutedEventArgs args)
@@ -348,7 +368,13 @@ public sealed partial class WorkbenchPage : Page
             {
                 var localResult = await new LocalFolderSyncService(_window.Conversations)
                     .SyncAsync(settings.Sync.SyncFolder);
-                ShowStatus("同步完成", localResult.Message);
+                ShowStatus(
+                    LocalizationService.Get("SyncCompletedTitle"),
+                    LocalizationService.Format(
+                        "LocalSyncCompleted",
+                        localResult.Uploaded,
+                        localResult.Downloaded,
+                        localResult.Skipped));
                 await ReloadAsync();
             }
             catch (Exception exception)
@@ -357,14 +383,16 @@ public sealed partial class WorkbenchPage : Page
                     StatusBar,
                     exception.Message,
                     InfoBarSeverity.Error,
-                    "同步失败");
+                    LocalizationService.Get("SyncFailedTitle"));
             }
             return;
         }
         if (settings.Sync.Provider != "webdav"
             || string.IsNullOrWhiteSpace(settings.Sync.WebdavHost))
         {
-            ShowStatus("同步", "请先在设置中完成 WebDAV 配置。");
+            ShowStatus(
+                LocalizationService.Get("SyncTitle"),
+                LocalizationService.Get("ConfigureWebDavFirst"));
             return;
         }
         try
@@ -374,7 +402,13 @@ public sealed partial class WorkbenchPage : Page
                 WebDavService.BuildCollectionUri(settings.Sync),
                 credentials?.Username ?? settings.Sync.Username,
                 credentials?.Password);
-            ShowStatus("同步完成", result.Message);
+            ShowStatus(
+                LocalizationService.Get("SyncCompletedTitle"),
+                LocalizationService.Format(
+                    "SyncCompleted",
+                    result.Uploaded,
+                    result.Downloaded,
+                    result.Skipped));
             await ReloadAsync();
         }
         catch (Exception exception)
@@ -383,7 +417,7 @@ public sealed partial class WorkbenchPage : Page
                 StatusBar,
                 exception.Message,
                 InfoBarSeverity.Error,
-                "同步失败");
+                LocalizationService.Get("SyncFailedTitle"));
         }
     }
 
@@ -413,10 +447,11 @@ public sealed class ProjectRow
     public ConversationSummary Latest { get; }
     public int Count { get; }
     public string DisplayName => string.IsNullOrWhiteSpace(ProjectPath)
-        ? "未知项目"
+        ? LocalizationService.Get("UnknownProject")
         : ProjectPath.TrimEnd('\\', '/').Split('\\', '/').Last();
     public string LatestTitle => string.IsNullOrWhiteSpace(Latest.Summary)
-        ? "未命名对话"
+        ? LocalizationService.Get("UntitledConversation")
         : Latest.Summary;
-    public string CountLabel => $"{Count} 条";
+    public string CountLabel =>
+        LocalizationService.Format("ConversationCount", Count);
 }

@@ -29,6 +29,7 @@
     { "id": "mcp-tool-contract", "status": "implemented", "evidence": "22-tool contract aligned with macOS, including continuation, Wiki/index rebuild, conflicts and entity graph" },
     { "id": "menu-and-shortcut-parity", "status": "implemented", "evidence": "MainWindow MenuBar and keyboard accelerator map" },
     { "id": "settings-navigation", "status": "implemented", "evidence": "Windows 11 category navigation for General, Agent integrations, Data sync and backup, Updates and diagnostics" },
+    { "id": "localized-ui", "status": "implemented", "evidence": "MRT Core .resw and x:Uid resources cover static XAML, dynamic feedback and package description in zh-CN and en-US; system/default and explicit language preferences persist compatibly" },
     { "id": "font-preferences", "status": "implemented", "evidence": "application-wide WinUI font resource with system, Noto Sans CJK SC, Noto Serif CJK SC and LXGW WenKai compatibility" },
     { "id": "update-and-diagnostics", "status": "implemented", "evidence": "About-centered update flow, UpdateService, DiagnosticsService and five-second success feedback" },
     { "id": "x64-arm64-builds", "status": "implemented", "evidence": "GitHub Actions run 30337018301 built WinUI 3 x64 and ARM64 successfully" },

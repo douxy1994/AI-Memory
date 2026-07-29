@@ -1,5 +1,6 @@
 using AIMemory.Core.Models;
 using AIMemory.Core.Services;
+using AIMemory.Windows.Services;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
@@ -86,7 +87,9 @@ public sealed partial class HistoryPage : Page
     private async void Refresh_Click(object sender, RoutedEventArgs args)
     {
         await ReloadAllAsync();
-        Show("历史已刷新。", InfoBarSeverity.Success);
+        Show(
+            LocalizationService.Get("HistoryRefreshed"),
+            InfoBarSeverity.Success);
     }
 
     private async void SearchBox_TextChanged(
@@ -141,7 +144,8 @@ public sealed partial class HistoryPage : Page
             value => value.Id == handoff.CheckpointId);
         if (checkpoint is null)
         {
-            Show("该交接包没有可用的来源检查点。",
+            Show(
+                LocalizationService.Get("HandoffSourceCheckpointUnavailable"),
                 InfoBarSeverity.Warning);
             return;
         }
@@ -204,7 +208,7 @@ public sealed partial class HistoryPage : Page
             XamlRoot = XamlRoot,
             Title = page.Title,
             Content = body,
-            CloseButtonText = "完成",
+            CloseButtonText = LocalizationService.Get("Done"),
         };
         await dialog.ShowAsync();
     }
@@ -226,7 +230,8 @@ public sealed partial class HistoryPage : Page
         }
         if (conversation is null)
         {
-            Show("来源对话当前不可用；历史条目仍会保留。",
+            Show(
+                LocalizationService.Get("HistorySourceUnavailable"),
                 InfoBarSeverity.Warning);
             return;
         }
@@ -246,7 +251,8 @@ public sealed partial class HistoryPage : Page
         if (_window is null
             || ConversationList.SelectedItem is not ConversationSummary conversation)
         {
-            Show("请先选择要移到回收站的对话。",
+            Show(
+                LocalizationService.Get("SelectConversationToTrash"),
                 InfoBarSeverity.Warning);
             return;
         }
@@ -255,7 +261,9 @@ public sealed partial class HistoryPage : Page
             conversation,
             settings.TrashRetentionDays);
         await ReloadConversationsAsync();
-        Show("对话已移到回收站。", InfoBarSeverity.Success);
+        Show(
+            LocalizationService.Get("ConversationMovedToTrash"),
+            InfoBarSeverity.Success);
     }
 
     private void Show(string message, InfoBarSeverity severity)

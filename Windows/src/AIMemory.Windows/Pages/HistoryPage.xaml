@@ -10,19 +10,20 @@
 
         <Grid>
             <StackPanel Spacing="4">
-                <TextBlock Text="历史" Style="{StaticResource PageTitleStyle}" />
-                <TextBlock Text="对话、记忆、检查点、交接、运行、产物与经历的统一资料库。"
+                <TextBlock x:Uid="HistoryTitle" Text="历史" Style="{StaticResource PageTitleStyle}" />
+                <TextBlock x:Uid="HistorySubtitle" Text="对话、记忆、检查点、交接、运行、产物与经历的统一资料库。"
                            TextWrapping="Wrap"
                            Opacity="0.65" />
             </StackPanel>
-            <Button HorizontalAlignment="Right"
+            <Button x:Uid="HistoryRefresh"
+                    HorizontalAlignment="Right"
                     VerticalAlignment="Center"
                     Content="刷新"
                     Click="Refresh_Click" />
         </Grid>
 
         <TabView Grid.Row="1">
-            <TabViewItem Header="对话" IsClosable="False">
+            <TabViewItem x:Uid="HistoryConversationsTab" Header="对话" IsClosable="False">
                 <Grid RowSpacing="12">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -34,9 +35,11 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <TextBox x:Name="SearchBox"
+                                 x:Uid="HistorySearch"
                                  PlaceholderText="搜索本地历史"
                                  TextChanged="SearchBox_TextChanged" />
-                        <Button Grid.Column="1"
+                        <Button x:Uid="HistoryTrashSelected"
+                                Grid.Column="1"
                                 Content="移到回收站"
                                 Click="TrashSelected_Click" />
                     </Grid>
@@ -75,6 +78,7 @@
                         </ListView.ItemTemplate>
                     </ListView>
                     <TextBlock x:Name="EmptyText"
+                               x:Uid="HistoryNoConversations"
                                Grid.Row="1"
                                Text="还没有可显示的对话。"
                                HorizontalAlignment="Center"
@@ -84,7 +88,7 @@
                 </Grid>
             </TabViewItem>
 
-            <TabViewItem Header="记忆" IsClosable="False">
+            <TabViewItem x:Uid="HistoryMemoryTab" Header="记忆" IsClosable="False">
                 <ListView x:Name="MemoryList"
                           IsItemClickEnabled="True"
                           ItemClick="MemoryList_ItemClick">
@@ -97,7 +101,7 @@
                                     <TextBlock Text="{Binding Value}"
                                                TextWrapping="Wrap"
                                                MaxLines="3" />
-                                    <TextBlock Text="打开记忆管理"
+                                    <TextBlock x:Uid="HistoryOpenMemory" Text="打开记忆管理"
                                                Foreground="{StaticResource AIMemoryGreenBrush}" />
                                 </StackPanel>
                             </Border>
@@ -106,7 +110,7 @@
                 </ListView>
             </TabViewItem>
 
-            <TabViewItem Header="检查点" IsClosable="False">
+            <TabViewItem x:Uid="HistoryCheckpointsTab" Header="检查点" IsClosable="False">
                 <ListView x:Name="CheckpointList"
                           IsItemClickEnabled="True"
                           ItemClick="CheckpointList_ItemClick">
@@ -121,7 +125,7 @@
                                                Opacity="0.6" />
                                     <TextBlock Text="{Binding CreatedAt}"
                                                Opacity="0.55" />
-                                    <TextBlock Text="打开来源对话"
+                                    <TextBlock x:Uid="HistoryOpenSourceCheckpoint" Text="打开来源对话"
                                                Foreground="{StaticResource AIMemoryGreenBrush}" />
                                 </StackPanel>
                             </Border>
@@ -130,7 +134,7 @@
                 </ListView>
             </TabViewItem>
 
-            <TabViewItem Header="交接" IsClosable="False">
+            <TabViewItem x:Uid="HistoryHandoffsTab" Header="交接" IsClosable="False">
                 <ListView x:Name="HandoffList"
                           IsItemClickEnabled="True"
                           ItemClick="HandoffList_ItemClick">
@@ -145,7 +149,7 @@
                                                Opacity="0.6" />
                                     <TextBlock Text="{Binding ToAgent}"
                                                Opacity="0.6" />
-                                    <TextBlock Text="打开来源对话"
+                                    <TextBlock x:Uid="HistoryOpenSourceHandoff" Text="打开来源对话"
                                                Foreground="{StaticResource AIMemoryGreenBrush}" />
                                 </StackPanel>
                             </Border>
@@ -154,7 +158,7 @@
                 </ListView>
             </TabViewItem>
 
-            <TabViewItem Header="运行" IsClosable="False">
+            <TabViewItem x:Uid="HistoryRunsTab" Header="运行" IsClosable="False">
                 <ListView x:Name="RunList"
                           IsItemClickEnabled="True"
                           ItemClick="RunList_ItemClick">
@@ -170,7 +174,7 @@
                                                MaxLines="3" />
                                     <TextBlock Text="{Binding Status}"
                                                Opacity="0.6" />
-                                    <TextBlock Text="打开来源对话"
+                                    <TextBlock x:Uid="HistoryOpenSourceRun" Text="打开来源对话"
                                                Foreground="{StaticResource AIMemoryGreenBrush}" />
                                 </StackPanel>
                             </Border>
@@ -179,7 +183,7 @@
                 </ListView>
             </TabViewItem>
 
-            <TabViewItem Header="产物" IsClosable="False">
+            <TabViewItem x:Uid="HistoryArtifactsTab" Header="产物" IsClosable="False">
                 <ListView x:Name="ArtifactList"
                           IsItemClickEnabled="True"
                           ItemClick="ArtifactList_ItemClick">
@@ -195,7 +199,7 @@
                                                MaxLines="3" />
                                     <TextBlock Text="{Binding TrustState}"
                                                Opacity="0.6" />
-                                    <TextBlock Text="查看产生该产物的对话"
+                                    <TextBlock x:Uid="HistoryOpenArtifactSource" Text="查看产生该产物的对话"
                                                Foreground="{StaticResource AIMemoryGreenBrush}" />
                                 </StackPanel>
                             </Border>
@@ -204,7 +208,7 @@
                 </ListView>
             </TabViewItem>
 
-            <TabViewItem Header="经历" IsClosable="False">
+            <TabViewItem x:Uid="HistoryEpisodesTab" Header="经历" IsClosable="False">
                 <ListView x:Name="EpisodeList"
                           IsItemClickEnabled="True"
                           ItemClick="EpisodeList_ItemClick">
@@ -220,7 +224,7 @@
                                                MaxLines="3" />
                                     <TextBlock Text="{Binding Outcome}"
                                                Opacity="0.6" />
-                                    <TextBlock Text="打开来源对话"
+                                    <TextBlock x:Uid="HistoryOpenSourceEpisode" Text="打开来源对话"
                                                Foreground="{StaticResource AIMemoryGreenBrush}" />
                                 </StackPanel>
                             </Border>
@@ -229,7 +233,7 @@
                 </ListView>
             </TabViewItem>
 
-            <TabViewItem Header="Wiki" IsClosable="False">
+            <TabViewItem x:Uid="HistoryWikiTab" Header="Wiki" IsClosable="False">
                 <ListView x:Name="WikiList"
                           IsItemClickEnabled="True"
                           ItemClick="WikiList_ItemClick">
@@ -242,7 +246,7 @@
                                     <TextBlock Text="{Binding Body}"
                                                TextWrapping="Wrap"
                                                MaxLines="4" />
-                                    <TextBlock Text="查看完整页面"
+                                    <TextBlock x:Uid="HistoryOpenWiki" Text="查看完整页面"
                                                Foreground="{StaticResource AIMemoryGreenBrush}" />
                                 </StackPanel>
                             </Border>

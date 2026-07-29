@@ -10,8 +10,8 @@
         </Grid.RowDefinitions>
 
         <StackPanel>
-            <TextBlock Text="设置" Style="{StaticResource PageTitleStyle}" />
-            <TextBlock Text="管理启动、Agent 集成、数据同步与备份以及软件更新。"
+            <TextBlock x:Uid="SettingsTitle" Text="设置" Style="{StaticResource PageTitleStyle}" />
+            <TextBlock x:Uid="SettingsSubtitle" Text="管理启动、Agent 集成、数据同步与备份以及软件更新。"
                        Opacity="0.65" />
         </StackPanel>
 
@@ -27,25 +27,25 @@
                 <ListViewItem Tag="general">
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <SymbolIcon Symbol="Setting" />
-                        <TextBlock Text="常规" VerticalAlignment="Center" />
+                        <TextBlock x:Uid="SettingsCategoryGeneral" Text="常规" VerticalAlignment="Center" />
                     </StackPanel>
                 </ListViewItem>
                 <ListViewItem Tag="agents">
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <SymbolIcon Symbol="World" />
-                        <TextBlock Text="Agent 集成" VerticalAlignment="Center" />
+                        <TextBlock x:Uid="SettingsCategoryAgents" Text="Agent 集成" VerticalAlignment="Center" />
                     </StackPanel>
                 </ListViewItem>
                 <ListViewItem Tag="sync">
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <SymbolIcon Symbol="Sync" />
-                        <TextBlock Text="数据同步与备份" VerticalAlignment="Center" />
+                        <TextBlock x:Uid="SettingsCategorySync" Text="数据同步与备份" VerticalAlignment="Center" />
                     </StackPanel>
                 </ListViewItem>
                 <ListViewItem Tag="updates">
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <SymbolIcon Symbol="Download" />
-                        <TextBlock Text="更新与诊断" VerticalAlignment="Center" />
+                        <TextBlock x:Uid="SettingsCategoryUpdates" Text="更新与诊断" VerticalAlignment="Center" />
                     </StackPanel>
                 </ListViewItem>
             </ListView>
@@ -56,22 +56,33 @@
                 <Grid MaxWidth="820" HorizontalAlignment="Stretch">
                     <StackPanel x:Name="GeneralPanel" Spacing="16">
                         <StackPanel Spacing="4">
-                            <TextBlock Text="常规"
+                            <TextBlock x:Uid="SettingsGeneralTitle" Text="常规"
                                        FontSize="22"
                                        FontWeight="SemiBold" />
-                            <TextBlock Text="控制字体、登录启动和自动备份。"
+                            <TextBlock x:Uid="SettingsGeneralSubtitle" Text="控制字体、登录启动和自动备份。"
                                        Opacity="0.65" />
                         </StackPanel>
                         <Border Style="{StaticResource CardStyle}">
                             <StackPanel Spacing="12">
-                                <TextBlock Text="语言与字体"
+                                <TextBlock x:Uid="SettingsLanguageFontTitle" Text="语言与字体"
                                            FontSize="17"
                                            FontWeight="SemiBold" />
+                                <ComboBox x:Name="LanguageBox"
+                                          x:Uid="SettingsLanguage"
+                                          Header="界面语言"
+                                          DisplayMemberPath="Label"
+                                          SelectionChanged="LanguageBox_SelectionChanged" />
+                                <TextBlock x:Name="LanguageRestartHint"
+                                           x:Uid="SettingsLanguageRestartHint"
+                                           Text="语言更改将在重新启动 AI Memory 后生效。"
+                                           TextWrapping="Wrap"
+                                           Opacity="0.6" />
                                 <ComboBox x:Name="FontFamilyBox"
+                                          x:Uid="SettingsFont"
                                           Header="字体"
                                           DisplayMemberPath="Label"
                                           SelectionChanged="FontFamilyBox_SelectionChanged" />
-                                <TextBlock Text="字体会立即应用；所选字体未安装时由 Windows 自动回退到系统字体。"
+                                <TextBlock x:Uid="SettingsFontHint" Text="字体会立即应用；所选字体未安装时由 Windows 自动回退到系统字体。"
                                            TextWrapping="Wrap"
                                            Opacity="0.6" />
                             </StackPanel>
@@ -83,10 +94,11 @@
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Spacing="4">
-                                    <TextBlock Text="登录时自动启动"
+                                    <TextBlock x:Uid="SettingsStartupTitle" Text="登录时自动启动"
                                                FontSize="16"
                                                FontWeight="SemiBold" />
                                     <TextBlock x:Name="StartupDetail"
+                                               x:Uid="SettingsStartupLoading"
                                                Text="正在读取系统状态…"
                                                TextWrapping="Wrap"
                                                Opacity="0.6" />
@@ -99,7 +111,7 @@
                         </Border>
                         <Border Style="{StaticResource CardStyle}">
                             <StackPanel Spacing="14">
-                                <TextBlock Text="自动备份"
+                                <TextBlock x:Uid="SettingsAutoBackupTitle" Text="自动备份"
                                            FontSize="17"
                                            FontWeight="SemiBold" />
                                 <Grid ColumnSpacing="16">
@@ -108,9 +120,9 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Spacing="4">
-                                        <TextBlock Text="定时备份数据库与设置"
+                                        <TextBlock x:Uid="SettingsAutoBackupToggleTitle" Text="定时备份数据库与设置"
                                                    FontWeight="SemiBold" />
-                                        <TextBlock Text="没有变化时不会生成重复恢复点；未变化的文件使用 NTFS 硬链接复用。"
+                                        <TextBlock x:Uid="SettingsAutoBackupHint" Text="没有变化时不会生成重复恢复点；未变化的文件使用 NTFS 硬链接复用。"
                                                    TextWrapping="Wrap"
                                                    Opacity="0.6" />
                                     </StackPanel>
@@ -119,12 +131,13 @@
                                                   VerticalAlignment="Center" />
                                 </Grid>
                                 <NumberBox x:Name="AutoBackupIntervalBox"
+                                           x:Uid="SettingsBackupInterval"
                                            Header="备份间隔（分钟）"
                                            Minimum="5"
                                            Maximum="1440"
                                            SmallChange="5"
                                            SpinButtonPlacementMode="Inline" />
-                                <Button Content="保存自动备份设置"
+                                <Button x:Uid="SettingsSaveAutoBackup" Content="保存自动备份设置"
                                         HorizontalAlignment="Right"
                                         Click="SaveGeneralSettings_Click" />
                             </StackPanel>
@@ -140,14 +153,15 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <StackPanel Spacing="4">
-                                <TextBlock Text="Agent 集成"
+                                <TextBlock x:Uid="SettingsAgentsTitle" Text="Agent 集成"
                                            FontSize="22"
                                            FontWeight="SemiBold" />
-                                <TextBlock Text="已安装项目优先显示；未安装项目保持关闭。"
+                                <TextBlock x:Uid="SettingsAgentsSubtitle" Text="已安装项目优先显示；未安装项目保持关闭。"
                                            TextWrapping="Wrap"
                                            Opacity="0.65" />
                             </StackPanel>
-                            <Button Grid.Column="1"
+                            <Button x:Uid="SettingsDetectAgents"
+                                    Grid.Column="1"
                                     HorizontalAlignment="Right"
                                     VerticalAlignment="Center"
                                     Content="重新检测"
@@ -190,31 +204,34 @@
                                 Spacing="16"
                                 Visibility="Collapsed">
                         <StackPanel Spacing="4">
-                            <TextBlock Text="数据同步与备份"
+                            <TextBlock x:Uid="SettingsSyncTitle" Text="数据同步与备份"
                                        FontSize="22"
                                        FontWeight="SemiBold" />
-                            <TextBlock Text="集中管理本地目录、WebDAV、历史导入和恢复点。"
+                            <TextBlock x:Uid="SettingsSyncSubtitle" Text="集中管理本地目录、WebDAV、历史导入和恢复点。"
                                        TextWrapping="Wrap"
                                        Opacity="0.65" />
                         </StackPanel>
 
                         <Border Style="{StaticResource CardStyle}">
                             <StackPanel Spacing="14">
-                                <TextBlock Text="本地同步目录"
+                                <TextBlock x:Uid="SettingsLocalSyncTitle" Text="本地同步目录"
                                            FontSize="17"
                                            FontWeight="SemiBold" />
-                                <TextBlock Text="适用于 OneDrive、Dropbox、Google Drive 等共享目录；只传输变化的对话文件。"
+                                <TextBlock x:Uid="SettingsLocalSyncHint" Text="适用于 OneDrive、Dropbox、Google Drive 等共享目录；只传输变化的对话文件。"
                                            TextWrapping="Wrap"
                                            Opacity="0.6" />
                                 <TextBox x:Name="SyncFolderBox"
+                                         x:Uid="SettingsLocalSyncFolder"
                                          PlaceholderText="例如 D:\OneDrive\AI Memory" />
                                 <CommandBar Background="Transparent"
                                             HorizontalAlignment="Right"
                                             DefaultLabelPosition="Right">
-                                    <AppBarButton Icon="Save"
+                                    <AppBarButton x:Uid="SettingsSaveFolder"
+                                                  Icon="Save"
                                                   Label="保存目录"
                                                   Click="SaveLocalFolder_Click" />
-                                    <AppBarButton Icon="Sync"
+                                    <AppBarButton x:Uid="SettingsSyncFolderNow"
+                                                  Icon="Sync"
                                                   Label="立即同步"
                                                   Click="SyncLocalFolder_Click" />
                                 </CommandBar>
@@ -223,7 +240,7 @@
 
                         <Border Style="{StaticResource CardStyle}">
                             <StackPanel Spacing="14">
-                                <TextBlock Text="WebDAV"
+                                <TextBlock x:Uid="SettingsWebDavTitle" Text="WebDAV"
                                            FontSize="17"
                                            FontWeight="SemiBold" />
                                 <Grid ColumnSpacing="12">
@@ -241,24 +258,31 @@
                                 </Grid>
                                 <StackPanel Spacing="10">
                                     <TextBox x:Name="ServerPathBox"
+                                             x:Uid="SettingsWebDavServerPath"
                                              PlaceholderText="服务器路径，例如 webdav" />
                                     <TextBox x:Name="RemotePathBox"
+                                             x:Uid="SettingsWebDavRemotePath"
                                              PlaceholderText="远程目录，例如 aimemory" />
                                     <TextBox x:Name="UsernameBox"
+                                             x:Uid="SettingsWebDavUsername"
                                              PlaceholderText="用户名" />
                                     <PasswordBox x:Name="PasswordBox"
+                                                 x:Uid="SettingsWebDavPassword"
                                                  PlaceholderText="密码" />
                                 </StackPanel>
                                 <CommandBar Background="Transparent"
                                             HorizontalAlignment="Right"
                                             DefaultLabelPosition="Right">
-                                    <AppBarButton Icon="Accept"
+                                    <AppBarButton x:Uid="SettingsVerifyWebDav"
+                                                  Icon="Accept"
                                                   Label="验证连接"
                                                   Click="VerifyWebDav_Click" />
-                                    <AppBarButton Icon="Sync"
+                                    <AppBarButton x:Uid="SettingsSyncWebDavNow"
+                                                  Icon="Sync"
                                                   Label="立即同步"
                                                   Click="SyncWebDav_Click" />
-                                    <AppBarButton Icon="Save"
+                                    <AppBarButton x:Uid="SettingsSaveWebDav"
+                                                  Icon="Save"
                                                   Label="保存"
                                                   Click="SaveSettings_Click" />
                                 </CommandBar>
@@ -270,7 +294,7 @@
 
                         <Border Style="{StaticResource CardStyle}">
                             <StackPanel Spacing="14">
-                                <TextBlock Text="数据与恢复"
+                                <TextBlock x:Uid="SettingsRecoveryTitle" Text="数据与恢复"
                                            FontSize="17"
                                            FontWeight="SemiBold" />
                                 <TextBlock x:Name="DataPathText"
@@ -280,19 +304,24 @@
                                 <CommandBar Background="Transparent"
                                             HorizontalAlignment="Stretch"
                                             DefaultLabelPosition="Right">
-                                    <AppBarButton Icon="SaveLocal"
+                                    <AppBarButton x:Uid="SettingsCreateRecoveryPoint"
+                                                  Icon="SaveLocal"
                                                   Label="创建恢复点"
                                                   Click="CreateBackup_Click" />
-                                    <AppBarButton Icon="Refresh"
+                                    <AppBarButton x:Uid="SettingsRestoreRecoveryPoint"
+                                                  Icon="Refresh"
                                                   Label="从恢复点恢复"
                                                   Click="RestoreBackup_Click" />
-                                    <AppBarButton Icon="Folder"
+                                    <AppBarButton x:Uid="SettingsOpenBackupFolder"
+                                                  Icon="Folder"
                                                   Label="打开备份目录"
                                                   Click="OpenBackupDirectory_Click" />
-                                    <AppBarButton Icon="Download"
+                                    <AppBarButton x:Uid="SettingsImportAgentHistory"
+                                                  Icon="Download"
                                                   Label="导入本机 Agent 历史"
                                                   Click="ImportNativeHistory_Click" />
                                     <AppBarButton x:Name="ImportChatMemButton"
+                                                  x:Uid="SettingsImportChatMem"
                                                   Icon="Download"
                                                   Label="导入 ChatMem 数据"
                                                   Click="ImportChatMem_Click" />
@@ -305,17 +334,17 @@
                                 Spacing="16"
                                 Visibility="Collapsed">
                         <StackPanel Spacing="4">
-                            <TextBlock Text="更新与诊断"
+                            <TextBlock x:Uid="SettingsUpdatesTitle" Text="更新与诊断"
                                        FontSize="22"
                                        FontWeight="SemiBold" />
-                            <TextBlock Text="配置自动检查更新，并查看当前本机运行状态。"
+                            <TextBlock x:Uid="SettingsUpdatesSubtitle" Text="配置自动检查更新，并查看当前本机运行状态。"
                                        TextWrapping="Wrap"
                                        Opacity="0.65" />
                         </StackPanel>
 
                         <Border Style="{StaticResource CardStyle}">
                             <StackPanel Spacing="14">
-                                <TextBlock Text="软件更新"
+                                <TextBlock x:Uid="SettingsSoftwareUpdateTitle" Text="软件更新"
                                            FontSize="17"
                                            FontWeight="SemiBold" />
                                 <Grid ColumnSpacing="16">
@@ -324,9 +353,9 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Spacing="4">
-                                        <TextBlock Text="自动检查更新"
+                                        <TextBlock x:Uid="SettingsAutoUpdateTitle" Text="自动检查更新"
                                                    FontWeight="SemiBold" />
-                                        <TextBlock Text="从 AI Memory 的 GitHub Releases 获取正式版本。"
+                                        <TextBlock x:Uid="SettingsAutoUpdateHint" Text="从 AI Memory 的 GitHub Releases 获取正式版本。"
                                                    TextWrapping="Wrap"
                                                    Opacity="0.6" />
                                     </StackPanel>
@@ -340,14 +369,17 @@
                                 <CommandBar Background="Transparent"
                                             HorizontalAlignment="Right"
                                             DefaultLabelPosition="Right">
-                                    <AppBarButton Icon="Save"
+                                    <AppBarButton x:Uid="SettingsSaveUpdate"
+                                                  Icon="Save"
                                                   Label="保存更新设置"
                                                   Click="SaveUpdateSettings_Click" />
-                                    <AppBarButton Icon="Refresh"
+                                    <AppBarButton x:Uid="SettingsCheckUpdateAbout"
+                                                  Icon="Refresh"
                                                   Label="在关于中检查更新"
                                                   Click="CheckUpdates_Click" />
                                 </CommandBar>
                                 <TextBlock x:Name="UpdateStatusText"
+                                           x:Uid="SettingsUpdateStatus"
                                            Text="更新检查与安装统一在“关于 AI Memory”窗口中完成。"
                                            TextWrapping="Wrap"
                                            Opacity="0.65" />
@@ -356,10 +388,10 @@
 
                         <Border Style="{StaticResource CardStyle}">
                             <StackPanel Spacing="14">
-                                <TextBlock Text="运行诊断"
+                                <TextBlock x:Uid="SettingsDiagnosticsTitle" Text="运行诊断"
                                            FontSize="17"
                                            FontWeight="SemiBold" />
-                                <TextBlock Text="以下内容来自当前数据库与本机环境，可用于核对版本、数据和 Agent 状态。"
+                                <TextBlock x:Uid="SettingsDiagnosticsHint" Text="以下内容来自当前数据库与本机环境，可用于核对版本、数据和 Agent 状态。"
                                            TextWrapping="Wrap"
                                            Opacity="0.6" />
                                 <TextBox x:Name="DiagnosticsBox"
@@ -371,13 +403,16 @@
                                 <CommandBar Background="Transparent"
                                             HorizontalAlignment="Right"
                                             DefaultLabelPosition="Right">
-                                    <AppBarButton Icon="Refresh"
+                                    <AppBarButton x:Uid="SettingsRefreshDiagnostics"
+                                                  Icon="Refresh"
                                                   Label="刷新诊断"
                                                   Click="RefreshDiagnostics_Click" />
-                                    <AppBarButton Icon="Copy"
+                                    <AppBarButton x:Uid="SettingsCopyDiagnostics"
+                                                  Icon="Copy"
                                                   Label="复制诊断"
                                                   Click="CopyDiagnostics_Click" />
-                                    <AppBarButton Icon="Folder"
+                                    <AppBarButton x:Uid="SettingsOpenDataFolder"
+                                                  Icon="Folder"
                                                   Label="打开数据目录"
                                                   Click="OpenDataDirectory_Click" />
                                 </CommandBar>

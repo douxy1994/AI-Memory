@@ -10,16 +10,17 @@
         </Grid.RowDefinitions>
         <Grid>
             <StackPanel>
-                <TextBlock Text="记忆与接续" Style="{StaticResource PageTitleStyle}" />
-                <TextBlock Text="审批候选规则、维护已批准记忆，并管理检查点与 Agent 交接。" Opacity="0.65" />
+                <TextBlock x:Uid="MemoryTitle" Text="记忆与接续" Style="{StaticResource PageTitleStyle}" />
+                <TextBlock x:Uid="MemorySubtitle" Text="审批候选规则、维护已批准记忆，并管理检查点与 Agent 交接。" Opacity="0.65" />
             </StackPanel>
-            <Button HorizontalAlignment="Right"
+            <Button x:Uid="MemoryRefresh"
+                    HorizontalAlignment="Right"
                     Content="刷新"
                     Click="Refresh_Click" />
         </Grid>
 
         <TabView Grid.Row="1">
-            <TabViewItem Header="待复核" IsClosable="False">
+            <TabViewItem x:Uid="MemoryReviewTab" Header="待复核" IsClosable="False">
                 <ListView x:Name="CandidateList">
                     <ListView.ItemTemplate>
                         <DataTemplate>
@@ -29,13 +30,13 @@
                                     <TextBlock Text="{Binding Value}" TextWrapping="Wrap" IsTextSelectionEnabled="True" />
                                     <TextBlock Text="{Binding WhyItMatters}" Opacity="0.6" TextWrapping="Wrap" />
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-                                        <Button Content="批准/编辑"
+                                        <Button x:Uid="MemoryApprove" Content="批准/编辑"
                                                 Tag="{Binding}"
                                                 Click="ApproveCandidate_Click" />
-                                        <Button Content="暂缓"
+                                        <Button x:Uid="MemorySnooze" Content="暂缓"
                                                 Tag="{Binding}"
                                                 Click="SnoozeCandidate_Click" />
-                                        <Button Content="拒绝"
+                                        <Button x:Uid="MemoryReject" Content="拒绝"
                                                 Tag="{Binding}"
                                                 Click="RejectCandidate_Click" />
                                     </StackPanel>
@@ -46,7 +47,7 @@
                 </ListView>
             </TabViewItem>
 
-            <TabViewItem Header="已批准规则" IsClosable="False">
+            <TabViewItem x:Uid="MemoryApprovedTab" Header="已批准规则" IsClosable="False">
                 <ListView x:Name="ApprovedList">
                     <ListView.ItemTemplate>
                         <DataTemplate>
@@ -56,13 +57,13 @@
                                     <TextBlock Text="{Binding Value}" TextWrapping="Wrap" IsTextSelectionEnabled="True" />
                                     <TextBlock Text="{Binding UsageHint}" Opacity="0.6" TextWrapping="Wrap" />
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-                                        <Button Content="编辑"
+                                        <Button x:Uid="MemoryEdit" Content="编辑"
                                                 Tag="{Binding}"
                                                 Click="EditApproved_Click" />
-                                        <Button Content="重新验证"
+                                        <Button x:Uid="MemoryReverify" Content="重新验证"
                                                 Tag="{Binding}"
                                                 Click="ReverifyApproved_Click" />
-                                        <Button Content="停用"
+                                        <Button x:Uid="MemoryRetire" Content="停用"
                                                 Tag="{Binding}"
                                                 Click="RetireApproved_Click" />
                                     </StackPanel>
@@ -73,14 +74,14 @@
                 </ListView>
             </TabViewItem>
 
-            <TabViewItem Header="检查点与交接" IsClosable="False">
+            <TabViewItem x:Uid="MemoryRecoveryTab" Header="检查点与交接" IsClosable="False">
                 <Grid ColumnSpacing="16">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
                     <StackPanel Spacing="8">
-                        <TextBlock Text="检查点" FontSize="18" FontWeight="SemiBold" />
+                        <TextBlock x:Uid="MemoryCheckpoints" Text="检查点" FontSize="18" FontWeight="SemiBold" />
                         <ListView x:Name="CheckpointList">
                             <ListView.ItemTemplate>
                                 <DataTemplate>
@@ -92,7 +93,7 @@
                                                        FontFamily="Cascadia Mono"
                                                        IsTextSelectionEnabled="True"
                                                        TextWrapping="Wrap" />
-                                            <Button Content="创建交接包"
+                                            <Button x:Uid="MemoryCreateHandoff" Content="创建交接包"
                                                     HorizontalAlignment="Right"
                                                     Tag="{Binding}"
                                                     Click="PromoteCheckpoint_Click" />
@@ -103,7 +104,7 @@
                         </ListView>
                     </StackPanel>
                     <StackPanel Grid.Column="1" Spacing="8">
-                        <TextBlock Text="交接包" FontSize="18" FontWeight="SemiBold" />
+                        <TextBlock x:Uid="MemoryHandoffs" Text="交接包" FontSize="18" FontWeight="SemiBold" />
                         <ListView x:Name="HandoffList">
                             <ListView.ItemTemplate>
                                 <DataTemplate>
@@ -112,7 +113,7 @@
                                             <TextBlock Text="{Binding CurrentGoal}" FontWeight="SemiBold" TextWrapping="Wrap" />
                                             <TextBlock Text="{Binding Route}" Opacity="0.6" />
                                             <TextBlock Text="{Binding Status}" Opacity="0.6" />
-                                            <Button Content="标记已消费"
+                                            <Button x:Uid="MemoryConsumeHandoff" Content="标记已消费"
                                                     HorizontalAlignment="Right"
                                                     Tag="{Binding}"
                                                     IsEnabled="{Binding CanConsume}"
