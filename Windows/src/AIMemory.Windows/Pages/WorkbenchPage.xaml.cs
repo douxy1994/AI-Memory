@@ -157,10 +157,8 @@ public sealed partial class WorkbenchPage : Page
 
     private async void Refresh_Click(object sender, RoutedEventArgs args)
     {
-        await ReloadAsync();
-        ShowStatus(
-            LocalizationService.Get("RefreshCompletedTitle"),
-            LocalizationService.Get("RefreshCompletedBody"));
+        if (_window is null) return;
+        await _window.RefreshAllSourcesAsync();
     }
 
     private void History_Click(object sender, RoutedEventArgs args) =>
@@ -360,65 +358,8 @@ public sealed partial class WorkbenchPage : Page
     private async void Sync_Click(object sender, RoutedEventArgs args)
     {
         if (_window is null) return;
-        var settings = await _window.Settings.LoadAsync();
-        if (settings.Sync.Provider == "local"
-            && !string.IsNullOrWhiteSpace(settings.Sync.SyncFolder))
-        {
-            try
-            {
-                var localResult = await new LocalFolderSyncService(_window.Conversations)
-                    .SyncAsync(settings.Sync.SyncFolder);
-                ShowStatus(
-                    LocalizationService.Get("SyncCompletedTitle"),
-                    LocalizationService.Format(
-                        "LocalSyncCompleted",
-                        localResult.Uploaded,
-                        localResult.Downloaded,
-                        localResult.Skipped));
-                await ReloadAsync();
-            }
-            catch (Exception exception)
-            {
-                AIMemory.Windows.Services.FeedbackPresenter.Show(
-                    StatusBar,
-                    exception.Message,
-                    InfoBarSeverity.Error,
-                    LocalizationService.Get("SyncFailedTitle"));
-            }
-            return;
-        }
-        if (settings.Sync.Provider != "webdav"
-            || string.IsNullOrWhiteSpace(settings.Sync.WebdavHost))
-        {
-            ShowStatus(
-                LocalizationService.Get("SyncTitle"),
-                LocalizationService.Get("ConfigureWebDavFirst"));
-            return;
-        }
-        try
-        {
-            var credentials = new AIMemory.Windows.Services.CredentialService().Load();
-            var result = await new WebDavService(_window.Conversations).SyncAsync(
-                WebDavService.BuildCollectionUri(settings.Sync),
-                credentials?.Username ?? settings.Sync.Username,
-                credentials?.Password);
-            ShowStatus(
-                LocalizationService.Get("SyncCompletedTitle"),
-                LocalizationService.Format(
-                    "SyncCompleted",
-                    result.Uploaded,
-                    result.Downloaded,
-                    result.Skipped));
-            await ReloadAsync();
-        }
-        catch (Exception exception)
-        {
-            AIMemory.Windows.Services.FeedbackPresenter.Show(
-                StatusBar,
-                exception.Message,
-                InfoBarSeverity.Error,
-                LocalizationService.Get("SyncFailedTitle"));
-        }
+        await _window.SyncNowAsync();
+        await ReloadAsync();
     }
 
     private void ShowStatus(string title, string message)

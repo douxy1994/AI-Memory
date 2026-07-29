@@ -14,6 +14,8 @@ public sealed partial class HistoryPage : Page
     private CancellationTokenSource? _searchCancellation;
     private CancellationTokenSource? _searchDebounce;
     private IReadOnlyList<CheckpointRecord> _checkpoints = [];
+    private IReadOnlyList<EpisodeRecord> _episodes = [];
+    private IReadOnlyList<WikiRecord> _wikiPages = [];
     private IReadOnlyList<ConversationSummary> _allConversations = [];
     private IReadOnlyList<ConversationProjectFilter> _projects = [];
     private readonly HashSet<string> _projectFilters =
@@ -81,6 +83,10 @@ public sealed partial class HistoryPage : Page
         var memory = new MemoryGovernanceService(_window.Database);
         var recovery = new RecoveryService(_window.Database);
         var history = new HistoryProjectionService(_window.Database);
+        var governance = new RepositoryGovernanceService(_window.Database);
+        var knowledge = new KnowledgeProjectionService(
+            _window.Database,
+            governance);
         var memoriesTask = memory.ListApprovedAsync();
         var checkpointsTask = recovery.ListCheckpointsAsync();
         var handoffsTask = recovery.ListHandoffsAsync();
@@ -88,6 +94,7 @@ public sealed partial class HistoryPage : Page
         var artifactsTask = history.ListArtifactsAsync();
         var episodesTask = history.ListEpisodesAsync();
         var wikiTask = history.ListWikiAsync();
+        var repositoriesTask = governance.ListRepositoriesAsync();
         await Task.WhenAll(
             memoriesTask,
             checkpointsTask,
@@ -95,15 +102,38 @@ public sealed partial class HistoryPage : Page
             runsTask,
             artifactsTask,
             episodesTask,
-            wikiTask);
+            wikiTask,
+            repositoriesTask);
         MemoryList.ItemsSource = await memoriesTask;
         _checkpoints = await checkpointsTask;
         CheckpointList.ItemsSource = _checkpoints;
         HandoffList.ItemsSource = await handoffsTask;
         RunList.ItemsSource = await runsTask;
         ArtifactList.ItemsSource = await artifactsTask;
-        EpisodeList.ItemsSource = await episodesTask;
-        WikiList.ItemsSource = await wikiTask;
+        _episodes = await episodesTask;
+        EpisodeList.ItemsSource = _episodes;
+        _wikiPages = await wikiTask;
+        WikiList.ItemsSource = _wikiPages;
+
+        var graphTasks = (await repositoriesTask)
+            .Select(async repository => (
+                Repository: repository,
+                Graph: await knowledge.ListEntityGraphAsync(
+                    repository.Root,
+                    100)))
+            .ToArray();
+        var graphs = graphTasks.Length == 0
+            ? []
+            : await Task.WhenAll(graphTasks);
+        var rows = graphs
+            .SelectMany(value => EntityGraphRow.Create(
+                value.Repository.Root,
+                value.Graph))
+            .ToArray();
+        EntityList.ItemsSource = rows;
+        NoEntitiesText.Visibility = rows.Length == 0
+            ? Visibility.Visible
+            : Visibility.Collapsed;
     }
 
     private async Task ReloadConversationsAsync()
@@ -448,7 +478,14 @@ public sealed partial class HistoryPage : Page
         object sender,
         ItemClickEventArgs args)
     {
-        if (args.ClickedItem is not WikiRecord page) return;
+        if (args.ClickedItem is WikiRecord page)
+        {
+            await ShowWikiPageAsync(page);
+        }
+    }
+
+    private async Task ShowWikiPageAsync(WikiRecord page)
+    {
         var body = new ScrollViewer
         {
             Content = new TextBlock
@@ -468,6 +505,77 @@ public sealed partial class HistoryPage : Page
             CloseButtonText = LocalizationService.Get("Done"),
         };
         await dialog.ShowAsync();
+    }
+
+    private async void EntityList_ItemClick(
+        object sender,
+        ItemClickEventArgs args)
+    {
+        if (args.ClickedItem is not EntityGraphRow row
+            || string.IsNullOrWhiteSpace(row.OwnerType))
+        {
+            return;
+        }
+        switch (row.OwnerType)
+        {
+            case "chunk":
+                if (!string.IsNullOrWhiteSpace(row.SourceConversationId))
+                {
+                    await OpenConversationAsync(row.SourceConversationId);
+                }
+                else
+                {
+                    Show(
+                        LocalizationService.Get(
+                            "EntitySourceConversationUnavailable"),
+                        InfoBarSeverity.Warning);
+                }
+                break;
+            case "conversation":
+                await OpenConversationAsync(row.OwnerId ?? "");
+                break;
+            case "episode":
+                var episode = _episodes.FirstOrDefault(value =>
+                    value.Id == row.OwnerId);
+                if (episode is null)
+                {
+                    Show(
+                        LocalizationService.Get(
+                            "EntitySourceConversationUnavailable"),
+                        InfoBarSeverity.Warning);
+                }
+                else
+                {
+                    await OpenConversationAsync(
+                        episode.SourceConversationId);
+                }
+                break;
+            case "memory":
+                if (_window is not null)
+                {
+                    Frame.Navigate(typeof(MemoryPage), _window);
+                }
+                break;
+            case "wiki_page":
+                var wiki = _wikiPages.FirstOrDefault(value =>
+                    value.Id == row.OwnerId);
+                if (wiki is null)
+                {
+                    Show(
+                        LocalizationService.Get("EntityWikiUnavailable"),
+                        InfoBarSeverity.Warning);
+                }
+                else
+                {
+                    await ShowWikiPageAsync(wiki);
+                }
+                break;
+            default:
+                Show(
+                    LocalizationService.Get("EntityLinkUnsupported"),
+                    InfoBarSeverity.Warning);
+                break;
+        }
     }
 
     private async Task OpenConversationAsync(
@@ -629,4 +737,71 @@ public sealed class ConversationProjectGroupView
     public string Key { get; }
     public string Label { get; }
     public string Path { get; }
+}
+
+public sealed record EntityGraphRow(
+    string RepositoryRoot,
+    string EntityName,
+    string Kind,
+    int MentionCount,
+    string? OwnerType,
+    string? OwnerId,
+    string? Relationship,
+    string? SourceTitle,
+    string? SourceConversationId)
+{
+    public string MentionLabel => LocalizationService.Format(
+        "EntityMentionCount",
+        MentionCount);
+
+    public string RelationshipLabel =>
+        string.IsNullOrWhiteSpace(OwnerType)
+            ? LocalizationService.Get("EntityWithoutLinks")
+            : LocalizationService.Format(
+                "EntityRelationship",
+                Relationship ?? "",
+                SourceTitle ?? OwnerId ?? "");
+
+    public Visibility ActionVisibility =>
+        string.IsNullOrWhiteSpace(OwnerType)
+            ? Visibility.Collapsed
+            : Visibility.Visible;
+
+    public static IReadOnlyList<EntityGraphRow> Create(
+        string repositoryRoot,
+        MemoryEntityGraph graph)
+    {
+        var rows = new List<EntityGraphRow>();
+        foreach (var entity in graph.Entities)
+        {
+            var links = graph.Links
+                .Where(value => value.EntityId == entity.Id)
+                .ToArray();
+            if (links.Length == 0)
+            {
+                rows.Add(new EntityGraphRow(
+                    repositoryRoot,
+                    entity.Name,
+                    entity.Kind,
+                    entity.MentionCount,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null));
+                continue;
+            }
+            rows.AddRange(links.Select(link => new EntityGraphRow(
+                repositoryRoot,
+                entity.Name,
+                entity.Kind,
+                entity.MentionCount,
+                link.OwnerType,
+                link.OwnerId,
+                link.Relationship,
+                link.SourceTitle,
+                link.SourceConversationId)));
+        }
+        return rows;
+    }
 }

@@ -23,8 +23,43 @@ public sealed record MemoryMergeProposalRecord(
     string CreatedAt,
     string UpdatedAt);
 
+public sealed record RepositorySummary(
+    string Id,
+    string Root,
+    int PendingCandidates);
+
 public sealed class RepositoryGovernanceService(AIMemoryDatabase database)
 {
+    public async Task<IReadOnlyList<RepositorySummary>> ListRepositoriesAsync(
+        CancellationToken cancellationToken = default)
+    {
+        await using var connection = database.OpenConnection();
+        var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT r.repo_id,r.repo_root,
+                   SUM(CASE
+                         WHEN mc.status IN ('pending','pending_review')
+                         THEN 1 ELSE 0
+                       END) AS pending_count
+            FROM repos r
+            LEFT JOIN memory_candidates mc ON mc.repo_id=r.repo_id
+            GROUP BY r.repo_id,r.repo_root,r.updated_at
+            ORDER BY pending_count DESC,r.updated_at DESC,
+                     r.repo_root COLLATE NOCASE;
+            """;
+        var result = new List<RepositorySummary>();
+        await using var reader =
+            await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            result.Add(new RepositorySummary(
+                reader.GetString(0),
+                reader.GetString(1),
+                reader.GetInt32(2)));
+        }
+        return result;
+    }
+
     public async Task<string?> ResolveRepoIdAsync(
         string repoRoot,
         bool create = false,

@@ -3,6 +3,8 @@ using AIMemory.Windows.Services;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
+using System.Text.Json;
+using Windows.ApplicationModel.DataTransfer;
 
 namespace AIMemory.Windows.Pages;
 
@@ -11,6 +13,12 @@ public sealed partial class MemoryPage : Page
     private MainWindow? _window;
     private MemoryGovernanceService? _memory;
     private RecoveryService? _recovery;
+    private RepositoryGovernanceService? _governance;
+    private KnowledgeProjectionService? _knowledge;
+    private IReadOnlyList<RepositorySummary> _repositories = [];
+    private IReadOnlyList<MemoryCandidateRecord> _pendingCandidates = [];
+    private IReadOnlyList<CheckpointRecord> _checkpoints = [];
+    private bool _loadingRepositories;
 
     public MemoryPage() => InitializeComponent();
 
@@ -19,25 +27,125 @@ public sealed partial class MemoryPage : Page
         _window = (MainWindow)args.Parameter;
         _memory = new MemoryGovernanceService(_window.Database);
         _recovery = new RecoveryService(_window.Database);
+        _governance = new RepositoryGovernanceService(_window.Database);
+        _knowledge = new KnowledgeProjectionService(
+            _window.Database,
+            _governance);
+        await ReloadRepositoryOptionsAsync();
         await ReloadAsync();
     }
 
     private async Task ReloadAsync()
     {
-        if (_memory is null || _recovery is null) return;
-        CandidateList.ItemsSource = await _memory.ListCandidatesAsync();
-        ApprovedList.ItemsSource = await _memory.ListApprovedAsync();
-        CheckpointList.ItemsSource = await _recovery.ListCheckpointsAsync();
-        HandoffList.ItemsSource = (await _recovery.ListHandoffsAsync())
+        if (_memory is null
+            || _recovery is null
+            || _governance is null
+            || _knowledge is null)
+        {
+            return;
+        }
+        var candidatesTask = _memory.ListCandidatesAsync();
+        var approvedTask = _memory.ListApprovedAsync();
+        var checkpointsTask = _recovery.ListCheckpointsAsync();
+        var handoffsTask = _recovery.ListHandoffsAsync();
+        await Task.WhenAll(
+            candidatesTask,
+            approvedTask,
+            checkpointsTask,
+            handoffsTask);
+        var selectedRepoId = SelectedRepositoryId();
+        _pendingCandidates = (await candidatesTask)
+            .Where(value => selectedRepoId is null
+                || value.RepoId == selectedRepoId)
+            .ToArray();
+        CandidateList.ItemsSource = _pendingCandidates;
+        RejectAllCandidatesButton.IsEnabled =
+            _pendingCandidates.Count > 0;
+        ApprovedList.ItemsSource = (await approvedTask)
+            .Where(value => selectedRepoId is null
+                || value.RepoId == selectedRepoId)
+            .ToArray();
+        _checkpoints = (await checkpointsTask)
+            .Where(value => selectedRepoId is null
+                || value.RepoId == selectedRepoId)
+            .ToArray();
+        CheckpointList.ItemsSource = _checkpoints;
+        HandoffList.ItemsSource = (await handoffsTask)
+            .Where(value => selectedRepoId is null
+                || value.RepoId == selectedRepoId)
             .Select(value => new HandoffRow(
                 value,
                 $"{value.FromAgent} → {value.ToAgent}",
                 value.Status != "consumed"))
             .ToArray();
+        var conflictTasks = _repositories
+            .Where(repository => selectedRepoId is null
+                || repository.Id == selectedRepoId)
+            .Select(repository => _knowledge.ListConflictsAsync(
+                repository.Root,
+                "open"))
+            .ToArray();
+        var conflicts = conflictTasks.Length == 0
+            ? []
+            : (await Task.WhenAll(conflictTasks))
+                .SelectMany(value => value)
+                .OrderByDescending(value => value.CreatedAt)
+                .ToArray();
+        ConflictList.ItemsSource = conflicts;
+        NoConflictsText.Visibility = conflicts.Length == 0
+            ? Visibility.Visible
+            : Visibility.Collapsed;
     }
 
-    private async void Refresh_Click(object sender, RoutedEventArgs args) =>
+    private async Task ReloadRepositoryOptionsAsync()
+    {
+        if (_governance is null) return;
+        var selectedId =
+            (RepositoryBox.SelectedItem as RepositoryOption)?.Id;
+        _repositories = await _governance.ListRepositoriesAsync();
+        var options = new[]
+            {
+                new RepositoryOption(
+                    null,
+                    LocalizationService.Get("AllRepositories")),
+            }
+            .Concat(_repositories.Select(repository =>
+                new RepositoryOption(
+                    repository.Id,
+                    repository.PendingCandidates == 0
+                        ? repository.Root
+                        : LocalizationService.Format(
+                            "RepositoryPendingCandidates",
+                            repository.Root,
+                            repository.PendingCandidates))))
+            .ToArray();
+        _loadingRepositories = true;
+        RepositoryBox.ItemsSource = options;
+        RepositoryBox.SelectedItem = options.FirstOrDefault(value =>
+            value.Id == selectedId)
+            ?? options.FirstOrDefault(value => value.Id is not null)
+            ?? options[0];
+        _loadingRepositories = false;
+    }
+
+    private string? SelectedRepositoryId() =>
+        (RepositoryBox.SelectedItem as RepositoryOption)?.Id;
+
+    private async void RepositoryBox_SelectionChanged(
+        object sender,
+        SelectionChangedEventArgs args)
+    {
+        if (!_loadingRepositories)
+        {
+            await ReloadAsync();
+        }
+    }
+
+    private async void Refresh_Click(object sender, RoutedEventArgs args)
+    {
+        await ReloadRepositoryOptionsAsync();
         await ReloadAsync();
+    }
 
     private async void ApproveCandidate_Click(object sender, RoutedEventArgs args)
     {
@@ -107,6 +215,46 @@ public sealed partial class MemoryPage : Page
             sender,
             "reject",
             LocalizationService.Get("CandidateRejected"));
+
+    private async void RejectAllCandidates_Click(
+        object sender,
+        RoutedEventArgs args)
+    {
+        if (_memory is null || _pendingCandidates.Count == 0) return;
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = LocalizationService.Get("RejectAllCandidatesTitle"),
+            Content = LocalizationService.Format(
+                "RejectAllCandidatesDescription",
+                _pendingCandidates.Count),
+            PrimaryButtonText =
+                LocalizationService.Get("RejectAllCandidatesAction"),
+            CloseButtonText = LocalizationService.Get("Cancel"),
+            DefaultButton = ContentDialogButton.Close,
+        };
+        if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
+        try
+        {
+            var count = await _memory.ReviewAllPendingAsync(
+                "reject",
+                SelectedRepositoryId());
+            await ReloadAsync();
+            Show(
+                LocalizationService.Format(
+                    "CandidatesRejectedCount",
+                    count),
+                InfoBarSeverity.Success);
+        }
+        catch (Exception exception)
+        {
+            Show(
+                LocalizationService.Format(
+                    "CandidateUpdateFailed",
+                    exception.Message),
+                InfoBarSeverity.Error);
+        }
+    }
 
     private async Task ReviewCandidateAsync(
         object sender,
@@ -197,6 +345,11 @@ public sealed partial class MemoryPage : Page
 
     private async void RetireApproved_Click(object sender, RoutedEventArgs args) =>
         await SetApprovedStateAsync(sender, false);
+
+    private void OpenConflictRules_Click(
+        object sender,
+        RoutedEventArgs args) =>
+        MemoryTabs.SelectedIndex = 1;
 
     private async Task SetApprovedStateAsync(object sender, bool active)
     {
@@ -312,6 +465,197 @@ public sealed partial class MemoryPage : Page
         }
     }
 
+    private async void ShowHandoffDetails_Click(
+        object sender,
+        RoutedEventArgs args)
+    {
+        if (sender is Button { Tag: HandoffRow handoff })
+        {
+            await ShowHandoffDetailsAsync(handoff);
+        }
+    }
+
+    private async Task ShowHandoffDetailsAsync(HandoffRow handoff)
+    {
+        var content = new StackPanel { Spacing = 12 };
+        AddHandoffSection(
+            content,
+            LocalizationService.Get("HandoffCurrentGoal"),
+            [handoff.Value.CurrentGoal]);
+        AddHandoffSection(
+            content,
+            LocalizationService.Get("HandoffDone"),
+            ParseStringArray(handoff.Value.DoneJson));
+        AddHandoffSection(
+            content,
+            LocalizationService.Get("HandoffNext"),
+            ParseStringArray(handoff.Value.NextJson));
+        AddHandoffSection(
+            content,
+            LocalizationService.Get("HandoffKeyFiles"),
+            ParseStringArray(handoff.Value.KeyFilesJson),
+            monospace: true);
+        AddHandoffSection(
+            content,
+            LocalizationService.Get("HandoffCommands"),
+            ParseStringArray(handoff.Value.CommandsJson),
+            monospace: true);
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = LocalizationService.Get("HandoffDetailsTitle"),
+            Content = new ScrollViewer
+            {
+                Content = content,
+                MinWidth = 520,
+                MaxHeight = 560,
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            },
+            PrimaryButtonText = LocalizationService.Get("CopyHandoff"),
+            SecondaryButtonText =
+                LocalizationService.Get("OpenSourceConversation"),
+            CloseButtonText = LocalizationService.Get("Done"),
+            DefaultButton = ContentDialogButton.Close,
+        };
+        switch (await dialog.ShowAsync())
+        {
+            case ContentDialogResult.Primary:
+                CopyText(HandoffText(handoff.Value));
+                Show(
+                    LocalizationService.Get("HandoffCopied"),
+                    InfoBarSeverity.Success);
+                break;
+            case ContentDialogResult.Secondary:
+                await OpenHandoffSourceAsync(handoff);
+                break;
+        }
+    }
+
+    private async void OpenHandoffSource_Click(
+        object sender,
+        RoutedEventArgs args)
+    {
+        if (sender is Button { Tag: HandoffRow handoff })
+        {
+            await OpenHandoffSourceAsync(handoff);
+        }
+    }
+
+    private async Task OpenHandoffSourceAsync(HandoffRow handoff)
+    {
+        if (_window is null) return;
+        var checkpoint = _checkpoints.FirstOrDefault(value =>
+            value.Id == handoff.Value.CheckpointId);
+        if (checkpoint is null)
+        {
+            Show(
+                LocalizationService.Get(
+                    "HandoffSourceCheckpointUnavailable"),
+                InfoBarSeverity.Warning);
+            return;
+        }
+        var candidateIds =
+            HistoryProjectionService.ConversationIdCandidates(
+                checkpoint.ConversationId,
+                checkpoint.SourceAgent);
+        var conversation = (await _window.Conversations.ListAsync(
+                sourceAgent: checkpoint.SourceAgent,
+                limit: 5_000))
+            .FirstOrDefault(value => candidateIds.Contains(
+                value.Id,
+                StringComparer.Ordinal));
+        if (conversation is null)
+        {
+            Show(
+                LocalizationService.Get("HistorySourceUnavailable"),
+                InfoBarSeverity.Warning);
+            return;
+        }
+        Frame.Navigate(
+            typeof(ConversationPage),
+            new ConversationNavigation(_window, conversation));
+    }
+
+    private static void AddHandoffSection(
+        Panel content,
+        string title,
+        IReadOnlyList<string> values,
+        bool monospace = false)
+    {
+        if (values.Count == 0) return;
+        var section = new StackPanel { Spacing = 6 };
+        section.Children.Add(new TextBlock
+        {
+            Text = title,
+            FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+        });
+        foreach (var value in values)
+        {
+            section.Children.Add(new TextBlock
+            {
+                Text = $"• {value}",
+                TextWrapping = TextWrapping.Wrap,
+                IsTextSelectionEnabled = true,
+                FontFamily = monospace
+                    ? new Microsoft.UI.Xaml.Media.FontFamily(
+                        "Cascadia Mono")
+                    : null,
+            });
+        }
+        content.Children.Add(section);
+    }
+
+    private static IReadOnlyList<string> ParseStringArray(string json)
+    {
+        try
+        {
+            return JsonSerializer.Deserialize<string[]>(json) ?? [];
+        }
+        catch
+        {
+            return [];
+        }
+    }
+
+    private static string HandoffText(HandoffRecord handoff)
+    {
+        var lines = new List<string>
+        {
+            $"# {handoff.CurrentGoal}",
+            "",
+            $"{handoff.FromAgent} -> {handoff.ToAgent}",
+        };
+        Append(
+            LocalizationService.Get("HandoffDone"),
+            ParseStringArray(handoff.DoneJson));
+        Append(
+            LocalizationService.Get("HandoffNext"),
+            ParseStringArray(handoff.NextJson));
+        Append(
+            LocalizationService.Get("HandoffKeyFiles"),
+            ParseStringArray(handoff.KeyFilesJson));
+        Append(
+            LocalizationService.Get("HandoffCommands"),
+            ParseStringArray(handoff.CommandsJson));
+        return string.Join(Environment.NewLine, lines);
+
+        void Append(string title, IReadOnlyList<string> values)
+        {
+            if (values.Count == 0) return;
+            lines.Add("");
+            lines.Add($"## {title}");
+            lines.AddRange(values.Select(value => $"- {value}"));
+        }
+    }
+
+    private static void CopyText(string value)
+    {
+        var package = new DataPackage();
+        package.SetText(value);
+        Clipboard.SetContent(package);
+        Clipboard.Flush();
+    }
+
     private void Show(string message, InfoBarSeverity severity)
         => AIMemory.Windows.Services.FeedbackPresenter.Show(
             Feedback,
@@ -327,3 +671,7 @@ public sealed record HandoffRow(
     public string CurrentGoal => Value.CurrentGoal;
     public string Status => Value.Status;
 }
+
+public sealed record RepositoryOption(
+    string? Id,
+    string Label);

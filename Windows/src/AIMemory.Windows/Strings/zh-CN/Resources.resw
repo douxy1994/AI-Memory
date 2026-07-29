@@ -433,6 +433,15 @@
   <data name="HistoryOpenSourceEpisode.Text" xml:space="preserve"><value>打开来源对话</value></data>
   <data name="HistoryWikiTab.Header" xml:space="preserve"><value>Wiki</value></data>
   <data name="HistoryOpenWiki.Text" xml:space="preserve"><value>查看完整页面</value></data>
+  <data name="HistoryGraphTab.Header" xml:space="preserve"><value>实体图谱</value></data>
+  <data name="HistoryGraphOpen.Text" xml:space="preserve"><value>打开关联内容</value></data>
+  <data name="HistoryNoEntities.Text" xml:space="preserve"><value>当前仓库尚无实体关系。批准记忆并重建索引后会生成。</value></data>
+  <data name="EntityMentionCount" xml:space="preserve"><value>{0} 次引用</value></data>
+  <data name="EntityWithoutLinks" xml:space="preserve"><value>尚无可打开的关联内容</value></data>
+  <data name="EntityRelationship" xml:space="preserve"><value>{0} · {1}</value></data>
+  <data name="EntitySourceConversationUnavailable" xml:space="preserve"><value>找不到这项实体关联对应的来源对话。</value></data>
+  <data name="EntityWikiUnavailable" xml:space="preserve"><value>找不到这项实体关联对应的 Wiki 页面。</value></data>
+  <data name="EntityLinkUnsupported" xml:space="preserve"><value>这个关联类型暂时没有可打开的内容。</value></data>
 
   <data name="FavoritesTitle.Text" xml:space="preserve"><value>收藏</value></data>
   <data name="FavoritesSubtitle.Text" xml:space="preserve"><value>收藏保存轻量快照，不复制或移动原始对话。</value></data>
@@ -448,8 +457,10 @@
 
   <data name="MemoryTitle.Text" xml:space="preserve"><value>记忆与接续</value></data>
   <data name="MemorySubtitle.Text" xml:space="preserve"><value>审批候选规则、维护已批准记忆，并管理检查点与 Agent 交接。</value></data>
+  <data name="MemoryRepositoryFilter.PlaceholderText" xml:space="preserve"><value>选择仓库</value></data>
   <data name="MemoryRefresh.Content" xml:space="preserve"><value>刷新</value></data>
   <data name="MemoryReviewTab.Header" xml:space="preserve"><value>待复核</value></data>
+  <data name="MemoryRejectAll.Content" xml:space="preserve"><value>全部忽略</value></data>
   <data name="MemoryApprove.Content" xml:space="preserve"><value>批准/编辑</value></data>
   <data name="MemorySnooze.Content" xml:space="preserve"><value>暂缓</value></data>
   <data name="MemoryReject.Content" xml:space="preserve"><value>拒绝</value></data>
@@ -457,11 +468,31 @@
   <data name="MemoryEdit.Content" xml:space="preserve"><value>编辑</value></data>
   <data name="MemoryReverify.Content" xml:space="preserve"><value>重新验证</value></data>
   <data name="MemoryRetire.Content" xml:space="preserve"><value>停用</value></data>
+  <data name="MemoryConflictsTab.Header" xml:space="preserve"><value>记忆冲突</value></data>
+  <data name="MemoryOpenConflictRule.Content" xml:space="preserve"><value>查看相关规则</value></data>
+  <data name="MemoryNoConflicts.Text" xml:space="preserve"><value>当前没有需要处理的记忆冲突。</value></data>
   <data name="MemoryRecoveryTab.Header" xml:space="preserve"><value>检查点与交接</value></data>
   <data name="MemoryCheckpoints.Text" xml:space="preserve"><value>检查点</value></data>
   <data name="MemoryCreateHandoff.Content" xml:space="preserve"><value>创建交接包</value></data>
   <data name="MemoryHandoffs.Text" xml:space="preserve"><value>交接包</value></data>
+  <data name="MemoryHandoffDetails.Content" xml:space="preserve"><value>查看详情</value></data>
+  <data name="MemoryOpenHandoffSource.Content" xml:space="preserve"><value>打开来源对话</value></data>
   <data name="MemoryConsumeHandoff.Content" xml:space="preserve"><value>标记已消费</value></data>
+  <data name="AllRepositories" xml:space="preserve"><value>全部仓库</value></data>
+  <data name="RepositoryPendingCandidates" xml:space="preserve"><value>{0}（{1} 条待审）</value></data>
+  <data name="RejectAllCandidatesTitle" xml:space="preserve"><value>忽略全部待审候选？</value></data>
+  <data name="RejectAllCandidatesDescription" xml:space="preserve"><value>这会将当前仓库筛选下的 {0} 条候选标记为已拒绝，证据记录仍会保留。</value></data>
+  <data name="RejectAllCandidatesAction" xml:space="preserve"><value>忽略全部</value></data>
+  <data name="CandidatesRejectedCount" xml:space="preserve"><value>已忽略 {0} 条候选。</value></data>
+  <data name="HandoffCurrentGoal" xml:space="preserve"><value>当前目标</value></data>
+  <data name="HandoffDone" xml:space="preserve"><value>已完成</value></data>
+  <data name="HandoffNext" xml:space="preserve"><value>下一步</value></data>
+  <data name="HandoffKeyFiles" xml:space="preserve"><value>关键文件</value></data>
+  <data name="HandoffCommands" xml:space="preserve"><value>可用命令</value></data>
+  <data name="HandoffDetailsTitle" xml:space="preserve"><value>交接详情</value></data>
+  <data name="CopyHandoff" xml:space="preserve"><value>复制交接内容</value></data>
+  <data name="OpenSourceConversation" xml:space="preserve"><value>打开来源对话</value></data>
+  <data name="HandoffCopied" xml:space="preserve"><value>交接内容已复制。</value></data>
 
   <data name="TrashTitle.Text" xml:space="preserve"><value>回收站</value></data>
   <data name="TrashSummary.Text" xml:space="preserve"><value>已删除对话的可恢复记录。</value></data>

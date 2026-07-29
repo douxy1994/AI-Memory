@@ -1044,6 +1044,11 @@ public sealed class CoreTests : IDisposable
             await service.ListCandidatesAsync(@"C:\repo", "pending_review"));
         Assert.Equal(candidateId, candidate.Id);
         Assert.Equal(1, candidate.Confidence);
+        var repository = Assert.Single(
+            await service.ListRepositoriesAsync());
+        Assert.Equal(repoId, repository.Id);
+        Assert.Equal(@"C:\repo", repository.Root);
+        Assert.Equal(1, repository.PendingCandidates);
 
         await using (var connection = database.OpenConnection())
         {
@@ -1848,6 +1853,39 @@ public sealed class CoreTests : IDisposable
         Assert.Equal(
             "fresh",
             Assert.Single(await service.ListApprovedAsync()).FreshnessStatus);
+    }
+
+    [Fact]
+    public async Task MemoryGovernanceBulkReviewIsRepositoryScoped()
+    {
+        var database = new AIMemoryDatabase(
+            Path.Combine(_root, "memory-bulk-review.db"));
+        await database.InitializeAsync();
+        await using (var connection = database.OpenConnection())
+        {
+            var insert = connection.CreateCommand();
+            insert.CommandText = """
+                INSERT INTO memory_candidates(
+                  candidate_id,repo_id,kind,summary,value,why_it_matters,
+                  confidence,proposed_by,status,created_at,reviewed_at)
+                VALUES
+                  ('candidate-a','repo-a','rule','A','A','A',0.9,'test',
+                   'pending_review',$now,NULL),
+                  ('candidate-b','repo-b','rule','B','B','B',0.8,'test',
+                   'pending_review',$now,NULL);
+                """;
+            insert.Parameters.AddWithValue(
+                "$now",
+                DateTimeOffset.UtcNow.ToString("O"));
+            await insert.ExecuteNonQueryAsync();
+        }
+        var service = new MemoryGovernanceService(database);
+        Assert.Equal(
+            1,
+            await service.ReviewAllPendingAsync("reject", "repo-a"));
+        var remaining = Assert.Single(
+            await service.ListCandidatesAsync());
+        Assert.Equal("repo-b", remaining.RepoId);
     }
 
     [Fact]

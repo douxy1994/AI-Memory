@@ -177,6 +177,38 @@ public sealed class MemoryGovernanceService(AIMemoryDatabase database)
         }
     }
 
+    public async Task<int> ReviewAllPendingAsync(
+        string action,
+        string? repoId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var status = action switch
+        {
+            "reject" => "rejected",
+            "snooze" => "snoozed",
+            _ => throw new ArgumentOutOfRangeException(
+                nameof(action), "仅支持 reject 或 snooze。"),
+        };
+        await using var connection = database.OpenConnection();
+        var command = connection.CreateCommand();
+        command.CommandText = """
+            UPDATE memory_candidates
+            SET status=$status,reviewed_at=$now
+            WHERE status IN ('pending','pending_review')
+              AND ($repo IS NULL OR repo_id=$repo);
+            """;
+        command.Parameters.AddWithValue("$status", status);
+        command.Parameters.AddWithValue(
+            "$now",
+            DateTimeOffset.UtcNow.ToString("O"));
+        command.Parameters.AddWithValue(
+            "$repo",
+            string.IsNullOrWhiteSpace(repoId)
+                ? DBNull.Value
+                : repoId.Trim());
+        return await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
     public async Task UpdateApprovedAsync(
         string memoryId,
         string title,

@@ -335,6 +335,57 @@
                     </ListView.ItemTemplate>
                 </ListView>
             </TabViewItem>
+
+            <TabViewItem x:Uid="HistoryGraphTab" Header="实体图谱" IsClosable="False">
+                <Grid>
+                    <ListView x:Name="EntityList"
+                              IsItemClickEnabled="True"
+                              ItemClick="EntityList_ItemClick">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource CardStyle}" Margin="0,4">
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Spacing="5">
+                                            <StackPanel Orientation="Horizontal"
+                                                        Spacing="8">
+                                                <TextBlock Text="{Binding EntityName}"
+                                                           FontWeight="SemiBold" />
+                                                <TextBlock Text="{Binding Kind}"
+                                                           Opacity="0.6" />
+                                                <TextBlock Text="{Binding MentionLabel}"
+                                                           Opacity="0.55" />
+                                            </StackPanel>
+                                            <TextBlock Text="{Binding RelationshipLabel}"
+                                                       TextWrapping="Wrap" />
+                                            <TextBlock Text="{Binding RepositoryRoot}"
+                                                       FontFamily="Cascadia Mono"
+                                                       Opacity="0.55"
+                                                       TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+                                        <TextBlock x:Uid="HistoryGraphOpen"
+                                                   Grid.Column="1"
+                                                   Text="打开关联内容"
+                                                   Foreground="{StaticResource AIMemoryGreenBrush}"
+                                                   VerticalAlignment="Center"
+                                                   Visibility="{Binding ActionVisibility}" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                    <TextBlock x:Name="NoEntitiesText"
+                               x:Uid="HistoryNoEntities"
+                               Text="当前仓库尚无实体关系。批准记忆并重建索引后会生成。"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Opacity="0.6"
+                               Visibility="Collapsed" />
+                </Grid>
+            </TabViewItem>
         </TabView>
 
         <InfoBar x:Name="Feedback"
