@@ -4,7 +4,9 @@ import Foundation
 /// Existing ChatMem entries are deliberately left untouched so the two apps
 /// can coexist. Every changed pre-existing file receives a timestamped backup.
 actor NativeAgentIntegrationStore {
-    static var catalogCount: Int { IntegrationAgent.allCases.count }
+    static var catalogCount: Int {
+        IntegrationAgent.allCases.count + DetectionOnlyAgent.all.count
+    }
 
     private static let blockStart = "<!-- AIMEMORY-INTEGRATION:START -->"
     private static let blockEnd = "<!-- AIMEMORY-INTEGRATION:END -->"
@@ -27,8 +29,10 @@ actor NativeAgentIntegrationStore {
     }
 
     func detect() -> [AgentIntegrationStatus] {
-        IntegrationAgent.allCases
-            .map(status)
+        (
+            IntegrationAgent.allCases.map(status)
+                + DetectionOnlyAgent.all.map(status)
+        )
             .sorted { lhs, rhs in
                 if lhs.isAgentDetected != rhs.isAgentDetected {
                     return lhs.isAgentDetected && !rhs.isAgentDetected
@@ -36,8 +40,8 @@ actor NativeAgentIntegrationStore {
                 if lhs.mcpInstalled != rhs.mcpInstalled {
                     return lhs.mcpInstalled && !rhs.mcpInstalled
                 }
-                return IntegrationAgent.catalogIndex(lhs.agent)
-                    < IntegrationAgent.catalogIndex(rhs.agent)
+                return Self.catalogIndex(lhs.agent)
+                    < Self.catalogIndex(rhs.agent)
             }
     }
 
@@ -112,6 +116,7 @@ actor NativeAgentIntegrationStore {
         let instructions = instructionPath(agent)
         let mcp = agent.integrationAvailable && mcpInstalled(agent: agent)
         let rules = !agent.supportsInstructions || instructionsInstalled(agent: agent)
+        let detected = agentDetected(agent)
         let state: String
         let label: String
         if mcp && rules {
@@ -120,6 +125,9 @@ actor NativeAgentIntegrationStore {
         } else if mcp || (agent.supportsInstructions && rules) {
             state = "partial"
             label = "部分安装"
+        } else if detected && !agent.integrationAvailable {
+            state = "detected"
+            label = "已检测"
         } else {
             state = "not_installed"
             label = "未安装"
@@ -131,7 +139,6 @@ actor NativeAgentIntegrationStore {
         if !fileManager.isExecutableFile(atPath: helperURL.path) {
             details.append("当前应用包内未找到可执行 helper，需重新构建应用。")
         }
-        let detected = agentDetected(agent)
         if !detected {
             details.append("未检测到应用、CLI 可执行文件或现有配置；默认不启用。")
         } else if !agent.integrationAvailable {
@@ -152,6 +159,53 @@ actor NativeAgentIntegrationStore {
             commandPreview: "\"\(helperURL.path)\"",
             details: details
         )
+    }
+
+    private func status(_ agent: DetectionOnlyAgent) -> AgentIntegrationStatus {
+        let paths = agent.detectionPaths(home: home)
+        let config = paths.first
+            ?? home.appendingPathComponent(
+                ".aimemory/integrations/\(agent.id)"
+            )
+        let detected = agentDetected(agent)
+        return AgentIntegrationStatus(
+            agent: agent.id,
+            label: agent.label,
+            configPath: config.path,
+            instructionsPath: nil,
+            mcpInstalled: false,
+            instructionsInstalled: true,
+            configExists: paths.contains {
+                fileManager.fileExists(atPath: $0.path)
+            },
+            agentDetected: detected,
+            integrationAvailable: false,
+            status: detected ? "detected" : "not_installed",
+            statusLabel: detected ? "已检测" : "未安装",
+            commandPreview: agent.executables.first,
+            details: detected
+                ? [
+                    "已检测到本机安装。",
+                    "该产品暂无可安全自动写入的稳定配置格式，因此 AI Memory 不会自动启用或修改它。",
+                ]
+                : [
+                    "未检测到 CLI 可执行文件或现有配置；默认不启用。",
+                ]
+        )
+    }
+
+    private static func catalogIndex(_ rawValue: String) -> Int {
+        if let index = IntegrationAgent.allCases.firstIndex(where: {
+            $0.rawValue == rawValue
+        }) {
+            return index
+        }
+        if let index = DetectionOnlyAgent.all.firstIndex(where: {
+            $0.id == rawValue
+        }) {
+            return IntegrationAgent.allCases.count + index
+        }
+        return Int.max
     }
 
     private func mcpInstalled(agent: IntegrationAgent) -> Bool {
@@ -680,6 +734,27 @@ actor NativeAgentIntegrationStore {
         }
     }
 
+    private func agentDetected(_ agent: DetectionOnlyAgent) -> Bool {
+        if agent.detectionPaths(home: home).contains(where: {
+            fileManager.fileExists(atPath: $0.path)
+        }) {
+            return true
+        }
+        let searchDirectories = (
+            (ProcessInfo.processInfo.environment["PATH"] ?? "")
+                .split(separator: ":").map(String.init)
+            + ["/opt/homebrew/bin", "/usr/local/bin", "/usr/bin"]
+        )
+        return agent.executables.contains { executable in
+            searchDirectories.contains {
+                fileManager.isExecutableFile(
+                    atPath: URL(fileURLWithPath: $0)
+                        .appendingPathComponent(executable).path
+                )
+            }
+        }
+    }
+
     private var extensionRoots: [URL] {
         [
             home.appendingPathComponent(".vscode/extensions"),
@@ -866,6 +941,116 @@ struct AgentIntegrationOperation: Sendable {
             "status": statusObject,
         ]
     }
+}
+
+private struct DetectionOnlyAgent: Sendable {
+    let id: String
+    let label: String
+    let executables: [String]
+    let relativePaths: [String]
+
+    func detectionPaths(home: URL) -> [URL] {
+        relativePaths.map { home.appendingPathComponent($0) }
+    }
+
+    static let all: [DetectionOnlyAgent] = [
+        .init(
+            id: "neovate",
+            label: "Neovate Code",
+            executables: ["neovate"],
+            relativePaths: [".neovate"]
+        ),
+        .init(
+            id: "vtcode",
+            label: "VT Code",
+            executables: ["vtcode"],
+            relativePaths: [".vtcode"]
+        ),
+        .init(
+            id: "dexto",
+            label: "Dexto",
+            executables: ["dexto"],
+            relativePaths: [".dexto"]
+        ),
+        .init(
+            id: "nanobot",
+            label: "nanobot",
+            executables: ["nanobot"],
+            relativePaths: [".nanobot"]
+        ),
+        .init(
+            id: "zeroclaw",
+            label: "ZeroClaw",
+            executables: ["zeroclaw"],
+            relativePaths: [".zeroclaw"]
+        ),
+        .init(
+            id: "picoclaw",
+            label: "PicoClaw",
+            executables: ["picoclaw"],
+            relativePaths: [".picoclaw"]
+        ),
+        .init(
+            id: "ironclaw",
+            label: "IronClaw",
+            executables: ["ironclaw"],
+            relativePaths: [".ironclaw"]
+        ),
+        .init(
+            id: "nullclaw",
+            label: "NullClaw",
+            executables: ["nullclaw"],
+            relativePaths: [".nullclaw"]
+        ),
+        .init(
+            id: "moltis",
+            label: "Moltis",
+            executables: ["moltis"],
+            relativePaths: [".moltis"]
+        ),
+        .init(
+            id: "opensquilla",
+            label: "OpenSquilla",
+            executables: ["opensquilla"],
+            relativePaths: [".opensquilla"]
+        ),
+        .init(
+            id: "qodo",
+            label: "Qodo Gen CLI",
+            executables: ["qodo"],
+            relativePaths: [".qodo"]
+        ),
+        .init(
+            id: "coderabbit",
+            label: "CodeRabbit CLI",
+            executables: ["coderabbit"],
+            relativePaths: [".coderabbit"]
+        ),
+        .init(
+            id: "poolside",
+            label: "Poolside Agent CLI",
+            executables: ["pool"],
+            relativePaths: [".pool"]
+        ),
+        .init(
+            id: "command-code",
+            label: "Command Code",
+            executables: ["cmd"],
+            relativePaths: [".commandcode"]
+        ),
+        .init(
+            id: "ante",
+            label: "Ante",
+            executables: ["ante"],
+            relativePaths: [".ante"]
+        ),
+        .init(
+            id: "mentat",
+            label: "Mentat",
+            executables: ["mentat"],
+            relativePaths: [".mentat"]
+        ),
+    ]
 }
 
 private enum IntegrationAgent: String, CaseIterable {

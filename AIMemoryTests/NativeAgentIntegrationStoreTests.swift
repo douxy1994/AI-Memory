@@ -99,6 +99,10 @@ final class NativeAgentIntegrationStoreTests: XCTestCase {
             "aichat", "llm", "fabric", "shell-gpt", "elia", "ollama",
             "lm-studio", "llama-cpp", "tgpt", "crewai", "autogpt",
             "gptscript", "elizaos", "openai-cli",
+            "neovate", "vtcode", "dexto", "nanobot", "zeroclaw",
+            "picoclaw", "ironclaw", "nullclaw", "moltis",
+            "opensquilla", "qodo", "coderabbit", "poolside",
+            "command-code", "ante", "mentat",
         ]
         XCTAssertEqual(Set(statuses.map(\.agent)), Set(expectedAgents))
         XCTAssertEqual(statuses.count, expectedAgents.count)
@@ -121,6 +125,14 @@ final class NativeAgentIntegrationStoreTests: XCTestCase {
             ),
             withIntermediateDirectories: true
         )
+        try FileManager.default.createDirectory(
+            at: root.appendingPathComponent(".nanobot"),
+            withIntermediateDirectories: true
+        )
+        try FileManager.default.createDirectory(
+            at: root.appendingPathComponent(".commandcode"),
+            withIntermediateDirectories: true
+        )
         let service = NativeAgentIntegrationStore(home: root, helperURL: helper)
         let statuses = await service.detect()
 
@@ -137,6 +149,18 @@ final class NativeAgentIntegrationStoreTests: XCTestCase {
         XCTAssertTrue(llm.isAgentDetected)
         XCTAssertFalse(llm.canInstallIntegration)
         XCTAssertFalse(llm.mcpInstalled)
+        let nanobot = try XCTUnwrap(
+            statuses.first { $0.agent == "nanobot" }
+        )
+        XCTAssertTrue(nanobot.isAgentDetected)
+        XCTAssertEqual(nanobot.status, "detected")
+        XCTAssertFalse(nanobot.canInstallIntegration)
+        let commandCode = try XCTUnwrap(
+            statuses.first { $0.agent == "command-code" }
+        )
+        XCTAssertTrue(commandCode.isAgentDetected)
+        XCTAssertEqual(commandCode.statusLabel, "已检测")
+        XCTAssertFalse(commandCode.mcpInstalled)
     }
 
     private func makeHelper(in root: URL) throws -> URL {

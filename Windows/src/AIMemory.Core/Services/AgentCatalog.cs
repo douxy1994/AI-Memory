@@ -112,6 +112,22 @@ public sealed class AgentCatalog
         new("gptscript", "GPTScript", ["gptscript"], [], false),
         new("elizaos", "ElizaOS CLI", ["elizaos"], [], false),
         new("openai-cli", "OpenAI CLI", ["openai"], [], false),
+        new("neovate", "Neovate Code", ["neovate"], [".neovate"], false),
+        new("vtcode", "VT Code", ["vtcode"], [".vtcode"], false),
+        new("dexto", "Dexto", ["dexto"], [".dexto"], false),
+        new("nanobot", "nanobot", ["nanobot"], [".nanobot"], false),
+        new("zeroclaw", "ZeroClaw", ["zeroclaw"], [".zeroclaw"], false),
+        new("picoclaw", "PicoClaw", ["picoclaw"], [".picoclaw"], false),
+        new("ironclaw", "IronClaw", ["ironclaw"], [".ironclaw"], false),
+        new("nullclaw", "NullClaw", ["nullclaw"], [".nullclaw"], false),
+        new("moltis", "Moltis", ["moltis"], [".moltis"], false),
+        new("opensquilla", "OpenSquilla", ["opensquilla"], [".opensquilla"], false),
+        new("qodo", "Qodo Gen CLI", ["qodo"], [".qodo"], false),
+        new("coderabbit", "CodeRabbit CLI", ["coderabbit"], [".coderabbit"], false),
+        new("poolside", "Poolside Agent CLI", ["pool"], [".pool"], false),
+        new("command-code", "Command Code", [], [".commandcode"], false),
+        new("ante", "Ante", ["ante"], [".ante"], false),
+        new("mentat", "Mentat", ["mentat"], [".mentat"], false),
     ];
 
     public IReadOnlyList<AgentIntegrationStatus> Detect()

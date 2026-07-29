@@ -15,7 +15,7 @@
     { "id": "approved-memory-reader", "status": "implemented", "evidence": "MemoryPage" },
     { "id": "favorites", "status": "implemented", "evidence": "create/remove, pin, note/tag editing, continuation-card copy and source conversation navigation with persistence tests" },
     { "id": "trash-restore-delete", "status": "implemented", "evidence": "single and confirmed bulk recoverable moves with partial-failure feedback, restore, permanent delete, empty, retention setting and expiry purge with round-trip tests" },
-    { "id": "agent-catalog", "status": "implemented", "evidence": "84 products spanning coding agents, general AI CLIs and local-model CLIs; PATH detection covers extensionless, .exe and .cmd launchers; detected-first; missing and stale-config entries remain disabled" },
+    { "id": "agent-catalog", "status": "implemented", "evidence": "100 products spanning coding agents, personal-agent CLIs, review CLIs, general AI CLIs and local-model CLIs; PATH detection covers extensionless, .exe and .cmd launchers; detected-first; missing and stale-config entries remain disabled" },
     { "id": "agent-integration", "status": "implemented", "evidence": "16 safe MCP integrations round-trip tested; 11 instruction-capable agents also receive owned skills and managed startup rules; existing files are backed up, partial installs are repairable, and installed integrations support bulk install/repair and confirmed bulk uninstall" },
     { "id": "credential-storage", "status": "implemented", "evidence": "Windows PasswordVault" },
     { "id": "webdav-verification", "status": "implemented", "evidence": "PROPFIND verification with visible result" },
