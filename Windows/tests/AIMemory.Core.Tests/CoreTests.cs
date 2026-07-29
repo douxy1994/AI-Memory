@@ -897,6 +897,132 @@ public sealed class CoreTests : IDisposable
     }
 
     [Fact]
+    public void AgentIntegrationInstallsRepairsAndRemovesOwnedConfiguration()
+    {
+        var home = Path.Combine(_root, "integration-home");
+        var bin = Path.Combine(home, "bin");
+        var helper = Path.Combine(home, "app", "aimemory-mcp.exe");
+        Directory.CreateDirectory(bin);
+        Directory.CreateDirectory(Path.GetDirectoryName(helper)!);
+        File.WriteAllText(Path.Combine(bin, "opencode.cmd"), "");
+        File.WriteAllText(helper, "helper");
+        var config = Path.Combine(
+            home,
+            ".config",
+            "opencode",
+            "opencode.json");
+        var rules = Path.Combine(
+            home,
+            ".config",
+            "opencode",
+            "AGENTS.md");
+        Directory.CreateDirectory(Path.GetDirectoryName(config)!);
+        File.WriteAllText(config, """{"theme":"user-theme"}""");
+        File.WriteAllText(rules, "# Existing user rules\n");
+        var manager = new AgentIntegrationManager(home, helper, [bin]);
+
+        var detected = manager.Detect()
+            .First(value => value.Id == "opencode");
+        Assert.True(detected.IsDetected);
+        Assert.False(detected.IsIntegrated);
+        manager.SetEnabled(detected, true);
+
+        var enabled = manager.Detect()
+            .First(value => value.Id == "opencode");
+        Assert.True(enabled.IsIntegrated);
+        Assert.Equal(AgentIntegrationState.Integrated, enabled.State);
+        var configText = File.ReadAllText(config);
+        Assert.Contains("\"theme\": \"user-theme\"", configText);
+        Assert.Contains("\"aimemory\"", configText);
+        Assert.Contains("\"aimemory_*\": true", configText);
+        Assert.Contains("\"aimemory\": \"allow\"", configText);
+        Assert.True(File.Exists(Path.Combine(
+            home,
+            ".config",
+            "opencode",
+            "skills",
+            "aimemory",
+            "SKILL.md")));
+        Assert.Contains(
+            "<!-- AIMEMORY-INTEGRATION:START -->",
+            File.ReadAllText(rules));
+        Assert.NotEmpty(Directory.GetFiles(
+            Path.GetDirectoryName(config)!,
+            "opencode.json.aimemory-backup-*"));
+
+        manager.SetEnabled(enabled, false);
+
+        var disabled = manager.Detect()
+            .First(value => value.Id == "opencode");
+        Assert.False(disabled.IsIntegrated);
+        Assert.Equal(AgentIntegrationState.Detected, disabled.State);
+        configText = File.ReadAllText(config);
+        Assert.Contains("\"theme\": \"user-theme\"", configText);
+        Assert.DoesNotContain("\"aimemory\"", configText);
+        Assert.DoesNotContain("\"aimemory_*\"", configText);
+        Assert.False(Directory.Exists(Path.Combine(
+            home,
+            ".config",
+            "opencode",
+            "skills",
+            "aimemory")));
+        var rulesText = File.ReadAllText(rules);
+        Assert.Contains("# Existing user rules", rulesText);
+        Assert.DoesNotContain("AIMEMORY-INTEGRATION", rulesText);
+    }
+
+    [Fact]
+    public void EverySupportedAgentIntegrationRoundTrips()
+    {
+        var home = Path.Combine(_root, "all-integrations-home");
+        var bin = Path.Combine(home, "bin");
+        var helper = Path.Combine(home, "app", "aimemory-mcp.exe");
+        Directory.CreateDirectory(bin);
+        Directory.CreateDirectory(Path.GetDirectoryName(helper)!);
+        File.WriteAllText(helper, "helper");
+        foreach (var descriptor in AgentCatalog.All.Where(
+                     value => value.SupportsAutomaticIntegration))
+        {
+            File.WriteAllText(
+                Path.Combine(bin, descriptor.Executables[0] + ".cmd"),
+                "");
+        }
+        var manager = new AgentIntegrationManager(home, helper, [bin]);
+        var supported = manager.Detect()
+            .Where(value => value.IsIntegrationAvailable)
+            .ToArray();
+
+        Assert.Equal(16, supported.Length);
+        foreach (var status in supported)
+        {
+            Assert.True(status.IsDetected);
+            manager.SetEnabled(status, true);
+        }
+        var enabled = manager.Detect()
+            .Where(value => value.IsIntegrationAvailable)
+            .ToArray();
+        Assert.All(enabled, status =>
+        {
+            Assert.True(status.IsIntegrated);
+            Assert.Equal(AgentIntegrationState.Integrated, status.State);
+        });
+
+        foreach (var status in enabled)
+        {
+            manager.SetEnabled(status, false);
+        }
+        var disabled = manager.Detect()
+            .Where(value => value.IsIntegrationAvailable)
+            .ToArray();
+        Assert.All(disabled, status =>
+        {
+            Assert.True(status.IsDetected);
+            Assert.False(status.IsIntegrated);
+            Assert.Equal(AgentIntegrationState.Detected, status.State);
+        });
+    }
+
+    [Fact]
     public async Task TrashRoundTripRestoresConversationAndMessages()
     {
         var database = new AIMemoryDatabase(Path.Combine(_root, "trash.db"));

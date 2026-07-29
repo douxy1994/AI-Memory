@@ -33,6 +33,8 @@ AI Memory 的 Windows 11 原生版本，使用 C#、WinUI 3 与 Windows App SDK 
 - 登录启动开关；
 - 45 种主流 Agent/CLI 安装检测，兼容无扩展、`.exe` 与 `.cmd` 启动器；
   已安装项优先，未安装项即使存在旧配置也保持关闭；
+- 16 种具有稳定配置格式的 Agent 可安全启用或关闭 MCP；其中 11 种同时
+  安装 AI Memory skill 与受管启动规则。已有配置先备份，部分安装可自动修复；
 - Claude、Codex、Gemini、Kimi、Hermes、Antigravity、OpenCode 与 ZCode
   本地历史只读导入；
 - 完整对话可原生复制到 Claude、Codex、Gemini 或 OpenCode，并在写入后
