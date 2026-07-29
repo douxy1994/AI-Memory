@@ -21,6 +21,17 @@
         </Grid>
 
         <MenuBar x:Name="MainMenuBar" Grid.Row="1">
+            <MenuBarItem x:Uid="MenuFile" Title="文件">
+                <MenuFlyoutItem x:Uid="MenuImportChatMem"
+                                Text="从 ChatMem 导入…"
+                                KeyboardAcceleratorTextOverride="Ctrl+I"
+                                Click="ImportChatMemMenu_Click" />
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem x:Uid="MenuCloseWindow"
+                                Text="关闭窗口"
+                                KeyboardAcceleratorTextOverride="Ctrl+W"
+                                Click="CloseWindowMenu_Click" />
+            </MenuBarItem>
             <MenuBarItem x:Uid="MenuWorkbench" Title="工作台">
                 <MenuFlyoutItem x:Uid="MenuReturnWorkbench" Text="返回工作台"
                                 KeyboardAcceleratorTextOverride="Ctrl+1"
@@ -31,6 +42,9 @@
                 <MenuFlyoutItem x:Uid="MenuHistory" Text="历史"
                                 KeyboardAcceleratorTextOverride="Ctrl+3"
                                 Click="HistoryMenu_Click" />
+                <MenuFlyoutItem x:Uid="MenuMemory" Text="记忆"
+                                KeyboardAcceleratorTextOverride="Ctrl+Alt+M"
+                                Click="MemoryMenu_Click" />
                 <MenuFlyoutSeparator />
                 <MenuFlyoutItem x:Uid="MenuSyncNow" Text="立即同步"
                                 KeyboardAcceleratorTextOverride="Ctrl+Shift+S"

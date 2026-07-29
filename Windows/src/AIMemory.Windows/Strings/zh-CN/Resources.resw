@@ -63,6 +63,7 @@
   <data name="ChatMemImportConfirmTitle" xml:space="preserve"><value>导入这个数据库？</value></data>
   <data name="ChatMemImportConfirmBody" xml:space="preserve"><value>来源：{0}&#x0a;&#x0a;AI Memory 将以只读方式复制来源，校验并迁移副本。当前 AI Memory 数据库会先建立可恢复备份，再以原子方式替换。</value></data>
   <data name="ChatMemImportConfirmAction" xml:space="preserve"><value>导入</value></data>
+  <data name="ChatMemImportInProgress" xml:space="preserve"><value>正在从 ChatMem 导入并校验数据…</value></data>
   <data name="ChatMemImportCompleted" xml:space="preserve"><value>ChatMem 数据已导入。</value></data>
   <data name="ChatMemImportCompletedWithBackup" xml:space="preserve"><value>ChatMem 数据已导入，原数据备份：{0}</value></data>
   <data name="ImportFailed" xml:space="preserve"><value>导入失败：{0}</value></data>
@@ -136,6 +137,9 @@
   <data name="CheckingUpdates" xml:space="preserve"><value>正在检查…</value></data>
   <data name="CheckingGitHubReleases" xml:space="preserve"><value>正在检查 GitHub Releases…</value></data>
   <data name="CurrentVersionLatest" xml:space="preserve"><value>当前版本已是最新；更新源最新版本为 {0}。</value></data>
+  <data name="AlreadyLatestTitle" xml:space="preserve"><value>AI Memory 已是最新版本</value></data>
+  <data name="AlreadyLatestBody" xml:space="preserve"><value>当前版本 {0} 已是最新版本。</value></data>
+  <data name="CannotCheckUpdatesTitle" xml:space="preserve"><value>无法检查更新</value></data>
   <data name="NewVersionFound" xml:space="preserve"><value>发现新版本 {0}：{1}</value></data>
   <data name="DownloadingNewVersion" xml:space="preserve"><value>发现新版本 {0}，正在下载安装包…</value></data>
   <data name="WindowsCannotOpenInstaller" xml:space="preserve"><value>Windows 无法打开安装包。</value></data>
@@ -271,10 +275,14 @@
   <data name="ConversationsMovedToTrash" xml:space="preserve"><value>已将 {0} 条对话移到回收站。</value></data>
   <data name="BulkTrashCompletedWithFailures" xml:space="preserve"><value>批量处理完成：{0} 条已移入回收站，{1} 条失败。</value></data>
 
+  <data name="MenuFile.Title" xml:space="preserve"><value>文件</value></data>
+  <data name="MenuImportChatMem.Text" xml:space="preserve"><value>从 ChatMem 导入…</value></data>
+  <data name="MenuCloseWindow.Text" xml:space="preserve"><value>关闭窗口</value></data>
   <data name="MenuWorkbench.Title" xml:space="preserve"><value>工作台</value></data>
   <data name="MenuReturnWorkbench.Text" xml:space="preserve"><value>返回工作台</value></data>
   <data name="MenuReview.Text" xml:space="preserve"><value>待复核</value></data>
   <data name="MenuHistory.Text" xml:space="preserve"><value>历史</value></data>
+  <data name="MenuMemory.Text" xml:space="preserve"><value>记忆</value></data>
   <data name="MenuSyncNow.Text" xml:space="preserve"><value>立即同步</value></data>
   <data name="MenuRefreshSources.Text" xml:space="preserve"><value>刷新全部来源</value></data>
   <data name="MenuWindow.Title" xml:space="preserve"><value>窗口</value></data>

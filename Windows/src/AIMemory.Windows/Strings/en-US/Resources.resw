@@ -63,6 +63,7 @@
   <data name="ChatMemImportConfirmTitle" xml:space="preserve"><value>Import This Database?</value></data>
   <data name="ChatMemImportConfirmBody" xml:space="preserve"><value>Source: {0}&#x0a;&#x0a;AI Memory will copy the source read-only, then validate and migrate the copy. The current AI Memory database is backed up before it is atomically replaced.</value></data>
   <data name="ChatMemImportConfirmAction" xml:space="preserve"><value>Import</value></data>
+  <data name="ChatMemImportInProgress" xml:space="preserve"><value>Importing and validating ChatMem data…</value></data>
   <data name="ChatMemImportCompleted" xml:space="preserve"><value>ChatMem data imported.</value></data>
   <data name="ChatMemImportCompletedWithBackup" xml:space="preserve"><value>ChatMem data imported. Original data backup: {0}</value></data>
   <data name="ImportFailed" xml:space="preserve"><value>Import failed: {0}</value></data>
@@ -136,6 +137,9 @@
   <data name="CheckingUpdates" xml:space="preserve"><value>Checking…</value></data>
   <data name="CheckingGitHubReleases" xml:space="preserve"><value>Checking GitHub Releases…</value></data>
   <data name="CurrentVersionLatest" xml:space="preserve"><value>You are up to date. The newest release is {0}.</value></data>
+  <data name="AlreadyLatestTitle" xml:space="preserve"><value>AI Memory Is Up to Date</value></data>
+  <data name="AlreadyLatestBody" xml:space="preserve"><value>Version {0} is the latest version.</value></data>
+  <data name="CannotCheckUpdatesTitle" xml:space="preserve"><value>Unable to Check for Updates</value></data>
   <data name="NewVersionFound" xml:space="preserve"><value>New version {0}: {1}</value></data>
   <data name="DownloadingNewVersion" xml:space="preserve"><value>Version {0} is available. Downloading the installer…</value></data>
   <data name="WindowsCannotOpenInstaller" xml:space="preserve"><value>Windows could not open the installer.</value></data>
@@ -271,10 +275,14 @@
   <data name="ConversationsMovedToTrash" xml:space="preserve"><value>Moved {0} conversations to Trash.</value></data>
   <data name="BulkTrashCompletedWithFailures" xml:space="preserve"><value>Bulk operation completed: {0} moved to Trash and {1} failed.</value></data>
 
+  <data name="MenuFile.Title" xml:space="preserve"><value>File</value></data>
+  <data name="MenuImportChatMem.Text" xml:space="preserve"><value>Import from ChatMem…</value></data>
+  <data name="MenuCloseWindow.Text" xml:space="preserve"><value>Close Window</value></data>
   <data name="MenuWorkbench.Title" xml:space="preserve"><value>Workbench</value></data>
   <data name="MenuReturnWorkbench.Text" xml:space="preserve"><value>Return to Workbench</value></data>
   <data name="MenuReview.Text" xml:space="preserve"><value>Review Queue</value></data>
   <data name="MenuHistory.Text" xml:space="preserve"><value>History</value></data>
+  <data name="MenuMemory.Text" xml:space="preserve"><value>Memory</value></data>
   <data name="MenuSyncNow.Text" xml:space="preserve"><value>Sync Now</value></data>
   <data name="MenuRefreshSources.Text" xml:space="preserve"><value>Refresh All Sources</value></data>
   <data name="MenuWindow.Title" xml:space="preserve"><value>Window</value></data>

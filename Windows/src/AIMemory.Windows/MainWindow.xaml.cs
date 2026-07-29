@@ -8,6 +8,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.Windows.Storage.Pickers;
 using Windows.System;
 using WinRT.Interop;
 
@@ -191,6 +192,13 @@ public sealed partial class MainWindow : Window
             () => NavigateTo("memory"));
         AddAccelerator(VirtualKey.Number3, VirtualKeyModifiers.Control,
             () => NavigateTo("history"));
+        AddAccelerator(VirtualKey.I, VirtualKeyModifiers.Control,
+            () => _ = ImportChatMemAsync());
+        AddAccelerator(VirtualKey.W, VirtualKeyModifiers.Control,
+            Close);
+        AddAccelerator(VirtualKey.M,
+            VirtualKeyModifiers.Control | VirtualKeyModifiers.Menu,
+            () => NavigateTo("memory"));
         AddAccelerator(VirtualKey.R, VirtualKeyModifiers.Control,
             () => _ = RefreshAllSourcesAsync());
         AddAccelerator(VirtualKey.S,
@@ -326,6 +334,83 @@ public sealed partial class MainWindow : Window
             message,
             severity);
 
+    public async Task ImportChatMemAsync()
+    {
+        string source;
+        try
+        {
+            var picker = new FileOpenPicker(WindowId)
+            {
+                Title = LocalizationService.Get("ChooseChatMemDatabaseTitle"),
+                CommitButtonText =
+                    LocalizationService.Get("ChooseChatMemDatabaseCommit"),
+                SettingsIdentifier = "AIMemory.ChatMemDatabase",
+            };
+            picker.FileTypeFilter.Add(".db");
+            picker.FileTypeFilter.Add(".sqlite");
+            picker.FileTypeFilter.Add(".sqlite3");
+            var selected = await picker.PickSingleFileAsync();
+            if (selected is null) return;
+            source = selected.Path;
+        }
+        catch (Exception exception)
+        {
+            ShowFeedback(
+                LocalizationService.Format(
+                    "ChooseChatMemDatabaseFailed",
+                    exception.Message),
+                InfoBarSeverity.Error);
+            return;
+        }
+
+        var confirmation = new ContentDialog
+        {
+            XamlRoot = RootLayout.XamlRoot,
+            Title = LocalizationService.Get("ChatMemImportConfirmTitle"),
+            Content = LocalizationService.Format(
+                "ChatMemImportConfirmBody",
+                source),
+            PrimaryButtonText =
+                LocalizationService.Get("ChatMemImportConfirmAction"),
+            CloseButtonText = LocalizationService.Get("Cancel"),
+            DefaultButton = ContentDialogButton.Close,
+        };
+        if (await confirmation.ShowAsync() != ContentDialogResult.Primary)
+        {
+            return;
+        }
+
+        GlobalProgress.Visibility = Visibility.Visible;
+        ShowFeedback(
+            LocalizationService.Get("ChatMemImportInProgress"),
+            InfoBarSeverity.Informational);
+        try
+        {
+            var result = await new ChatMemImportService(Database)
+                .ImportAsync(source);
+            ShowFeedback(
+                string.IsNullOrWhiteSpace(result.BackupPath)
+                    ? LocalizationService.Get("ChatMemImportCompleted")
+                    : LocalizationService.Format(
+                        "ChatMemImportCompletedWithBackup",
+                        result.BackupPath),
+                InfoBarSeverity.Success);
+            NavigateTo("workbench");
+        }
+        catch (Exception exception)
+        {
+            ShowFeedback(
+                LocalizationService.Format(
+                    "ImportFailed",
+                    exception.Message),
+                InfoBarSeverity.Error);
+        }
+        finally
+        {
+            GlobalProgress.Visibility = Visibility.Collapsed;
+        }
+    }
+
     private async Task ShowHelpAsync()
     {
         var dialog = new ContentDialog
@@ -389,6 +474,19 @@ public sealed partial class MainWindow : Window
 
     private void HistoryMenu_Click(object sender, RoutedEventArgs args) =>
         NavigateTo("history");
+
+    private void MemoryMenu_Click(object sender, RoutedEventArgs args) =>
+        NavigateTo("memory");
+
+    private async void ImportChatMemMenu_Click(
+        object sender,
+        RoutedEventArgs args) =>
+        await ImportChatMemAsync();
+
+    private void CloseWindowMenu_Click(
+        object sender,
+        RoutedEventArgs args) =>
+        Close();
 
     private async void SyncMenu_Click(object sender, RoutedEventArgs args) =>
         await SyncNowAsync();

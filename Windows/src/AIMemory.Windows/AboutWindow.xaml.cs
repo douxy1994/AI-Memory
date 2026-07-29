@@ -64,6 +64,14 @@ public sealed partial class AboutWindow : Window
                 UpdateStatus.Message = LocalizationService.Format(
                     "CurrentVersionLatest",
                     result.Release.Version);
+                if (automaticInstall)
+                {
+                    await ShowUpdateResultAsync(
+                        LocalizationService.Get("AlreadyLatestTitle"),
+                        LocalizationService.Format(
+                            "AlreadyLatestBody",
+                            CurrentVersion()));
+                }
                 return;
             }
 
@@ -96,6 +104,12 @@ public sealed partial class AboutWindow : Window
             UpdateStatus.Message = LocalizationService.Format(
                 "UpdateCheckFailed",
                 exception.Message);
+            if (automaticInstall)
+            {
+                await ShowUpdateResultAsync(
+                    LocalizationService.Get("CannotCheckUpdatesTitle"),
+                    exception.Message);
+            }
         }
         finally
         {
@@ -111,6 +125,21 @@ public sealed partial class AboutWindow : Window
 
     private async void CheckUpdate_Click(object sender, RoutedEventArgs args) =>
         await CheckForUpdatesAsync(automaticInstall: false);
+
+    private async Task ShowUpdateResultAsync(
+        string title,
+        string message)
+    {
+        var dialog = new ContentDialog
+        {
+            XamlRoot = Content.XamlRoot,
+            Title = title,
+            Content = message,
+            CloseButtonText = LocalizationService.Get("Done"),
+            DefaultButton = ContentDialogButton.Close,
+        };
+        await dialog.ShowAsync();
+    }
 
     private static string CurrentVersion()
     {

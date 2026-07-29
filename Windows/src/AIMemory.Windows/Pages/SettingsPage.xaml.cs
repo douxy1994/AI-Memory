@@ -759,76 +759,14 @@ public sealed partial class SettingsPage : Page
     private async void ImportChatMem_Click(object sender, RoutedEventArgs args)
     {
         if (_window is null) return;
-        var importer = new ChatMemImportService(_window.Database);
-        string source;
-        try
-        {
-            var picker = new FileOpenPicker(_window.WindowId)
-            {
-                Title = LocalizationService.Get("ChooseChatMemDatabaseTitle"),
-                CommitButtonText =
-                    LocalizationService.Get("ChooseChatMemDatabaseCommit"),
-                SettingsIdentifier = "AIMemory.ChatMemDatabase",
-            };
-            picker.FileTypeFilter.Add(".db");
-            picker.FileTypeFilter.Add(".sqlite");
-            picker.FileTypeFilter.Add(".sqlite3");
-            var selected = await picker.PickSingleFileAsync();
-            if (selected is null) return;
-            source = selected.Path;
-        }
-        catch (Exception exception)
-        {
-            Show(
-                LocalizationService.Format(
-                    "ChooseChatMemDatabaseFailed",
-                    exception.Message),
-                InfoBarSeverity.Error);
-            return;
-        }
-
-        var confirmation = new ContentDialog
-        {
-            XamlRoot = XamlRoot,
-            Title = LocalizationService.Get("ChatMemImportConfirmTitle"),
-            Content = LocalizationService.Format(
-                "ChatMemImportConfirmBody",
-                source),
-            PrimaryButtonText =
-                LocalizationService.Get("ChatMemImportConfirmAction"),
-            CloseButtonText = LocalizationService.Get("Cancel"),
-            DefaultButton = ContentDialogButton.Close,
-        };
-        if (await confirmation.ShowAsync() != ContentDialogResult.Primary)
-        {
-            return;
-        }
-
         ImportChatMemButton.IsEnabled = false;
-        SyncProgress.Visibility = Visibility.Visible;
         try
         {
-            var result = await importer.ImportAsync(source);
-            var message = string.IsNullOrWhiteSpace(result.BackupPath)
-                    ? LocalizationService.Get("ChatMemImportCompleted")
-                    : LocalizationService.Format(
-                        "ChatMemImportCompletedWithBackup",
-                        result.BackupPath);
-            _window.ShowFeedback(message, InfoBarSeverity.Success);
-            _window.NavigateTo("workbench");
-        }
-        catch (Exception exception)
-        {
-            Show(
-                LocalizationService.Format(
-                    "ImportFailed",
-                    exception.Message),
-                InfoBarSeverity.Error);
+            await _window.ImportChatMemAsync();
         }
         finally
         {
             ImportChatMemButton.IsEnabled = true;
-            SyncProgress.Visibility = Visibility.Collapsed;
         }
     }
 
