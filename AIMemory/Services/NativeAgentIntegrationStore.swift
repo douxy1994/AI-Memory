@@ -556,6 +556,12 @@ actor NativeAgentIntegrationStore {
             return home.appendingPathComponent(".grok/config.toml")
         case .jules:
             return home.appendingPathComponent(".aimemory/integrations/jules")
+        case .alquimia, .auggie, .firebender, .forge, .ibmBob,
+             .iflow, .lingma, .ohMyPi, .qoder, .shai, .sweAgent,
+             .tabnineCLI, .zed:
+            return home.appendingPathComponent(
+                ".aimemory/integrations/\(agent.rawValue)"
+            )
         }
     }
 
@@ -599,7 +605,10 @@ actor NativeAgentIntegrationStore {
              .trae, .junie, .crush, .augment, .cody, .tabby,
              .openhands, .openInterpreter, .openclaw, .codebuddy, .devin,
              .vibe, .pi, .kilo, .plandex, .gptme, .miniSweAgent,
-             .googleAgentsCLI, .rovoDev, .gitlabDuo, .grokBuild, .jules:
+             .googleAgentsCLI, .rovoDev, .gitlabDuo, .grokBuild, .jules,
+             .alquimia, .auggie, .firebender, .forge, .ibmBob,
+             .iflow, .lingma, .ohMyPi, .qoder, .shai, .sweAgent,
+             .tabnineCLI, .zed:
             return home.appendingPathComponent(".aimemory/integrations/\(agent.rawValue)")
         }
     }
@@ -864,6 +873,14 @@ private enum IntegrationAgent: String, CaseIterable {
     case gitlabDuo = "gitlab-duo"
     case grokBuild = "grok-build"
     case jules
+    case alquimia, auggie, firebender, forge
+    case ibmBob = "ibm-bob"
+    case iflow, lingma
+    case ohMyPi = "oh-my-pi"
+    case qoder, shai
+    case sweAgent = "swe-agent"
+    case tabnineCLI = "tabnine-cli"
+    case zed
 
     static func catalogIndex(_ rawValue: String) -> Int {
         allCases.firstIndex { $0.rawValue == rawValue } ?? Int.max
@@ -916,6 +933,19 @@ private enum IntegrationAgent: String, CaseIterable {
         case .gitlabDuo: "GitLab Duo CLI"
         case .grokBuild: "xAI Grok Build"
         case .jules: "Google Jules Tools"
+        case .alquimia: "Alquimia AI"
+        case .auggie: "Auggie CLI"
+        case .firebender: "Firebender"
+        case .forge: "Forge"
+        case .ibmBob: "IBM Bob"
+        case .iflow: "iFlow CLI"
+        case .lingma: "Lingma"
+        case .ohMyPi: "Oh My Pi"
+        case .qoder: "Qoder CLI"
+        case .shai: "SHAI (OVHcloud)"
+        case .sweAgent: "SWE-agent"
+        case .tabnineCLI: "Tabnine CLI"
+        case .zed: "Zed"
         }
     }
 
@@ -940,6 +970,9 @@ private enum IntegrationAgent: String, CaseIterable {
             .openhands, .openInterpreter, .openclaw, .codebuddy, .devin,
             .vibe, .pi, .kilo, .plandex, .gptme, .miniSweAgent,
             .googleAgentsCLI, .rovoDev, .gitlabDuo, .grokBuild, .jules,
+            .alquimia, .auggie, .firebender, .forge, .ibmBob,
+            .iflow, .lingma, .ohMyPi, .qoder, .shai, .sweAgent,
+            .tabnineCLI, .zed,
         ].contains(self)
     }
 
@@ -949,7 +982,10 @@ private enum IntegrationAgent: String, CaseIterable {
              .trae, .junie, .crush, .augment, .cody, .tabby,
              .openhands, .openInterpreter, .openclaw, .codebuddy, .devin,
              .vibe, .pi, .kilo, .plandex, .gptme, .miniSweAgent,
-             .googleAgentsCLI, .rovoDev, .gitlabDuo, .grokBuild, .jules:
+             .googleAgentsCLI, .rovoDev, .gitlabDuo, .grokBuild, .jules,
+             .alquimia, .auggie, .firebender, .forge, .ibmBob,
+             .iflow, .lingma, .ohMyPi, .qoder, .shai, .sweAgent,
+             .tabnineCLI, .zed:
             false
         default:
             true
@@ -961,7 +997,7 @@ private enum IntegrationAgent: String, CaseIterable {
         case .claude: ["claude"]
         case .codex: ["codex"]
         case .gemini: ["gemini"]
-        case .antigravity: ["antigravity"]
+        case .antigravity: ["antigravity", "agy"]
         case .opencode: ["opencode"]
         case .hermes: ["hermes"]
         case .zcode: ["zcode"]
@@ -973,7 +1009,7 @@ private enum IntegrationAgent: String, CaseIterable {
         case .amazonq: ["q", "qchat"]
         case .factory: ["droid"]
         case .windsurf: ["windsurf"]
-        case .kiro: ["kiro", "kiro-cli"]
+        case .kiro: ["kiro", "kiro-cli", "kiro-cli-chat"]
         case .continueDev: ["cn", "continue"]
         case .goose: ["goose"]
         case .cline: ["cline"]
@@ -981,7 +1017,7 @@ private enum IntegrationAgent: String, CaseIterable {
         case .aider: ["aider", "aider-chat"]
         case .amp: ["amp"]
         case .warp: ["warp"]
-        case .trae: ["trae"]
+        case .trae: ["trae", "traecli"]
         case .junie: ["junie"]
         case .crush: ["crush"]
         case .augment: ["augment"]
@@ -994,15 +1030,28 @@ private enum IntegrationAgent: String, CaseIterable {
         case .devin: ["devin"]
         case .vibe: ["vibe", "vibe-acp"]
         case .pi: ["pi"]
-        case .kilo: ["kilo"]
+        case .kilo: ["kilo", "kilocode"]
         case .plandex: ["plandex", "pdx"]
         case .gptme: ["gptme"]
         case .miniSweAgent: ["mini", "mini-extra"]
         case .googleAgentsCLI: ["agents-cli"]
-        case .rovoDev: ["acli"]
+        case .rovoDev: ["acli", "rovodev"]
         case .gitlabDuo: ["duo"]
         case .grokBuild: ["grok"]
         case .jules: ["jules"]
+        case .alquimia: ["alquimia"]
+        case .auggie: ["auggie"]
+        case .firebender: ["firebender"]
+        case .forge: ["forge"]
+        case .ibmBob: ["bob"]
+        case .iflow: ["iflow"]
+        case .lingma: ["lingma"]
+        case .ohMyPi: ["omp"]
+        case .qoder: ["qodercli"]
+        case .shai: ["shai"]
+        case .sweAgent: ["sweagent"]
+        case .tabnineCLI: ["tabnine", "tabnine-cli"]
+        case .zed: ["zed"]
         }
     }
 
@@ -1021,6 +1070,10 @@ private enum IntegrationAgent: String, CaseIterable {
         case .openhands: ["OpenHands"]
         case .codebuddy: ["CodeBuddy"]
         case .devin: ["Devin"]
+        case .firebender: ["Firebender"]
+        case .lingma: ["Lingma"]
+        case .qoder: ["Qoder"]
+        case .zed: ["Zed"]
         default: []
         }
     }
@@ -1088,6 +1141,8 @@ private enum IntegrationAgent: String, CaseIterable {
             [home.appendingPathComponent(".grok")]
         case .jules:
             []
+        case .sweAgent:
+            [home.appendingPathComponent(".config/swe-agent")]
         default:
             [defaultDetectionPath(home: home)]
         }
@@ -1160,6 +1215,19 @@ private enum IntegrationAgent: String, CaseIterable {
         case .gitlabDuo: home.appendingPathComponent(".gitlab/storage.json")
         case .grokBuild: home.appendingPathComponent(".grok")
         case .jules: home.appendingPathComponent(".config/jules")
+        case .alquimia: home.appendingPathComponent(".alquimia")
+        case .auggie: home.appendingPathComponent(".augment")
+        case .firebender: home.appendingPathComponent(".firebender")
+        case .forge: home.appendingPathComponent(".forge")
+        case .ibmBob: home.appendingPathComponent(".bob")
+        case .iflow: home.appendingPathComponent(".iflow")
+        case .lingma: home.appendingPathComponent(".lingma")
+        case .ohMyPi: home.appendingPathComponent(".omp")
+        case .qoder: home.appendingPathComponent(".qoder")
+        case .shai: home.appendingPathComponent(".shai")
+        case .sweAgent: home.appendingPathComponent(".config/swe-agent")
+        case .tabnineCLI: home.appendingPathComponent(".tabnine")
+        case .zed: home.appendingPathComponent(".config/zed")
         }
     }
 }

@@ -138,7 +138,7 @@ struct AboutView: View {
             )
             releaseItem(
                 "Agent 覆盖扩展",
-                "支持 45 种主流 Agent 与 CLI 检测；已安装项目优先显示，未安装项目保持关闭。"
+                "支持 58 种主流 Agent 与 CLI 检测；已安装项目优先显示，未安装项目保持关闭。"
             )
             releaseItem(
                 "原生体验改进",
