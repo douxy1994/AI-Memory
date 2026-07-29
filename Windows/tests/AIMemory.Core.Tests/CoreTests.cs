@@ -1060,6 +1060,7 @@ public sealed class CoreTests : IDisposable
         File.WriteAllText(Path.Combine(bin, "opencode.cmd"), "");
         File.WriteAllText(Path.Combine(bin, "qodercli.cmd"), "");
         File.WriteAllText(Path.Combine(bin, "mimo.cmd"), "");
+        File.WriteAllText(Path.Combine(bin, "aichat.cmd"), "");
         var statuses = new AgentCatalog(_root, [bin]).Detect();
         Assert.Equal(
         [
@@ -1078,12 +1079,15 @@ public sealed class CoreTests : IDisposable
             "deepagents-code", "mimo-code", "codebuff", "kode",
             "letta-code", "nanocoder", "ra-aid", "conductor", "waza",
             "langsmith-cli", "cortex-code", "cline-kanban",
+            "aichat", "llm", "fabric", "shell-gpt", "elia", "ollama",
+            "lm-studio", "llama-cpp", "tgpt", "crewai", "autogpt",
+            "gptscript", "elizaos", "openai-cli",
         ], AgentCatalog.All.Select(value => value.Id).ToArray());
         var firstMissing = statuses
             .Select((status, index) => (status, index))
             .First(value => !value.status.IsDetected).index;
-        Assert.Equal(5, firstMissing);
-        Assert.Equal(["opencode", "goose", "vibe", "qoder", "mimo-code"], statuses
+        Assert.Equal(6, firstMissing);
+        Assert.Equal(["opencode", "goose", "vibe", "qoder", "mimo-code", "aichat"], statuses
             .Take(firstMissing).Select(value => value.Id).ToArray());
         Assert.All(statuses.Take(firstMissing), value => Assert.True(value.IsDetected));
         Assert.All(statuses.Skip(firstMissing), value =>
@@ -1092,7 +1096,7 @@ public sealed class CoreTests : IDisposable
             Assert.False(value.IsIntegrated);
             Assert.Equal(AgentIntegrationState.Missing, value.State);
         });
-        Assert.Equal(70, statuses.Count);
+        Assert.Equal(84, statuses.Count);
 
         var missingWithStaleConfiguration =
             AgentIntegrationStateService.ApplyConfigurationState(
@@ -1894,7 +1898,7 @@ public sealed class CoreTests : IDisposable
         Assert.Equal(1, report.Conversations);
         Assert.Equal(1, report.Messages);
         Assert.Equal(1, report.DetectedAgents);
-        Assert.Equal(70, report.CatalogAgents);
+        Assert.Equal(84, report.CatalogAgents);
         Assert.Contains(databasePath, report.ToDisplayText());
     }
 

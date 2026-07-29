@@ -87,7 +87,6 @@ public sealed partial class App : Application
     {
         _window?.DispatcherQueue.TryEnqueue(() =>
         {
-            _window.Activate();
             _window.BringToFront();
         });
     }

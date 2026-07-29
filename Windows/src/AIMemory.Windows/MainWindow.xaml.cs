@@ -18,8 +18,11 @@ public sealed partial class MainWindow : Window
     public AIMemoryDatabase Database { get; }
     public ConversationRepository Conversations { get; }
     public SettingsStore Settings { get; } = new();
+    private readonly AppWindow _appWindow;
     private AboutWindow? _aboutWindow;
     private CancellationTokenSource? _automaticBackup;
+    private NotificationAreaService? _notificationArea;
+    private bool _isExiting;
 
     public MainWindow(AIMemoryDatabase database)
     {
@@ -32,21 +35,37 @@ public sealed partial class MainWindow : Window
 
         var handle = WindowNative.GetWindowHandle(this);
         var id = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(handle);
-        var appWindow = AppWindow.GetFromWindowId(id);
-        appWindow.Resize(new global::Windows.Graphics.SizeInt32(1180, 760));
+        _appWindow = AppWindow.GetFromWindowId(id);
+        _appWindow.Resize(new global::Windows.Graphics.SizeInt32(1180, 760));
+        _appWindow.Closing += OnAppWindowClosing;
         Navigation.SelectedItem = Navigation.MenuItems[0];
         Navigate("workbench");
         RegisterAccelerators();
-        Closed += (_, _) =>
+
+        try
         {
-            _automaticBackup?.Cancel();
-            _automaticBackup?.Dispose();
-            _automaticBackup = null;
-        };
+            _notificationArea = new NotificationAreaService(
+                handle,
+                DispatcherQueue,
+                BringToFront,
+                () => _ = SyncNowAsync(),
+                ExitApplication,
+                LocalizationService.Get("TrayOpen"),
+                LocalizationService.Get("TraySyncNow"),
+                LocalizationService.Get("TrayExit"));
+        }
+        catch (Exception exception)
+        {
+            System.Diagnostics.Debug.WriteLine(
+                $"Notification-area initialization failed: {exception}");
+        }
+
+        Closed += (_, _) => Cleanup();
     }
 
     public void BringToFront()
     {
+        _appWindow.Show(true);
         var handle = WindowNative.GetWindowHandle(this);
         NativeMethods.ShowWindow(handle, 9);
         NativeMethods.SetForegroundWindow(handle);
@@ -334,6 +353,32 @@ public sealed partial class MainWindow : Window
 
     public void OpenAboutAndCheckForUpdates() =>
         ShowAbout(checkForUpdates: true);
+
+    private void OnAppWindowClosing(
+        AppWindow sender,
+        AppWindowClosingEventArgs args)
+    {
+        if (_isExiting || _notificationArea is null) return;
+        args.Cancel = true;
+        sender.Hide();
+    }
+
+    private void ExitApplication()
+    {
+        if (_isExiting) return;
+        _isExiting = true;
+        Cleanup();
+        Application.Current.Exit();
+    }
+
+    private void Cleanup()
+    {
+        _automaticBackup?.Cancel();
+        _automaticBackup?.Dispose();
+        _automaticBackup = null;
+        _notificationArea?.Dispose();
+        _notificationArea = null;
+    }
 
     private void WorkbenchMenu_Click(object sender, RoutedEventArgs args) =>
         NavigateTo("workbench");

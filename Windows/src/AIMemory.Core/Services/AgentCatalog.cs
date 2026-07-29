@@ -98,6 +98,20 @@ public sealed class AgentCatalog
         new("langsmith-cli", "LangSmith CLI", ["langsmith"], [".langsmith"], false),
         new("cortex-code", "Snowflake Cortex Code", ["cortex"], [".snowflake\\cortex"], false),
         new("cline-kanban", "Cline Kanban", ["kanban"], [], false),
+        new("aichat", "AIChat", ["aichat"], [".config\\aichat", "AppData\\Roaming\\aichat"], false),
+        new("llm", "LLM", ["llm"], ["AppData\\Roaming\\io.datasette.llm"], false),
+        new("fabric", "Fabric", ["fabric", "fabric-ai"], [".config\\fabric"], false),
+        new("shell-gpt", "ShellGPT", ["sgpt"], [".config\\shell_gpt"], false),
+        new("elia", "Elia", ["elia"], [], false),
+        new("ollama", "Ollama", ["ollama"], [".ollama", "AppData\\Local\\Programs\\Ollama"], false),
+        new("lm-studio", "LM Studio CLI", ["lms"], ["AppData\\Local\\Programs\\LM Studio", "AppData\\Local\\LM-Studio"], false),
+        new("llama-cpp", "llama.cpp", ["llama", "llama-cli"], [], false),
+        new("tgpt", "tgpt", ["tgpt"], [".config\\tgpt"], false),
+        new("crewai", "CrewAI", ["crewai"], [], false),
+        new("autogpt", "AutoGPT", ["autogpt"], [".autogpt"], false),
+        new("gptscript", "GPTScript", ["gptscript"], [], false),
+        new("elizaos", "ElizaOS CLI", ["elizaos"], [], false),
+        new("openai-cli", "OpenAI CLI", ["openai"], [], false),
     ];
 
     public IReadOnlyList<AgentIntegrationStatus> Detect()

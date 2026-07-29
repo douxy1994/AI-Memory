@@ -19,6 +19,7 @@ AI Memory 的 Windows 11 原生版本，使用 C#、WinUI 3 与 Windows App SDK 
 ## 当前实现
 
 - 单实例：重复启动恢复并聚焦现有窗口；
+- 原生通知区域图标：关闭主窗口后继续运行，可重新打开、立即同步或彻底退出；
 - 可按来源切换的工作台、最近任务、四项核心指标，以及按 Windows、Mac、Linux、Internal、Other 自动识别的电脑分组；
 - 可重命名电脑、合并电脑、移动单个项目并恢复自动分组，所有调整只影响展示，不改写原始项目路径；
 - 字体设置全局应用于 WinUI，并兼容 macOS 的系统、思源黑体、思源宋体和霞鹜文楷标识；未安装字体由 Windows 自动回退；
@@ -35,7 +36,8 @@ AI Memory 的 Windows 11 原生版本，使用 C#、WinUI 3 与 Windows App SDK 
   恢复前安全备份与失败自动回滚；
 - Windows Credential Locker 保存 WebDAV 密码；
 - 登录启动开关；
-- 70 种主流 Agent/CLI 安装检测，兼容无扩展、`.exe` 与 `.cmd` 启动器；
+- 84 种主流 Agent、通用 AI CLI 与本地模型 CLI 安装检测，兼容无扩展、
+  `.exe` 与 `.cmd` 启动器；
   已安装项优先，未安装项即使存在旧配置也保持关闭；
 - 16 种具有稳定配置格式的 Agent 可安全启用或关闭 MCP；其中 11 种同时
   安装 AI Memory skill 与受管启动规则。已有配置先备份，部分安装可自动修复；

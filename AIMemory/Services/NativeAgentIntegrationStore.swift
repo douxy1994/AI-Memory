@@ -562,7 +562,9 @@ actor NativeAgentIntegrationStore {
              .iflow, .lingma, .ohMyPi, .qoder, .shai, .sweAgent,
              .tabnineCLI, .zed, .deepagentsCode, .mimoCode, .codebuff,
              .kode, .lettaCode, .nanocoder, .raAid, .conductor, .waza,
-             .langsmithCLI, .cortexCode, .clineKanban:
+             .langsmithCLI, .cortexCode, .clineKanban, .aichat, .llm,
+             .fabric, .shellGPT, .elia, .ollama, .lmStudio, .llamaCpp,
+             .tgpt, .crewai, .autogpt, .gptscript, .elizaOS, .openAICLI:
             return home.appendingPathComponent(
                 ".aimemory/integrations/\(agent.rawValue)"
             )
@@ -614,7 +616,9 @@ actor NativeAgentIntegrationStore {
              .iflow, .lingma, .ohMyPi, .qoder, .shai, .sweAgent,
              .tabnineCLI, .zed, .deepagentsCode, .mimoCode, .codebuff,
              .kode, .lettaCode, .nanocoder, .raAid, .conductor, .waza,
-             .langsmithCLI, .cortexCode, .clineKanban:
+             .langsmithCLI, .cortexCode, .clineKanban, .aichat, .llm,
+             .fabric, .shellGPT, .elia, .ollama, .lmStudio, .llamaCpp,
+             .tgpt, .crewai, .autogpt, .gptscript, .elizaOS, .openAICLI:
             return home.appendingPathComponent(".aimemory/integrations/\(agent.rawValue)")
         }
     }
@@ -897,6 +901,14 @@ private enum IntegrationAgent: String, CaseIterable {
     case langsmithCLI = "langsmith-cli"
     case cortexCode = "cortex-code"
     case clineKanban = "cline-kanban"
+    case aichat, llm, fabric
+    case shellGPT = "shell-gpt"
+    case elia, ollama
+    case lmStudio = "lm-studio"
+    case llamaCpp = "llama-cpp"
+    case tgpt, crewai, autogpt, gptscript
+    case elizaOS = "elizaos"
+    case openAICLI = "openai-cli"
 
     static func catalogIndex(_ rawValue: String) -> Int {
         allCases.firstIndex { $0.rawValue == rawValue } ?? Int.max
@@ -974,6 +986,20 @@ private enum IntegrationAgent: String, CaseIterable {
         case .langsmithCLI: "LangSmith CLI"
         case .cortexCode: "Snowflake Cortex Code"
         case .clineKanban: "Cline Kanban"
+        case .aichat: "AIChat"
+        case .llm: "LLM"
+        case .fabric: "Fabric"
+        case .shellGPT: "ShellGPT"
+        case .elia: "Elia"
+        case .ollama: "Ollama"
+        case .lmStudio: "LM Studio CLI"
+        case .llamaCpp: "llama.cpp"
+        case .tgpt: "tgpt"
+        case .crewai: "CrewAI"
+        case .autogpt: "AutoGPT"
+        case .gptscript: "GPTScript"
+        case .elizaOS: "ElizaOS CLI"
+        case .openAICLI: "OpenAI CLI"
         }
     }
 
@@ -1002,7 +1028,9 @@ private enum IntegrationAgent: String, CaseIterable {
             .iflow, .lingma, .ohMyPi, .qoder, .shai, .sweAgent,
             .tabnineCLI, .zed, .deepagentsCode, .mimoCode, .codebuff,
             .kode, .lettaCode, .nanocoder, .raAid, .conductor, .waza,
-            .langsmithCLI, .cortexCode, .clineKanban,
+            .langsmithCLI, .cortexCode, .clineKanban, .aichat, .llm,
+            .fabric, .shellGPT, .elia, .ollama, .lmStudio, .llamaCpp,
+            .tgpt, .crewai, .autogpt, .gptscript, .elizaOS, .openAICLI,
         ].contains(self)
     }
 
@@ -1017,7 +1045,9 @@ private enum IntegrationAgent: String, CaseIterable {
              .iflow, .lingma, .ohMyPi, .qoder, .shai, .sweAgent,
              .tabnineCLI, .zed, .deepagentsCode, .mimoCode, .codebuff,
              .kode, .lettaCode, .nanocoder, .raAid, .conductor, .waza,
-             .langsmithCLI, .cortexCode, .clineKanban:
+             .langsmithCLI, .cortexCode, .clineKanban, .aichat, .llm,
+             .fabric, .shellGPT, .elia, .ollama, .lmStudio, .llamaCpp,
+             .tgpt, .crewai, .autogpt, .gptscript, .elizaOS, .openAICLI:
             false
         default:
             true
@@ -1096,6 +1126,20 @@ private enum IntegrationAgent: String, CaseIterable {
         case .langsmithCLI: ["langsmith"]
         case .cortexCode: ["cortex"]
         case .clineKanban: ["kanban"]
+        case .aichat: ["aichat"]
+        case .llm: ["llm"]
+        case .fabric: ["fabric", "fabric-ai"]
+        case .shellGPT: ["sgpt"]
+        case .elia: ["elia"]
+        case .ollama: ["ollama"]
+        case .lmStudio: ["lms"]
+        case .llamaCpp: ["llama", "llama-cli"]
+        case .tgpt: ["tgpt"]
+        case .crewai: ["crewai"]
+        case .autogpt: ["autogpt"]
+        case .gptscript: ["gptscript"]
+        case .elizaOS: ["elizaos"]
+        case .openAICLI: ["openai"]
         }
     }
 
@@ -1118,6 +1162,8 @@ private enum IntegrationAgent: String, CaseIterable {
         case .lingma: ["Lingma"]
         case .qoder: ["Qoder"]
         case .zed: ["Zed"]
+        case .ollama: ["Ollama"]
+        case .lmStudio: ["LM Studio"]
         default: []
         }
     }
@@ -1188,6 +1234,39 @@ private enum IntegrationAgent: String, CaseIterable {
         case .sweAgent:
             [home.appendingPathComponent(".config/swe-agent")]
         case .clineKanban:
+            []
+        case .aichat:
+            [
+                home.appendingPathComponent(".config/aichat"),
+                home.appendingPathComponent("Library/Application Support/aichat"),
+            ]
+        case .llm:
+            [
+                home.appendingPathComponent(
+                    "Library/Application Support/io.datasette.llm"
+                ),
+            ]
+        case .fabric:
+            [home.appendingPathComponent(".config/fabric")]
+        case .shellGPT:
+            [home.appendingPathComponent(".config/shell_gpt")]
+        case .ollama:
+            [home.appendingPathComponent(".ollama")]
+        case .lmStudio:
+            [
+                home.appendingPathComponent(
+                    "Library/Application Support/LM Studio"
+                ),
+            ]
+        case .tgpt:
+            [
+                home.appendingPathComponent(
+                    "Library/Application Support/tgpt"
+                ),
+            ]
+        case .autogpt:
+            [home.appendingPathComponent(".autogpt")]
+        case .elia, .llamaCpp, .crewai, .gptscript, .elizaOS, .openAICLI:
             []
         default:
             [defaultDetectionPath(home: home)]
@@ -1287,6 +1366,30 @@ private enum IntegrationAgent: String, CaseIterable {
         case .cortexCode: home.appendingPathComponent(".snowflake/cortex")
         case .clineKanban:
             home.appendingPathComponent(".aimemory/integrations/cline-kanban")
+        case .aichat: home.appendingPathComponent(".config/aichat")
+        case .llm:
+            home.appendingPathComponent(
+                "Library/Application Support/io.datasette.llm"
+            )
+        case .fabric: home.appendingPathComponent(".config/fabric")
+        case .shellGPT: home.appendingPathComponent(".config/shell_gpt")
+        case .elia: home.appendingPathComponent(".aimemory/integrations/elia")
+        case .ollama: home.appendingPathComponent(".ollama")
+        case .lmStudio:
+            home.appendingPathComponent("Library/Application Support/LM Studio")
+        case .llamaCpp:
+            home.appendingPathComponent(".aimemory/integrations/llama-cpp")
+        case .tgpt:
+            home.appendingPathComponent("Library/Application Support/tgpt")
+        case .crewai:
+            home.appendingPathComponent(".aimemory/integrations/crewai")
+        case .autogpt: home.appendingPathComponent(".autogpt")
+        case .gptscript:
+            home.appendingPathComponent(".aimemory/integrations/gptscript")
+        case .elizaOS:
+            home.appendingPathComponent(".aimemory/integrations/elizaos")
+        case .openAICLI:
+            home.appendingPathComponent(".aimemory/integrations/openai-cli")
         }
     }
 }

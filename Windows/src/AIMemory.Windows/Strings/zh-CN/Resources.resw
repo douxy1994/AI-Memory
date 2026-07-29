@@ -78,6 +78,9 @@
   <data name="HelpTitle" xml:space="preserve"><value>AI Memory 帮助</value></data>
   <data name="HelpContent" xml:space="preserve"><value>Ctrl+1 返回工作台&#x0a;Ctrl+2 打开记忆与待复核&#x0a;Ctrl+3 打开历史&#x0a;Ctrl+R 刷新全部来源&#x0a;Ctrl+Shift+S 增量同步&#x0a;Ctrl+, 打开设置</value></data>
   <data name="Done" xml:space="preserve"><value>完成</value></data>
+  <data name="TrayOpen" xml:space="preserve"><value>打开 AI Memory</value></data>
+  <data name="TraySyncNow" xml:space="preserve"><value>立即同步</value></data>
+  <data name="TrayExit" xml:space="preserve"><value>退出 AI Memory</value></data>
   <data name="AboutWindowTitle" xml:space="preserve"><value>关于 AI Memory</value></data>
   <data name="ReleaseVersion" xml:space="preserve"><value>正式版本 {0}</value></data>
   <data name="DevelopmentVersion" xml:space="preserve"><value>开发版本 {0}</value></data>

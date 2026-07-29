@@ -96,6 +96,9 @@ final class NativeAgentIntegrationStoreTests: XCTestCase {
             "deepagents-code", "mimo-code", "codebuff", "kode",
             "letta-code", "nanocoder", "ra-aid", "conductor", "waza",
             "langsmith-cli", "cortex-code", "cline-kanban",
+            "aichat", "llm", "fabric", "shell-gpt", "elia", "ollama",
+            "lm-studio", "llama-cpp", "tgpt", "crewai", "autogpt",
+            "gptscript", "elizaos", "openai-cli",
         ]
         XCTAssertEqual(Set(statuses.map(\.agent)), Set(expectedAgents))
         XCTAssertEqual(statuses.count, expectedAgents.count)
@@ -112,6 +115,12 @@ final class NativeAgentIntegrationStoreTests: XCTestCase {
             at: root.appendingPathComponent(".devin"),
             withIntermediateDirectories: true
         )
+        try FileManager.default.createDirectory(
+            at: root.appendingPathComponent(
+                "Library/Application Support/io.datasette.llm"
+            ),
+            withIntermediateDirectories: true
+        )
         let service = NativeAgentIntegrationStore(home: root, helperURL: helper)
         let statuses = await service.detect()
 
@@ -124,6 +133,10 @@ final class NativeAgentIntegrationStoreTests: XCTestCase {
         XCTAssertTrue(devin.isAgentDetected)
         XCTAssertFalse(devin.canInstallIntegration)
         XCTAssertFalse(devin.mcpInstalled)
+        let llm = try XCTUnwrap(statuses.first { $0.agent == "llm" })
+        XCTAssertTrue(llm.isAgentDetected)
+        XCTAssertFalse(llm.canInstallIntegration)
+        XCTAssertFalse(llm.mcpInstalled)
     }
 
     private func makeHelper(in root: URL) throws -> URL {

@@ -59,6 +59,7 @@ flowchart LR
 ### 统一历史工作台
 
 - 聚合 Claude Code、Codex、Gemini CLI、Google Antigravity、OpenCode、ZCode、Hermes、Kimi Code 等本地历史；
+- 检测 84 种 Agent、通用 AI CLI 与本地模型 CLI，包括 AIChat、LLM、Fabric、ShellGPT、Elia、Ollama、LM Studio CLI、llama.cpp、tgpt、CrewAI、AutoGPT、GPTScript、ElizaOS 和 OpenAI CLI；
 - 已安装且存在可读数据的来源优先显示，未安装来源不会自动启用；
 - 按电脑、项目和更新时间组织对话，支持搜索、筛选、排序、折叠和批量操作；
 - 收藏重要会话，添加备注、标签和置顶，并生成可复制的继续卡片。

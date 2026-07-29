@@ -22,12 +22,20 @@ for table_name in ${expected_tables}; do
 done
 
 rg -q 'FindOrRegisterForKey' "${windows_dir}/src/AIMemory.Windows/Program.cs"
+rg -q 'Shell_NotifyIconW' \
+  "${windows_dir}/src/AIMemory.Windows/Services/NotificationAreaService.cs"
+rg -q '<ApplicationIcon>Assets\\AppIcon.ico</ApplicationIcon>' \
+  "${windows_dir}/src/AIMemory.Windows/AIMemory.Windows.csproj"
+rg -q '_appWindow\.Closing' \
+  "${windows_dir}/src/AIMemory.Windows/MainWindow.xaml.cs"
+rg -q 'sender\.Hide\(\)' \
+  "${windows_dir}/src/AIMemory.Windows/MainWindow.xaml.cs"
 rg -q 'windows.startupTask' "${windows_dir}/src/AIMemory.Windows/Package.appxmanifest"
 rg -q 'Enabled="false"' "${windows_dir}/src/AIMemory.Windows/Package.appxmanifest"
 rg -q 'OrderByDescending\(value => value.detected\)' \
   "${windows_dir}/src/AIMemory.Core/Services/AgentCatalog.cs"
 agent_count=$(rg -c 'new\("' \
   "${windows_dir}/src/AIMemory.Core/Services/AgentCatalog.cs")
-test "${agent_count}" -eq 70
+test "${agent_count}" -eq 84
 
 printf '%s\n' "Windows source structure verification passed."

@@ -78,6 +78,9 @@
   <data name="HelpTitle" xml:space="preserve"><value>AI Memory Help</value></data>
   <data name="HelpContent" xml:space="preserve"><value>Ctrl+1 Return to Workbench&#x0a;Ctrl+2 Open Memory and Review Queue&#x0a;Ctrl+3 Open History&#x0a;Ctrl+R Refresh All Sources&#x0a;Ctrl+Shift+S Incremental Sync&#x0a;Ctrl+, Open Settings</value></data>
   <data name="Done" xml:space="preserve"><value>Done</value></data>
+  <data name="TrayOpen" xml:space="preserve"><value>Open AI Memory</value></data>
+  <data name="TraySyncNow" xml:space="preserve"><value>Sync Now</value></data>
+  <data name="TrayExit" xml:space="preserve"><value>Exit AI Memory</value></data>
   <data name="AboutWindowTitle" xml:space="preserve"><value>About AI Memory</value></data>
   <data name="ReleaseVersion" xml:space="preserve"><value>Release {0}</value></data>
   <data name="DevelopmentVersion" xml:space="preserve"><value>Development {0}</value></data>
