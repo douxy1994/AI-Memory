@@ -103,10 +103,18 @@
                                                TextWrapping="Wrap"
                                                Opacity="0.6" />
                                 </StackPanel>
-                                <ToggleSwitch x:Name="StartupToggle"
-                                              Grid.Column="1"
-                                              VerticalAlignment="Center"
-                                              Toggled="StartupToggle_Toggled" />
+                                <StackPanel Grid.Column="1"
+                                            Spacing="8"
+                                            VerticalAlignment="Center">
+                                    <ToggleSwitch x:Name="StartupToggle"
+                                                  HorizontalAlignment="Right"
+                                                  Toggled="StartupToggle_Toggled" />
+                                    <Button x:Name="OpenStartupSettingsButton"
+                                            x:Uid="SettingsOpenStartupSettings"
+                                            Content="打开启动应用设置"
+                                            Visibility="Collapsed"
+                                            Click="OpenStartupSettings_Click" />
+                                </StackPanel>
                             </Grid>
                         </Border>
                         <Border Style="{StaticResource CardStyle}">
@@ -176,12 +184,25 @@
                                            TextWrapping="Wrap"
                                            Opacity="0.65" />
                             </StackPanel>
-                            <Button x:Uid="SettingsDetectAgents"
-                                    Grid.Column="1"
-                                    HorizontalAlignment="Right"
-                                    VerticalAlignment="Center"
-                                    Content="重新检测"
-                                    Click="DetectAgents_Click" />
+                            <CommandBar x:Name="AgentCommandBar"
+                                        Grid.Column="1"
+                                        Background="Transparent"
+                                        HorizontalAlignment="Right"
+                                        DefaultLabelPosition="Right"
+                                        IsDynamicOverflowEnabled="True">
+                                <AppBarButton x:Uid="SettingsInstallAllAgents"
+                                              Icon="Download"
+                                              Label="全部安装"
+                                              Click="InstallAllAgents_Click" />
+                                <AppBarButton x:Uid="SettingsUninstallAllAgents"
+                                              Icon="Remove"
+                                              Label="全部卸载"
+                                              Click="UninstallAllAgents_Click" />
+                                <AppBarButton x:Uid="SettingsDetectAgents"
+                                              Icon="Refresh"
+                                              Label="重新检测"
+                                              Click="DetectAgents_Click" />
+                            </CommandBar>
                         </Grid>
                         <Border Style="{StaticResource CardStyle}">
                             <ItemsControl x:Name="AgentList">
@@ -242,10 +263,18 @@
                                 <CommandBar Background="Transparent"
                                             HorizontalAlignment="Right"
                                             DefaultLabelPosition="Right">
+                                    <AppBarButton x:Uid="SettingsChooseFolder"
+                                                  Icon="Folder"
+                                                  Label="选择目录"
+                                                  Click="ChooseLocalFolder_Click" />
                                     <AppBarButton x:Uid="SettingsSaveFolder"
                                                   Icon="Save"
                                                   Label="保存目录"
                                                   Click="SaveLocalFolder_Click" />
+                                    <AppBarButton x:Uid="SettingsCheckCloudReadiness"
+                                                  Icon="Accept"
+                                                  Label="检测云盘状态"
+                                                  Click="CheckCloudReadiness_Click" />
                                     <AppBarButton x:Uid="SettingsSyncFolderNow"
                                                   Icon="Sync"
                                                   Label="立即同步"

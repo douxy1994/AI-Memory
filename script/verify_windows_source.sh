@@ -35,6 +35,12 @@ rg -q 'CloseMainWindow' "${windows_dir}/scripts/smoke-desktop.ps1"
 rg -q 'IsWindowVisible' "${windows_dir}/scripts/smoke-desktop.ps1"
 rg -q 'windows.startupTask' "${windows_dir}/src/AIMemory.Windows/Package.appxmanifest"
 rg -q 'Enabled="false"' "${windows_dir}/src/AIMemory.Windows/Package.appxmanifest"
+rg -q 'ms-settings:startupapps' \
+  "${windows_dir}/src/AIMemory.Windows/Services/StartupService.cs"
+rg -Fq 'new FolderPicker(_window.WindowId)' \
+  "${windows_dir}/src/AIMemory.Windows/Pages/SettingsPage.xaml.cs"
+rg -q 'RunBulkAgentIntegrationAsync' \
+  "${windows_dir}/src/AIMemory.Windows/Pages/SettingsPage.xaml.cs"
 rg -q 'OrderByDescending\(value => value.detected\)' \
   "${windows_dir}/src/AIMemory.Core/Services/AgentCatalog.cs"
 agent_count=$(rg -c 'new\("' \

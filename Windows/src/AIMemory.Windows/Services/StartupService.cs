@@ -19,4 +19,8 @@ public sealed class StartupService
         task.Disable();
         return task.State;
     }
+
+    public Task<bool> OpenSystemSettingsAsync() =>
+        global::Windows.System.Launcher.LaunchUriAsync(
+            new Uri("ms-settings:startupapps")).AsTask();
 }

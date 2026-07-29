@@ -5,6 +5,7 @@ using AIMemory.Windows.Services;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
+using Microsoft.Windows.Storage.Pickers;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
@@ -19,6 +20,7 @@ public sealed partial class SettingsPage : Page
     private readonly StartupService _startup = new();
     private readonly CredentialService _credentials = new();
     private readonly AgentIntegrationService _agentIntegrations = new();
+    private readonly CloudReadinessService _cloudReadiness = new();
     private bool _loading;
 
     public SettingsPage() => InitializeComponent();
@@ -144,7 +146,13 @@ public sealed partial class SettingsPage : Page
                 LocalizationService.Get("StartupDisabledByPolicy"),
             _ => LocalizationService.Get("StartupDisabled"),
         };
-        StartupToggle.IsEnabled = state != StartupTaskState.DisabledByPolicy;
+        StartupToggle.IsEnabled = state is not (
+            StartupTaskState.DisabledByPolicy
+            or StartupTaskState.DisabledByUser);
+        OpenStartupSettingsButton.Visibility =
+            state == StartupTaskState.DisabledByUser
+                ? Visibility.Visible
+                : Visibility.Collapsed;
     }
 
     private async void StartupToggle_Toggled(object sender, RoutedEventArgs args)
@@ -163,6 +171,28 @@ public sealed partial class SettingsPage : Page
             Show(
                 LocalizationService.Format(
                     "StartupSettingFailed",
+                    exception.Message),
+                InfoBarSeverity.Error);
+        }
+    }
+
+    private async void OpenStartupSettings_Click(
+        object sender,
+        RoutedEventArgs args)
+    {
+        try
+        {
+            if (!await _startup.OpenSystemSettingsAsync())
+            {
+                throw new InvalidOperationException(
+                    LocalizationService.Get("StartupSettingsLaunchRejected"));
+            }
+        }
+        catch (Exception exception)
+        {
+            Show(
+                LocalizationService.Format(
+                    "StartupSettingsLaunchFailed",
                     exception.Message),
                 InfoBarSeverity.Error);
         }
@@ -263,6 +293,101 @@ public sealed partial class SettingsPage : Page
         AgentList.ItemsSource = _agentIntegrations.Detect()
             .Select(value => new LocalizedAgentIntegration(value))
             .ToArray();
+
+    private async void InstallAllAgents_Click(
+        object sender,
+        RoutedEventArgs args) =>
+        await RunBulkAgentIntegrationAsync(enabled: true);
+
+    private async void UninstallAllAgents_Click(
+        object sender,
+        RoutedEventArgs args)
+    {
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = LocalizationService.Get("AgentUninstallAllTitle"),
+            Content = LocalizationService.Get("AgentUninstallAllDescription"),
+            PrimaryButtonText = LocalizationService.Get("UninstallAll"),
+            CloseButtonText = LocalizationService.Get("Cancel"),
+            DefaultButton = ContentDialogButton.Close,
+        };
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+        {
+            await RunBulkAgentIntegrationAsync(enabled: false);
+        }
+    }
+
+    private async Task RunBulkAgentIntegrationAsync(bool enabled)
+    {
+        var targets = _agentIntegrations.Detect()
+            .Where(value =>
+                value.CanToggle
+                && (enabled
+                    ? !value.IsIntegrated
+                    : value.IsIntegrated
+                      || value.State == AgentIntegrationState.Partial))
+            .ToArray();
+        if (targets.Length == 0)
+        {
+            Show(
+                LocalizationService.Get("NoEligibleAgentIntegrations"),
+                InfoBarSeverity.Warning);
+            return;
+        }
+
+        AgentCommandBar.IsEnabled = false;
+        AgentList.IsEnabled = false;
+        try
+        {
+            var result = await Task.Run(() =>
+            {
+                var updated = 0;
+                var failures = new List<string>();
+                foreach (var target in targets)
+                {
+                    try
+                    {
+                        _agentIntegrations.SetEnabled(target, enabled);
+                        updated += 1;
+                    }
+                    catch
+                    {
+                        failures.Add(target.Label);
+                    }
+                }
+                return (updated, failures);
+            });
+            ReloadAgents();
+
+            var summary = LocalizationService.Format(
+                enabled
+                    ? "AgentBulkInstallCompleted"
+                    : "AgentBulkUninstallCompleted",
+                result.updated);
+            if (result.failures.Count == 0)
+            {
+                Show(summary, InfoBarSeverity.Success);
+            }
+            else
+            {
+                Show(
+                    LocalizationService.Format(
+                        "AgentBulkPartialFailure",
+                        summary,
+                        result.failures.Count,
+                        string.Join(
+                            LocalizationService.Get("ListSeparator"),
+                            result.failures)),
+                    InfoBarSeverity.Warning);
+            }
+        }
+        finally
+        {
+            AgentCommandBar.IsEnabled = true;
+            AgentList.IsEnabled = true;
+        }
+    }
 
     private void ToggleAgent_Click(object sender, RoutedEventArgs args)
     {
@@ -502,20 +627,104 @@ public sealed partial class SettingsPage : Page
         }
     }
 
-    private async void SaveLocalFolder_Click(object sender, RoutedEventArgs args)
+    private async void ChooseLocalFolder_Click(
+        object sender,
+        RoutedEventArgs args)
     {
         if (_window is null) return;
-        _settings.Sync.Provider = "local";
-        _settings.Sync.SyncFolder = SyncFolderBox.Text.Trim();
-        await _window.Settings.SaveAsync(_settings);
-        Show(
-            LocalizationService.Get("LocalSyncFolderSaved"),
-            InfoBarSeverity.Success);
+        try
+        {
+            var picker = new FolderPicker(_window.WindowId)
+            {
+                Title = LocalizationService.Get("ChooseSyncFolderTitle"),
+                CommitButtonText =
+                    LocalizationService.Get("ChooseSyncFolderCommit"),
+                SettingsIdentifier = "AIMemory.SyncFolder",
+            };
+            var result = await picker.PickSingleFolderAsync();
+            if (result is null) return;
+            SyncFolderBox.Text = result.Path;
+            await SaveLocalFolderAsync(showConfirmation: true);
+        }
+        catch (Exception exception)
+        {
+            Show(
+                LocalizationService.Format(
+                    "ChooseSyncFolderFailed",
+                    exception.Message),
+                InfoBarSeverity.Error);
+        }
+    }
+
+    private async void SaveLocalFolder_Click(object sender, RoutedEventArgs args) =>
+        await SaveLocalFolderAsync(showConfirmation: true);
+
+    private async Task<bool> SaveLocalFolderAsync(bool showConfirmation)
+    {
+        if (_window is null) return false;
+        try
+        {
+            _settings.Sync.Provider = "local";
+            _settings.Sync.SyncFolder = SyncFolderBox.Text.Trim();
+            await _window.Settings.SaveAsync(_settings);
+            if (showConfirmation)
+            {
+                Show(
+                    LocalizationService.Get("LocalSyncFolderSaved"),
+                    InfoBarSeverity.Success);
+            }
+            return true;
+        }
+        catch (Exception exception)
+        {
+            Show(
+                LocalizationService.Format(
+                    "LocalSyncFolderSaveFailed",
+                    exception.Message),
+                InfoBarSeverity.Error);
+            return false;
+        }
+    }
+
+    private void CheckCloudReadiness_Click(
+        object sender,
+        RoutedEventArgs args)
+    {
+        try
+        {
+            var result = _cloudReadiness.Check(
+                SyncFolderBox.Text.Trim());
+            var message = result.RecommendedAction switch
+            {
+                "folder_missing" =>
+                    LocalizationService.Get("CloudFolderMissing"),
+                "safe_to_sync" =>
+                    LocalizationService.Get("CloudFolderReady"),
+                _ when result.HasLockFiles =>
+                    LocalizationService.Get("CloudFolderBusyWithLocks"),
+                _ => LocalizationService.Get("CloudFolderRecentlyChanged"),
+            };
+            Show(
+                message,
+                result.IsQuiet
+                    ? InfoBarSeverity.Success
+                    : InfoBarSeverity.Warning);
+        }
+        catch (Exception exception)
+        {
+            Show(
+                LocalizationService.Format(
+                    "CloudReadinessCheckFailed",
+                    exception.Message),
+                InfoBarSeverity.Error);
+        }
     }
 
     private async void SyncLocalFolder_Click(object sender, RoutedEventArgs args)
     {
         if (_window is null) return;
+        if (!await SaveLocalFolderAsync(showConfirmation: false)) return;
+        SyncProgress.Visibility = Visibility.Visible;
         try
         {
             var result = await new LocalFolderSyncService(_window.Conversations)
@@ -535,6 +744,10 @@ public sealed partial class SettingsPage : Page
                     "LocalSyncFailed",
                     exception.Message),
                 InfoBarSeverity.Error);
+        }
+        finally
+        {
+            SyncProgress.Visibility = Visibility.Collapsed;
         }
     }
 

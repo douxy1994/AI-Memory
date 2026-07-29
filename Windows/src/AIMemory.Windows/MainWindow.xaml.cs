@@ -18,6 +18,7 @@ public sealed partial class MainWindow : Window
     public AIMemoryDatabase Database { get; }
     public ConversationRepository Conversations { get; }
     public SettingsStore Settings { get; } = new();
+    public Microsoft.UI.WindowId WindowId => _appWindow.Id;
     private readonly AppWindow _appWindow;
     private AboutWindow? _aboutWindow;
     private CancellationTokenSource? _automaticBackup;

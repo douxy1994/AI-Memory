@@ -31,16 +31,19 @@ AI Memory 的 Windows 11 原生版本，使用 C#、WinUI 3 与 Windows App SDK 
 - 完整对话详情、收藏备注/标签/置顶/继续卡片，以及带确认、失败反馈和保留期说明的
   可恢复批量回收站；
 - SQLite 数据库、可双向读取 macOS/Windows 键名的版本化设置和 ChatMem 安全导入；
-- WebDAV 与本地文件夹增量同步；
+- WebDAV 与本地文件夹增量同步；本地目录使用 Windows App SDK 原生
+  `FolderPicker` 选择，并可在同步前检查云盘锁文件及短时变动；
 - 无变化跳过、未变化文件使用 NTFS 硬链接复用的增量恢复点，支持定时备份、
   恢复前安全备份与失败自动回滚；
 - Windows Credential Locker 保存 WebDAV 密码；
-- 登录启动开关；
+- 登录启动开关；若曾被用户从 Windows“启动应用”中禁用，会直接提供系统
+  设置入口恢复，不伪装成可由应用绕过的开关；
 - 84 种主流 Agent、通用 AI CLI 与本地模型 CLI 安装检测，兼容无扩展、
   `.exe` 与 `.cmd` 启动器；
   已安装项优先，未安装项即使存在旧配置也保持关闭；
 - 16 种具有稳定配置格式的 Agent 可安全启用或关闭 MCP；其中 11 种同时
-  安装 AI Memory skill 与受管启动规则。已有配置先备份，部分安装可自动修复；
+  安装 AI Memory skill 与受管启动规则。已有配置先备份，部分安装可自动修复，
+  并支持对当前已安装且可安全配置的 Agent 批量安装、修复或确认后批量卸载；
 - Claude、Codex、Gemini、Kimi、Hermes、Antigravity、OpenCode 与 ZCode
   本地历史只读导入；
 - 完整对话可原生复制到 Claude、Codex、Gemini 或 OpenCode，并在写入后

@@ -25,6 +25,8 @@
   <data name="StartupDisabled" xml:space="preserve"><value>已关闭</value></data>
   <data name="StartupSettingUpdated" xml:space="preserve"><value>启动设置已更新。</value></data>
   <data name="StartupSettingFailed" xml:space="preserve"><value>更新启动设置失败：{0}</value></data>
+  <data name="StartupSettingsLaunchRejected" xml:space="preserve"><value>Windows 拒绝打开启动应用设置。</value></data>
+  <data name="StartupSettingsLaunchFailed" xml:space="preserve"><value>打开启动应用设置失败：{0}</value></data>
   <data name="AutomaticBackupEnabled" xml:space="preserve"><value>自动备份已开启，每 {0} 分钟检查一次变化。</value></data>
   <data name="AutomaticBackupDisabled" xml:space="preserve"><value>自动备份已关闭。</value></data>
   <data name="AutomaticBackupSaveFailed" xml:space="preserve"><value>保存自动备份设置失败：{0}</value></data>
@@ -49,6 +51,7 @@
   <data name="RestoreCompleted" xml:space="preserve"><value>恢复完成；恢复前的数据已备份到：{0}</value></data>
   <data name="RestoreFailed" xml:space="preserve"><value>恢复失败：{0}</value></data>
   <data name="LocalSyncFolderSaved" xml:space="preserve"><value>本地同步目录已保存。</value></data>
+  <data name="LocalSyncFolderSaveFailed" xml:space="preserve"><value>保存本地同步目录失败：{0}</value></data>
   <data name="LocalSyncCompleted" xml:space="preserve"><value>本地同步完成：上传 {0}，下载 {1}，跳过 {2}。</value></data>
   <data name="LocalSyncFailed" xml:space="preserve"><value>本地同步失败：{0}</value></data>
   <data name="ChatMemDatabaseNotFound" xml:space="preserve"><value>没有找到可导入的 ChatMem 数据库。</value></data>
@@ -78,6 +81,21 @@
   <data name="HelpTitle" xml:space="preserve"><value>AI Memory 帮助</value></data>
   <data name="HelpContent" xml:space="preserve"><value>Ctrl+1 返回工作台&#x0a;Ctrl+2 打开记忆与待复核&#x0a;Ctrl+3 打开历史&#x0a;Ctrl+R 刷新全部来源&#x0a;Ctrl+Shift+S 增量同步&#x0a;Ctrl+, 打开设置</value></data>
   <data name="Done" xml:space="preserve"><value>完成</value></data>
+  <data name="UninstallAll" xml:space="preserve"><value>全部卸载</value></data>
+  <data name="AgentUninstallAllTitle" xml:space="preserve"><value>卸载全部 Agent 集成？</value></data>
+  <data name="AgentUninstallAllDescription" xml:space="preserve"><value>只移除 AI Memory 管理的 MCP、skill 和启动规则，不删除 Agent、历史或记忆数据。</value></data>
+  <data name="NoEligibleAgentIntegrations" xml:space="preserve"><value>当前没有可执行该操作的已安装 Agent 集成。</value></data>
+  <data name="AgentBulkInstallCompleted" xml:space="preserve"><value>已安装或修复 {0} 项 Agent 集成。</value></data>
+  <data name="AgentBulkUninstallCompleted" xml:space="preserve"><value>已卸载 {0} 项 Agent 集成。</value></data>
+  <data name="AgentBulkPartialFailure" xml:space="preserve"><value>{0} 失败 {1} 项：{2}</value></data>
+  <data name="ChooseSyncFolderTitle" xml:space="preserve"><value>选择本地同步目录</value></data>
+  <data name="ChooseSyncFolderCommit" xml:space="preserve"><value>选择</value></data>
+  <data name="ChooseSyncFolderFailed" xml:space="preserve"><value>选择同步目录失败：{0}</value></data>
+  <data name="CloudFolderMissing" xml:space="preserve"><value>同步目录不存在，请重新选择。</value></data>
+  <data name="CloudFolderReady" xml:space="preserve"><value>云盘目录当前空闲，可以安全同步。</value></data>
+  <data name="CloudFolderBusyWithLocks" xml:space="preserve"><value>检测到云盘锁文件或临时文件，建议稍后再试。</value></data>
+  <data name="CloudFolderRecentlyChanged" xml:space="preserve"><value>云盘目录刚刚发生变化，建议等待数秒后再同步。</value></data>
+  <data name="CloudReadinessCheckFailed" xml:space="preserve"><value>检测云盘状态失败：{0}</value></data>
   <data name="TrayOpen" xml:space="preserve"><value>打开 AI Memory</value></data>
   <data name="TraySyncNow" xml:space="preserve"><value>立即同步</value></data>
   <data name="TrayExit" xml:space="preserve"><value>退出 AI Memory</value></data>
@@ -257,6 +275,7 @@
   <data name="SettingsFontHint.Text" xml:space="preserve"><value>字体会立即应用；所选字体未安装时由 Windows 自动回退到系统字体。</value></data>
   <data name="SettingsStartupTitle.Text" xml:space="preserve"><value>登录时自动启动</value></data>
   <data name="SettingsStartupLoading.Text" xml:space="preserve"><value>正在读取系统状态…</value></data>
+  <data name="SettingsOpenStartupSettings.Content" xml:space="preserve"><value>打开启动应用设置</value></data>
   <data name="SettingsAutoBackupTitle.Text" xml:space="preserve"><value>自动恢复与备份</value></data>
   <data name="SettingsAutoCaptureTitle.Text" xml:space="preserve"><value>自动保留记忆恢复点</value></data>
   <data name="SettingsAutoCaptureHint.Text" xml:space="preserve"><value>打开对话后刷新对应 Agent 来源，并持续更新该对话唯一的自动检查点。</value></data>
@@ -267,12 +286,17 @@
   <data name="SettingsAgentsTitle.Text" xml:space="preserve"><value>Agent 集成</value></data>
   <data name="SettingsAgentsSubtitle.Text" xml:space="preserve"><value>已安装项目优先显示；未安装项目保持关闭。</value></data>
   <data name="SettingsDetectAgents.Content" xml:space="preserve"><value>重新检测</value></data>
+  <data name="SettingsInstallAllAgents.Label" xml:space="preserve"><value>全部安装</value></data>
+  <data name="SettingsUninstallAllAgents.Label" xml:space="preserve"><value>全部卸载</value></data>
+  <data name="SettingsDetectAgents.Label" xml:space="preserve"><value>重新检测</value></data>
   <data name="SettingsSyncTitle.Text" xml:space="preserve"><value>数据同步与备份</value></data>
   <data name="SettingsSyncSubtitle.Text" xml:space="preserve"><value>集中管理本地目录、WebDAV、历史导入和恢复点。</value></data>
   <data name="SettingsLocalSyncTitle.Text" xml:space="preserve"><value>本地同步目录</value></data>
   <data name="SettingsLocalSyncHint.Text" xml:space="preserve"><value>适用于 OneDrive、Dropbox、Google Drive 等共享目录；只传输变化的对话文件。</value></data>
   <data name="SettingsLocalSyncFolder.PlaceholderText" xml:space="preserve"><value>例如 D:\OneDrive\AI Memory</value></data>
+  <data name="SettingsChooseFolder.Label" xml:space="preserve"><value>选择目录</value></data>
   <data name="SettingsSaveFolder.Label" xml:space="preserve"><value>保存目录</value></data>
+  <data name="SettingsCheckCloudReadiness.Label" xml:space="preserve"><value>检测云盘状态</value></data>
   <data name="SettingsSyncFolderNow.Label" xml:space="preserve"><value>立即同步</value></data>
   <data name="SettingsWebDavTitle.Text" xml:space="preserve"><value>WebDAV</value></data>
   <data name="SettingsWebDavServerPath.PlaceholderText" xml:space="preserve"><value>服务器路径，例如 webdav</value></data>

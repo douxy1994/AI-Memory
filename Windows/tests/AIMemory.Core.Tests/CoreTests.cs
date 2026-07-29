@@ -16,6 +16,55 @@ public sealed class CoreTests : IDisposable
 
     public CoreTests() => Directory.CreateDirectory(_root);
 
+    [Fact]
+    public void CloudReadinessReportsMissingFolders()
+    {
+        var result = new CloudReadinessService().Check(
+            Path.Combine(_root, "missing-cloud-folder"));
+
+        Assert.False(result.FolderExists);
+        Assert.True(result.IsQuiet);
+        Assert.False(result.HasLockFiles);
+        Assert.Equal("folder_missing", result.RecommendedAction);
+    }
+
+    [Fact]
+    public void CloudReadinessDetectsLockFiles()
+    {
+        var folder = Path.Combine(_root, "locked-cloud-folder");
+        Directory.CreateDirectory(folder);
+        File.WriteAllText(Path.Combine(folder, "~$document.docx"), "");
+        Directory.SetLastWriteTimeUtc(
+            folder,
+            DateTime.UtcNow.AddMinutes(-1));
+
+        var result = new CloudReadinessService().Check(folder);
+
+        Assert.True(result.FolderExists);
+        Assert.False(result.IsQuiet);
+        Assert.True(result.HasLockFiles);
+        Assert.Equal("wait", result.RecommendedAction);
+    }
+
+    [Fact]
+    public void CloudReadinessRequiresAQuietPeriod()
+    {
+        var folder = Path.Combine(_root, "quiet-cloud-folder");
+        Directory.CreateDirectory(folder);
+        var now = DateTimeOffset.UtcNow;
+
+        var busy = new CloudReadinessService().Check(folder, now);
+        Assert.False(busy.IsQuiet);
+        Assert.False(busy.HasLockFiles);
+
+        Directory.SetLastWriteTimeUtc(
+            folder,
+            now.UtcDateTime.AddSeconds(-10));
+        var ready = new CloudReadinessService().Check(folder, now);
+        Assert.True(ready.IsQuiet);
+        Assert.Equal("safe_to_sync", ready.RecommendedAction);
+    }
+
     [Theory]
     [InlineData(null, "system", "")]
     [InlineData("", "system", "")]
