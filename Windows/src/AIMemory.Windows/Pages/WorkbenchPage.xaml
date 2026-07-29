@@ -154,9 +154,21 @@
 
                 <Border Grid.Column="1" Style="{StaticResource CardStyle}">
                     <StackPanel Spacing="12">
-                        <TextBlock Text="项目"
-                                   FontSize="18"
-                                   FontWeight="SemiBold" />
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="项目"
+                                       FontSize="18"
+                                       FontWeight="SemiBold"
+                                       VerticalAlignment="Center" />
+                            <Button x:Name="ManageMachineGroupsButton"
+                                    Grid.Column="1"
+                                    Content="管理电脑分组"
+                                    Click="ManageMachineGroups_Click"
+                                    IsEnabled="False" />
+                        </Grid>
                         <ListView x:Name="ProjectList"
                                   SelectionMode="None"
                                   IsItemClickEnabled="True"
@@ -174,6 +186,10 @@
                                                        TextTrimming="CharacterEllipsis" />
                                             <TextBlock Text="{Binding LatestTitle}"
                                                        Opacity="0.6"
+                                                       TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{Binding MachineLabel}"
+                                                       Foreground="{StaticResource AIMemoryGreenBrush}"
+                                                       Opacity="0.85"
                                                        TextTrimming="CharacterEllipsis" />
                                         </StackPanel>
                                         <TextBlock Grid.Column="1"

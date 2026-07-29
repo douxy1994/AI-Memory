@@ -471,6 +471,79 @@ public sealed class CoreTests : IDisposable
     }
 
     [Fact]
+    public void MachineGroupingDetectsPlatformsAndAppliesNamesAndOverrides()
+    {
+        var now = DateTimeOffset.Parse("2026-07-29T04:00:00Z");
+        var conversations = new[]
+        {
+            new ConversationSummary(
+                "windows",
+                "windows-repo",
+                "codex",
+                "source-windows",
+                "Windows work",
+                now.AddMinutes(-3),
+                now.AddMinutes(-3),
+                null,
+                @"C:\src\AI-Memory"),
+            new ConversationSummary(
+                "mac",
+                "mac-repo",
+                "claude",
+                "source-mac",
+                "Mac work",
+                now.AddMinutes(-2),
+                now.AddMinutes(-2),
+                null,
+                "/Users/alvis/AI-Memory"),
+            new ConversationSummary(
+                "linux",
+                "linux-repo",
+                "gemini",
+                "source-linux",
+                "Linux work",
+                now.AddMinutes(-1),
+                now.AddMinutes(-1),
+                null,
+                "/home/alvis/AI-Memory"),
+        };
+        var settings = new AppSettings
+        {
+            MachineGroupNames =
+            {
+                ["macos"] = "MacBook Pro",
+            },
+            MachineGroupOverrides =
+            {
+                ["/home/alvis/AI-Memory"] = "macos",
+            },
+        };
+
+        var service = new MachineGroupingService();
+        var groups = service.Build(conversations, settings);
+
+        Assert.Equal("windows", MachineGroupingService.DetectMachineId(
+            @"C:\src\AI-Memory"));
+        Assert.Equal("macos", MachineGroupingService.DetectMachineId(
+            "/Volumes/Work/AI-Memory"));
+        Assert.Equal("linux", MachineGroupingService.DetectMachineId(
+            "/opt/ai-memory"));
+        Assert.Equal("internal", MachineGroupingService.DetectMachineId(
+            "chatmem://local"));
+        Assert.Equal("other", MachineGroupingService.DetectMachineId(
+            "relative/project"));
+        Assert.Equal(2, groups.Count);
+        Assert.Equal("MacBook Pro", groups[0].Label);
+        Assert.Equal(2, groups[0].ConversationCount);
+        Assert.Contains(
+            groups[0].Projects,
+            project => project.Path == "/home/alvis/AI-Memory"
+                && project.MachineId == "macos"
+                && project.MachineLabel == "MacBook Pro");
+        Assert.Equal("Windows", groups[1].Label);
+    }
+
+    [Fact]
     public async Task SettingsNormalizeAndPersistWithoutDroppingExtensions()
     {
         var path = Path.Combine(_root, "settings.json");

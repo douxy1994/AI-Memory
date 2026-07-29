@@ -10,6 +10,8 @@ public sealed partial class WorkbenchPage : Page
 {
     private MainWindow? _window;
     private IReadOnlyList<ConversationSummary> _allConversations = [];
+    private AppSettings _settings = new();
+    private readonly MachineGroupingService _machineGrouping = new();
     private bool _loadingSources;
 
     public WorkbenchPage() => InitializeComponent();
@@ -24,6 +26,7 @@ public sealed partial class WorkbenchPage : Page
     {
         if (_window is null) return;
         _allConversations = await _window.Conversations.ListAsync(limit: 5_000);
+        _settings = await _window.Settings.LoadAsync();
         AllConversationCount.Text = _allConversations.Count.ToString();
         ReloadSourceOptions();
         ReloadConversationSections();
@@ -86,15 +89,15 @@ public sealed partial class WorkbenchPage : Page
             ? Visibility.Visible
             : Visibility.Collapsed;
 
-        var projects = filtered
-            .GroupBy(value => string.IsNullOrWhiteSpace(value.ProjectPath)
-                ? value.RepoId
-                : value.ProjectPath)
-            .Select(group => new ProjectRow(group.Key, group.ToArray()))
+        var projects = _machineGrouping
+            .Build(filtered, _settings)
+            .SelectMany(group => group.Projects)
+            .Select(project => new ProjectRow(project))
             .OrderByDescending(value => value.Latest.UpdatedAt)
             .Take(8)
             .ToArray();
         ProjectList.ItemsSource = projects;
+        ManageMachineGroupsButton.IsEnabled = projects.Length > 0;
         NoProjectsText.Visibility = projects.Length == 0
             ? Visibility.Visible
             : Visibility.Collapsed;
@@ -153,6 +156,186 @@ public sealed partial class WorkbenchPage : Page
 
     private void History_Click(object sender, RoutedEventArgs args) =>
         Frame.Navigate(typeof(HistoryPage), _window);
+
+    private async void ManageMachineGroups_Click(
+        object sender,
+        RoutedEventArgs args)
+    {
+        if (_window is null) return;
+        var groups = _machineGrouping.Build(_allConversations, _settings);
+        if (groups.Count == 0)
+        {
+            ShowStatus("电脑分组", "当前没有可管理的项目。");
+            return;
+        }
+
+        var knownMachineIds = groups
+            .Select(group => group.Id)
+            .Concat(groups.SelectMany(group => group.Projects)
+                .Select(project =>
+                    MachineGroupingService.DetectMachineId(project.Path)))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        var choices = knownMachineIds
+            .Select(id => new MachineChoice(
+                id,
+                _machineGrouping.LabelFor(id, _settings)))
+            .OrderBy(choice => choice.Label, StringComparer.CurrentCulture)
+            .ToArray();
+        var nameFields = new Dictionary<string, TextBox>(
+            StringComparer.OrdinalIgnoreCase);
+        var mergeFields = new Dictionary<string, ComboBox>(
+            StringComparer.OrdinalIgnoreCase);
+        var projectFields = new Dictionary<string, ComboBox>(
+            StringComparer.OrdinalIgnoreCase);
+        var content = new StackPanel { Spacing = 16 };
+        content.Children.Add(new TextBlock
+        {
+            Text = "重命名电脑，或把项目移动到另一个电脑分组。"
+                + "这里只改变 AI Memory 的展示，不修改原始路径。",
+            TextWrapping = TextWrapping.Wrap,
+            Opacity = 0.65,
+        });
+
+        foreach (var group in groups)
+        {
+            var section = new StackPanel { Spacing = 10 };
+            var nameField = new TextBox
+            {
+                Header = "电脑名称",
+                Text = group.Label,
+                PlaceholderText = group.Label,
+            };
+            nameFields[group.Id] = nameField;
+            section.Children.Add(nameField);
+            if (choices.Length > 1)
+            {
+                var mergeChoices = new[]
+                    {
+                        new MachineChoice("", "不合并"),
+                    }
+                    .Concat(choices.Where(choice => !choice.Id.Equals(
+                        group.Id,
+                        StringComparison.OrdinalIgnoreCase)))
+                    .ToArray();
+                var mergeField = new ComboBox
+                {
+                    Header = "合并电脑",
+                    ItemsSource = mergeChoices,
+                    DisplayMemberPath = nameof(MachineChoice.Label),
+                    SelectedIndex = 0,
+                    HorizontalAlignment = HorizontalAlignment.Stretch,
+                };
+                mergeFields[group.Id] = mergeField;
+                section.Children.Add(mergeField);
+            }
+
+            foreach (var project in group.Projects)
+            {
+                var row = new StackPanel { Spacing = 5 };
+                row.Children.Add(new TextBlock
+                {
+                    Text = $"{project.Label} · {project.Count} 条",
+                    FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+                    TextTrimming = TextTrimming.CharacterEllipsis,
+                });
+                row.Children.Add(new TextBlock
+                {
+                    Text = project.Path,
+                    Opacity = 0.55,
+                    TextTrimming = TextTrimming.CharacterEllipsis,
+                });
+                var target = new ComboBox
+                {
+                    Header = "所属电脑",
+                    ItemsSource = choices,
+                    DisplayMemberPath = nameof(MachineChoice.Label),
+                    HorizontalAlignment = HorizontalAlignment.Stretch,
+                };
+                target.SelectedItem = choices.First(
+                    choice => choice.Id.Equals(
+                        project.MachineId,
+                        StringComparison.OrdinalIgnoreCase));
+                projectFields[project.Path] = target;
+                row.Children.Add(target);
+                section.Children.Add(row);
+            }
+
+            content.Children.Add(section);
+        }
+
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = "管理电脑分组",
+            Content = new ScrollViewer
+            {
+                Content = content,
+                MaxHeight = 520,
+                MinWidth = 620,
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            },
+            PrimaryButtonText = "保存",
+            SecondaryButtonText = "恢复自动分组",
+            CloseButtonText = "取消",
+            DefaultButton = ContentDialogButton.Primary,
+        };
+        var result = await dialog.ShowAsync();
+        if (result == ContentDialogResult.None) return;
+
+        if (result == ContentDialogResult.Secondary)
+        {
+            _settings.MachineGroupOverrides.Clear();
+            await _window.Settings.SaveAsync(_settings);
+            await ReloadAsync();
+            ShowStatus("电脑分组", "已恢复按项目路径自动分组。");
+            return;
+        }
+
+        foreach (var (id, field) in nameFields)
+        {
+            var name = field.Text.Trim();
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                _settings.MachineGroupNames.Remove(id);
+            }
+            else
+            {
+                _settings.MachineGroupNames[id] = name;
+            }
+        }
+        foreach (var (path, field) in projectFields)
+        {
+            if (field.SelectedItem is not MachineChoice choice) continue;
+            var automaticId = MachineGroupingService.DetectMachineId(path);
+            if (choice.Id.Equals(
+                    automaticId,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                _settings.MachineGroupOverrides.Remove(path);
+            }
+            else
+            {
+                _settings.MachineGroupOverrides[path] = choice.Id;
+            }
+        }
+        foreach (var group in groups)
+        {
+            if (!mergeFields.TryGetValue(group.Id, out var field)
+                || field.SelectedItem is not MachineChoice choice
+                || string.IsNullOrWhiteSpace(choice.Id))
+            {
+                continue;
+            }
+            foreach (var project in group.Projects)
+            {
+                _settings.MachineGroupOverrides[project.Path] = choice.Id;
+            }
+        }
+        await _window.Settings.SaveAsync(_settings);
+        await ReloadAsync();
+        ShowStatus("电脑分组", "电脑名称和项目分组已保存。");
+    }
 
     private async void Sync_Click(object sender, RoutedEventArgs args)
     {
@@ -213,20 +396,20 @@ public sealed partial class WorkbenchPage : Page
 }
 
 public sealed record SourceFilter(string Id, string Label);
+public sealed record MachineChoice(string Id, string Label);
 
 public sealed class ProjectRow
 {
-    public ProjectRow(
-        string projectPath,
-        IReadOnlyList<ConversationSummary> conversations)
+    public ProjectRow(MachineProjectGroup project)
     {
-        ProjectPath = projectPath;
-        Latest = conversations.OrderByDescending(
-            value => value.UpdatedAt).First();
-        Count = conversations.Count;
+        ProjectPath = project.Path;
+        MachineLabel = project.MachineLabel;
+        Latest = project.Latest;
+        Count = project.Count;
     }
 
     public string ProjectPath { get; }
+    public string MachineLabel { get; }
     public ConversationSummary Latest { get; }
     public int Count { get; }
     public string DisplayName => string.IsNullOrWhiteSpace(ProjectPath)
