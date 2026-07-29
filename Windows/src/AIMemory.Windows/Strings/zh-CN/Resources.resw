@@ -66,6 +66,28 @@
   <data name="OpenedAboutCheckingUpdates" xml:space="preserve"><value>已打开“关于 AI Memory”并开始检查更新。</value></data>
   <data name="DiagnosticsReadFailed" xml:space="preserve"><value>读取诊断失败：{0}</value></data>
   <data name="DiagnosticsCopied" xml:space="preserve"><value>诊断信息已复制。</value></data>
+  <data name="UpgradeReadinessPassed" xml:space="preserve"><value>升级就绪检查通过。</value></data>
+  <data name="UpgradeReadinessWarnings" xml:space="preserve"><value>发现 {0} 个需要处理的项目。</value></data>
+  <data name="UpgradeReadinessErrors" xml:space="preserve"><value>发现 {0} 个阻断问题。</value></data>
+  <data name="UpgradeReadinessFailed" xml:space="preserve"><value>升级就绪检查失败：{0}</value></data>
+  <data name="ReadinessSettingsLabel" xml:space="preserve"><value>原生设置文件</value></data>
+  <data name="ReadinessWebDavProfileLabel" xml:space="preserve"><value>WebDAV 配置</value></data>
+  <data name="ReadinessWebDavPasswordLabel" xml:space="preserve"><value>WebDAV 密码</value></data>
+  <data name="ReadinessDatabaseLabel" xml:space="preserve"><value>记忆数据库</value></data>
+  <data name="ReadinessUnknownLabel" xml:space="preserve"><value>未知检查项</value></data>
+  <data name="ReadinessSettingsParsed" xml:space="preserve"><value>设置文件存在且可以解析。</value></data>
+  <data name="ReadinessSettingsDefaults" xml:space="preserve"><value>尚未生成设置文件；当前使用安全默认值。</value></data>
+  <data name="ReadinessSettingsInvalid" xml:space="preserve"><value>设置文件无法解析：{0}</value></data>
+  <data name="ReadinessWebDavComplete" xml:space="preserve"><value>服务器、用户名和远程目录均已配置。</value></data>
+  <data name="ReadinessWebDavIncomplete" xml:space="preserve"><value>WebDAV 已启用，但服务器、用户名或远程目录不完整。</value></data>
+  <data name="ReadinessWebDavDisabled" xml:space="preserve"><value>当前未启用 WebDAV 同步。</value></data>
+  <data name="ReadinessPasswordPresent" xml:space="preserve"><value>密码存在于 Windows 凭据保险箱。</value></data>
+  <data name="ReadinessPasswordMissing" xml:space="preserve"><value>凭据保险箱中没有对应密码，请重新输入并验证服务器。</value></data>
+  <data name="ReadinessPasswordUnavailable" xml:space="preserve"><value>无法读取 Windows 凭据保险箱：{0}</value></data>
+  <data name="ReadinessPasswordNotRequired" xml:space="preserve"><value>当前同步模式不需要 WebDAV 密码。</value></data>
+  <data name="ReadinessDatabaseValid" xml:space="preserve"><value>数据库可以打开，结构版本 {0} 有效。</value></data>
+  <data name="ReadinessDatabaseInvalid" xml:space="preserve"><value>数据库无法验证：{0}</value></data>
+  <data name="ReadinessUnknownDetail" xml:space="preserve"><value>没有可用的检查详情。</value></data>
   <data name="DataDirectory" xml:space="preserve"><value>数据目录</value></data>
   <data name="BackupDirectory" xml:space="preserve"><value>备份目录</value></data>
   <data name="WindowsCannotOpenLocation" xml:space="preserve"><value>Windows 无法打开{0}。</value></data>
@@ -320,6 +342,9 @@
   <data name="SettingsSaveUpdate.Label" xml:space="preserve"><value>保存更新设置</value></data>
   <data name="SettingsCheckUpdateAbout.Label" xml:space="preserve"><value>在关于中检查更新</value></data>
   <data name="SettingsUpdateStatus.Text" xml:space="preserve"><value>更新检查与安装统一在“关于 AI Memory”窗口中完成。</value></data>
+  <data name="SettingsReadinessTitle.Text" xml:space="preserve"><value>升级就绪检查</value></data>
+  <data name="SettingsReadinessHint.Text" xml:space="preserve"><value>验证设置文件、WebDAV 配置、凭据和数据库，提前发现会阻断升级的问题。</value></data>
+  <data name="SettingsRunReadiness.Label" xml:space="preserve"><value>运行升级就绪检查</value></data>
   <data name="SettingsDiagnosticsTitle.Text" xml:space="preserve"><value>运行诊断</value></data>
   <data name="SettingsDiagnosticsHint.Text" xml:space="preserve"><value>以下内容来自当前数据库与本机环境，可用于核对版本、数据和 Agent 状态。</value></data>
   <data name="SettingsRefreshDiagnostics.Label" xml:space="preserve"><value>刷新诊断</value></data>

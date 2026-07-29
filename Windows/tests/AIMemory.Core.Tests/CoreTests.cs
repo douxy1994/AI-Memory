@@ -65,6 +65,115 @@ public sealed class CoreTests : IDisposable
         Assert.Equal("safe_to_sync", ready.RecommendedAction);
     }
 
+    [Fact]
+    public async Task UpgradeReadinessPassesWithDefaultsAndValidDatabase()
+    {
+        var settingsPath = Path.Combine(
+            _root,
+            "readiness-defaults",
+            "settings.json");
+        var database = new AIMemoryDatabase(
+            Path.Combine(_root, "readiness-defaults", "aimemory.db"));
+        await database.InitializeAsync();
+
+        var report = await new UpgradeReadinessService(
+            database,
+            new SettingsStore(settingsPath),
+            settingsPath).CheckAsync(_ => false);
+
+        Assert.Equal("ok", report.Status);
+        Assert.Equal(0, report.ErrorCount);
+        Assert.Equal(0, report.WarningCount);
+        Assert.Contains(
+            report.Checks,
+            value => value.Key == "settings"
+                && value.DetailCode == "settings_defaults");
+        Assert.Contains(
+            report.Checks,
+            value => value.Key == "memory_store"
+                && value.DetailCode == "database_valid");
+    }
+
+    [Fact]
+    public async Task UpgradeReadinessWarnsForIncompleteWebDavCredentials()
+    {
+        var root = Path.Combine(_root, "readiness-webdav");
+        var settingsPath = Path.Combine(root, "settings.json");
+        var settingsStore = new SettingsStore(settingsPath);
+        await settingsStore.SaveAsync(new AppSettings
+        {
+            Sync = new SyncSettings
+            {
+                Provider = "webdav",
+                WebdavHost = "dav.example.test",
+                Username = "alvis",
+                RemotePath = "",
+            },
+        });
+        var database = new AIMemoryDatabase(
+            Path.Combine(root, "aimemory.db"));
+        await database.InitializeAsync();
+
+        var report = await new UpgradeReadinessService(
+            database,
+            settingsStore,
+            settingsPath).CheckAsync(_ => false);
+
+        Assert.Equal("warning", report.Status);
+        Assert.Equal(0, report.ErrorCount);
+        Assert.Equal(2, report.WarningCount);
+        Assert.Contains(
+            report.Checks,
+            value => value.DetailCode == "webdav_incomplete");
+        Assert.Contains(
+            report.Checks,
+            value => value.DetailCode == "password_missing");
+    }
+
+    [Fact]
+    public async Task UpgradeReadinessReportsInvalidSettingsAsBlocking()
+    {
+        var root = Path.Combine(_root, "readiness-invalid-settings");
+        Directory.CreateDirectory(root);
+        var settingsPath = Path.Combine(root, "settings.json");
+        await File.WriteAllTextAsync(settingsPath, "{invalid-json");
+        var database = new AIMemoryDatabase(
+            Path.Combine(root, "aimemory.db"));
+        await database.InitializeAsync();
+
+        var report = await new UpgradeReadinessService(
+            database,
+            new SettingsStore(settingsPath),
+            settingsPath).CheckAsync(_ => true);
+
+        Assert.Equal("error", report.Status);
+        Assert.Equal(1, report.ErrorCount);
+        Assert.Contains(
+            report.Checks,
+            value => value.DetailCode == "settings_invalid");
+    }
+
+    [Fact]
+    public async Task UpgradeReadinessReportsInvalidDatabaseAsBlocking()
+    {
+        var root = Path.Combine(_root, "readiness-invalid-database");
+        Directory.CreateDirectory(root);
+        var databasePath = Path.Combine(root, "aimemory.db");
+        await File.WriteAllTextAsync(databasePath, "not-a-database");
+        var settingsPath = Path.Combine(root, "settings.json");
+
+        var report = await new UpgradeReadinessService(
+            new AIMemoryDatabase(databasePath),
+            new SettingsStore(settingsPath),
+            settingsPath).CheckAsync(_ => false);
+
+        Assert.Equal("error", report.Status);
+        Assert.Equal(1, report.ErrorCount);
+        Assert.Contains(
+            report.Checks,
+            value => value.DetailCode == "database_invalid");
+    }
+
     [Theory]
     [InlineData(null, "system", "")]
     [InlineData("", "system", "")]

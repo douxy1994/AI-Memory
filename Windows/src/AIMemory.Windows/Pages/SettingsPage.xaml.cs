@@ -872,6 +872,70 @@ public sealed partial class SettingsPage : Page
         RoutedEventArgs args) =>
         await RefreshDiagnosticsAsync();
 
+    private async void RunReadiness_Click(
+        object sender,
+        RoutedEventArgs args)
+    {
+        if (_window is null) return;
+        RunReadinessButton.IsEnabled = false;
+        ReadinessProgress.IsActive = true;
+        ReadinessProgress.Visibility = Visibility.Visible;
+        try
+        {
+            var report = await new UpgradeReadinessService(
+                _window.Database,
+                _window.Settings,
+                DataPaths.SettingsPath).CheckAsync(username =>
+            {
+                var stored = _credentials.Load();
+                return stored is not null
+                    && string.Equals(
+                        stored.Value.Username,
+                        username,
+                        StringComparison.Ordinal)
+                    && !string.IsNullOrEmpty(stored.Value.Password);
+            });
+            ReadinessList.ItemsSource = report.Checks
+                .Select(value =>
+                    new LocalizedUpgradeReadinessCheck(value))
+                .ToArray();
+            ReadinessSummary.Text = report.Status switch
+            {
+                "error" => LocalizationService.Format(
+                    "UpgradeReadinessErrors",
+                    report.ErrorCount),
+                "warning" => LocalizationService.Format(
+                    "UpgradeReadinessWarnings",
+                    report.WarningCount),
+                _ => LocalizationService.Get(
+                    "UpgradeReadinessPassed"),
+            };
+            ReadinessSummary.Visibility = Visibility.Visible;
+            Show(
+                ReadinessSummary.Text,
+                report.Status switch
+                {
+                    "error" => InfoBarSeverity.Error,
+                    "warning" => InfoBarSeverity.Warning,
+                    _ => InfoBarSeverity.Success,
+                });
+        }
+        catch (Exception exception)
+        {
+            ReadinessSummary.Text = LocalizationService.Format(
+                "UpgradeReadinessFailed",
+                exception.Message);
+            ReadinessSummary.Visibility = Visibility.Visible;
+            Show(ReadinessSummary.Text, InfoBarSeverity.Error);
+        }
+        finally
+        {
+            RunReadinessButton.IsEnabled = true;
+            ReadinessProgress.IsActive = false;
+            ReadinessProgress.Visibility = Visibility.Collapsed;
+        }
+    }
+
     private async Task RefreshDiagnosticsAsync()
     {
         if (_window is null) return;

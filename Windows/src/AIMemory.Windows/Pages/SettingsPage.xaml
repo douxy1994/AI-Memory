@@ -433,6 +433,63 @@
 
                         <Border Style="{StaticResource CardStyle}">
                             <StackPanel Spacing="14">
+                                <TextBlock x:Uid="SettingsReadinessTitle"
+                                           Text="升级就绪检查"
+                                           FontSize="17"
+                                           FontWeight="SemiBold" />
+                                <TextBlock x:Uid="SettingsReadinessHint"
+                                           Text="验证设置文件、WebDAV 配置、凭据和数据库，提前发现会阻断升级的问题。"
+                                           TextWrapping="Wrap"
+                                           Opacity="0.6" />
+                                <StackPanel Orientation="Horizontal"
+                                            Spacing="10">
+                                    <AppBarButton x:Name="RunReadinessButton"
+                                                  x:Uid="SettingsRunReadiness"
+                                                  Icon="Accept"
+                                                  Label="运行升级就绪检查"
+                                                  Click="RunReadiness_Click" />
+                                    <ProgressRing x:Name="ReadinessProgress"
+                                                  Width="20"
+                                                  Height="20"
+                                                  IsActive="False"
+                                                  Visibility="Collapsed"
+                                                  VerticalAlignment="Center" />
+                                    <TextBlock x:Name="ReadinessSummary"
+                                               Visibility="Collapsed"
+                                               TextWrapping="Wrap"
+                                               FontWeight="SemiBold"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                                <ItemsControl x:Name="ReadinessList">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Padding="0,7"
+                                                  ColumnSpacing="10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="24" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding StatusGlyph}"
+                                                           FontSize="16"
+                                                           FontWeight="SemiBold"
+                                                           HorizontalAlignment="Center" />
+                                                <StackPanel Grid.Column="1"
+                                                            Spacing="2">
+                                                    <TextBlock Text="{Binding Label}"
+                                                               FontWeight="SemiBold" />
+                                                    <TextBlock Text="{Binding Detail}"
+                                                               TextWrapping="Wrap"
+                                                               Opacity="0.65" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource CardStyle}">
+                            <StackPanel Spacing="14">
                                 <TextBlock x:Uid="SettingsDiagnosticsTitle" Text="运行诊断"
                                            FontSize="17"
                                            FontWeight="SemiBold" />

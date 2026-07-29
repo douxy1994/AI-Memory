@@ -1,5 +1,6 @@
 using Microsoft.Windows.ApplicationModel.Resources;
 using AIMemory.Core.Models;
+using AIMemory.Core.Services;
 
 namespace AIMemory.Windows.Services;
 
@@ -45,4 +46,52 @@ public sealed record LocalizedAgentIntegration(
     public string ActionLabel => LocalizationService.Get(
         Value.IsIntegrated ? "Disable" : "Enable");
     public bool CanToggle => Value.CanToggle;
+}
+
+public sealed record LocalizedUpgradeReadinessCheck(
+    UpgradeReadinessCheck Value)
+{
+    public string Label => LocalizationService.Get(Value.Key switch
+    {
+        "settings" => "ReadinessSettingsLabel",
+        "webdav_profile" => "ReadinessWebDavProfileLabel",
+        "webdav_password" => "ReadinessWebDavPasswordLabel",
+        "memory_store" => "ReadinessDatabaseLabel",
+        _ => "ReadinessUnknownLabel",
+    });
+
+    public string Detail
+    {
+        get
+        {
+            var key = Value.DetailCode switch
+            {
+                "settings_parsed" => "ReadinessSettingsParsed",
+                "settings_defaults" => "ReadinessSettingsDefaults",
+                "settings_invalid" => "ReadinessSettingsInvalid",
+                "webdav_complete" => "ReadinessWebDavComplete",
+                "webdav_incomplete" => "ReadinessWebDavIncomplete",
+                "webdav_disabled" => "ReadinessWebDavDisabled",
+                "password_present" => "ReadinessPasswordPresent",
+                "password_missing" => "ReadinessPasswordMissing",
+                "password_unavailable" => "ReadinessPasswordUnavailable",
+                "password_not_required" => "ReadinessPasswordNotRequired",
+                "database_valid" => "ReadinessDatabaseValid",
+                "database_invalid" => "ReadinessDatabaseInvalid",
+                _ => "ReadinessUnknownDetail",
+            };
+            return Value.DetailArgument is null
+                ? LocalizationService.Get(key)
+                : LocalizationService.Format(
+                    key,
+                    Value.DetailArgument);
+        }
+    }
+
+    public string StatusGlyph => Value.Status switch
+    {
+        "ok" => "✓",
+        "error" => "×",
+        _ => "!",
+    };
 }

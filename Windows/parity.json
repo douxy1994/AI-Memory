@@ -34,6 +34,7 @@
     { "id": "localized-ui", "status": "implemented", "evidence": "MRT Core .resw and x:Uid resources cover static XAML, dynamic feedback and package description in zh-CN and en-US; system/default and explicit language preferences persist compatibly" },
     { "id": "font-preferences", "status": "implemented", "evidence": "application-wide WinUI font resource with system, Noto Sans CJK SC, Noto Serif CJK SC and LXGW WenKai compatibility" },
     { "id": "update-and-diagnostics", "status": "implemented", "evidence": "About-centered update flow, UpdateService, DiagnosticsService and five-second success feedback" },
+    { "id": "upgrade-readiness", "status": "implemented", "evidence": "Settings JSON parsing, WebDAV profile, Credential Locker presence, SQLite schema and quick_check are evaluated with localized per-item results" },
     { "id": "x64-arm64-builds", "status": "implemented", "evidence": "GitHub Actions run 30337018301 built WinUI 3 x64 and ARM64 successfully" },
     { "id": "mcp-runtime-smoke", "status": "implemented", "evidence": "GitHub Actions run 30337018301 successfully exercised the packaged aimemory-mcp helper" },
     { "id": "desktop-lifecycle-smoke", "status": "verification-required", "evidence": "smoke-desktop.ps1 verifies one process, close-to-notification-area, and relaunch recovery; requires an interactive Windows 11 session" }

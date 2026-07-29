@@ -7,6 +7,7 @@ windows_dir="${repo_dir}/Windows"
 test -f "${windows_dir}/AIMemory.Windows.slnx"
 test -f "${windows_dir}/src/AIMemory.Windows/Package.appxmanifest"
 test -f "${windows_dir}/src/AIMemory.Core/Persistence/SchemaV1.sql"
+test -f "${windows_dir}/src/AIMemory.Core/Services/UpgradeReadinessService.cs"
 test -f "${windows_dir}/parity.json"
 test -f "${windows_dir}/scripts/smoke-desktop.ps1"
 
@@ -40,6 +41,10 @@ rg -q 'ms-settings:startupapps' \
 rg -Fq 'new FolderPicker(_window.WindowId)' \
   "${windows_dir}/src/AIMemory.Windows/Pages/SettingsPage.xaml.cs"
 rg -q 'RunBulkAgentIntegrationAsync' \
+  "${windows_dir}/src/AIMemory.Windows/Pages/SettingsPage.xaml.cs"
+rg -q 'PRAGMA quick_check' \
+  "${windows_dir}/src/AIMemory.Core/Services/UpgradeReadinessService.cs"
+rg -q 'RunReadiness_Click' \
   "${windows_dir}/src/AIMemory.Windows/Pages/SettingsPage.xaml.cs"
 rg -q 'OrderByDescending\(value => value.detected\)' \
   "${windows_dir}/src/AIMemory.Core/Services/AgentCatalog.cs"

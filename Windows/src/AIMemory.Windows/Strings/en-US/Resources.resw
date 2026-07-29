@@ -66,6 +66,28 @@
   <data name="OpenedAboutCheckingUpdates" xml:space="preserve"><value>Opened About AI Memory and started checking for updates.</value></data>
   <data name="DiagnosticsReadFailed" xml:space="preserve"><value>Could not read diagnostics: {0}</value></data>
   <data name="DiagnosticsCopied" xml:space="preserve"><value>Diagnostics copied.</value></data>
+  <data name="UpgradeReadinessPassed" xml:space="preserve"><value>Upgrade readiness check passed.</value></data>
+  <data name="UpgradeReadinessWarnings" xml:space="preserve"><value>Found {0} items to review.</value></data>
+  <data name="UpgradeReadinessErrors" xml:space="preserve"><value>Found {0} blocking issues.</value></data>
+  <data name="UpgradeReadinessFailed" xml:space="preserve"><value>Upgrade readiness check failed: {0}</value></data>
+  <data name="ReadinessSettingsLabel" xml:space="preserve"><value>Native Settings File</value></data>
+  <data name="ReadinessWebDavProfileLabel" xml:space="preserve"><value>WebDAV Configuration</value></data>
+  <data name="ReadinessWebDavPasswordLabel" xml:space="preserve"><value>WebDAV Password</value></data>
+  <data name="ReadinessDatabaseLabel" xml:space="preserve"><value>Memory Database</value></data>
+  <data name="ReadinessUnknownLabel" xml:space="preserve"><value>Unknown Check</value></data>
+  <data name="ReadinessSettingsParsed" xml:space="preserve"><value>The settings file exists and can be parsed.</value></data>
+  <data name="ReadinessSettingsDefaults" xml:space="preserve"><value>No settings file exists yet; safe defaults are in use.</value></data>
+  <data name="ReadinessSettingsInvalid" xml:space="preserve"><value>The settings file cannot be parsed: {0}</value></data>
+  <data name="ReadinessWebDavComplete" xml:space="preserve"><value>The server, username, and remote folder are configured.</value></data>
+  <data name="ReadinessWebDavIncomplete" xml:space="preserve"><value>WebDAV is enabled, but the server, username, or remote folder is incomplete.</value></data>
+  <data name="ReadinessWebDavDisabled" xml:space="preserve"><value>WebDAV sync is not currently enabled.</value></data>
+  <data name="ReadinessPasswordPresent" xml:space="preserve"><value>The password exists in Windows Credential Locker.</value></data>
+  <data name="ReadinessPasswordMissing" xml:space="preserve"><value>No matching password exists in Credential Locker. Enter it again and verify the server.</value></data>
+  <data name="ReadinessPasswordUnavailable" xml:space="preserve"><value>Windows Credential Locker could not be read: {0}</value></data>
+  <data name="ReadinessPasswordNotRequired" xml:space="preserve"><value>The current sync mode does not require a WebDAV password.</value></data>
+  <data name="ReadinessDatabaseValid" xml:space="preserve"><value>The database opens successfully and schema version {0} is valid.</value></data>
+  <data name="ReadinessDatabaseInvalid" xml:space="preserve"><value>The database could not be validated: {0}</value></data>
+  <data name="ReadinessUnknownDetail" xml:space="preserve"><value>No check details are available.</value></data>
   <data name="DataDirectory" xml:space="preserve"><value>the data folder</value></data>
   <data name="BackupDirectory" xml:space="preserve"><value>the backup folder</value></data>
   <data name="WindowsCannotOpenLocation" xml:space="preserve"><value>Windows could not open {0}.</value></data>
@@ -320,6 +342,9 @@
   <data name="SettingsSaveUpdate.Label" xml:space="preserve"><value>Save Update Settings</value></data>
   <data name="SettingsCheckUpdateAbout.Label" xml:space="preserve"><value>Check in About</value></data>
   <data name="SettingsUpdateStatus.Text" xml:space="preserve"><value>Update checking and installation are handled in the About AI Memory window.</value></data>
+  <data name="SettingsReadinessTitle.Text" xml:space="preserve"><value>Upgrade Readiness Check</value></data>
+  <data name="SettingsReadinessHint.Text" xml:space="preserve"><value>Validate the settings file, WebDAV configuration, credentials, and database to find issues that could block an upgrade.</value></data>
+  <data name="SettingsRunReadiness.Label" xml:space="preserve"><value>Run Upgrade Readiness Check</value></data>
   <data name="SettingsDiagnosticsTitle.Text" xml:space="preserve"><value>Diagnostics</value></data>
   <data name="SettingsDiagnosticsHint.Text" xml:space="preserve"><value>This report reflects the current database and machine environment for checking versions, data, and Agent status.</value></data>
   <data name="SettingsRefreshDiagnostics.Label" xml:space="preserve"><value>Refresh Diagnostics</value></data>

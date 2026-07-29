@@ -38,6 +38,8 @@ AI Memory 的 Windows 11 原生版本，使用 C#、WinUI 3 与 Windows App SDK 
 - Windows Credential Locker 保存 WebDAV 密码；
 - 登录启动开关；若曾被用户从 Windows“启动应用”中禁用，会直接提供系统
   设置入口恢复，不伪装成可由应用绕过的开关；
+- 升级就绪检查会逐项验证设置文件、WebDAV 配置、Credential Locker 密码、
+  SQLite 结构版本与 `quick_check`，并明确区分通过、提醒和阻断问题；
 - 84 种主流 Agent、通用 AI CLI 与本地模型 CLI 安装检测，兼容无扩展、
   `.exe` 与 `.cmd` 启动器；
   已安装项优先，未安装项即使存在旧配置也保持关闭；
