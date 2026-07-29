@@ -38,6 +38,9 @@ public sealed partial class SettingsPage : Page
             SyncFolderBox.Text = _settings.Sync.SyncFolder;
             AutoUpdateToggle.IsOn = _settings.AutoCheckUpdates;
             UpdateFeedBox.Text = _settings.UpdateFeedUrl;
+            AutoBackupToggle.IsOn = _settings.AutoBackupEnabled;
+            AutoBackupIntervalBox.Value =
+                _settings.AutoBackupIntervalMinutes;
             if (_credentials.Load() is { } stored)
             {
                 UsernameBox.Text = stored.Username;
@@ -115,6 +118,33 @@ public sealed partial class SettingsPage : Page
         catch (Exception exception)
         {
             Show($"更新启动设置失败：{exception.Message}", InfoBarSeverity.Error);
+        }
+    }
+
+    private async void SaveGeneralSettings_Click(
+        object sender,
+        RoutedEventArgs args)
+    {
+        if (_window is null) return;
+        _settings.AutoBackupEnabled = AutoBackupToggle.IsOn;
+        _settings.AutoBackupIntervalMinutes = double.IsNaN(
+                AutoBackupIntervalBox.Value)
+            ? 30
+            : (int)AutoBackupIntervalBox.Value;
+        try
+        {
+            await _window.Settings.SaveAsync(_settings);
+            _window.ConfigureAutomaticBackup(_settings);
+            Show(
+                _settings.AutoBackupEnabled
+                    ? $"自动备份已开启，每 {_settings.AutoBackupIntervalMinutes} 分钟检查一次变化。"
+                    : "自动备份已关闭。",
+                InfoBarSeverity.Success);
+        }
+        catch (Exception exception)
+        {
+            Show($"保存自动备份设置失败：{exception.Message}",
+                InfoBarSeverity.Error);
         }
     }
 
@@ -218,9 +248,13 @@ public sealed partial class SettingsPage : Page
         if (_window is null) return;
         try
         {
-            var path = await new BackupService(_window.Database)
-                .CreateRecoveryPointAsync();
-            Show($"恢复点已创建：{path}", InfoBarSeverity.Success);
+            var result = await new BackupService(_window.Database)
+                .CreateRecoveryPointDetailedAsync("manual");
+            Show(
+                result.Created
+                    ? $"恢复点已创建：{result.Path}"
+                    : $"数据没有变化，已保留现有恢复点：{result.Path}",
+                InfoBarSeverity.Success);
         }
         catch (Exception exception)
         {
@@ -299,6 +333,10 @@ public sealed partial class SettingsPage : Page
         SyncFolderBox.Text = _settings.Sync.SyncFolder;
         AutoUpdateToggle.IsOn = _settings.AutoCheckUpdates;
         UpdateFeedBox.Text = _settings.UpdateFeedUrl;
+        AutoBackupToggle.IsOn = _settings.AutoBackupEnabled;
+        AutoBackupIntervalBox.Value =
+            _settings.AutoBackupIntervalMinutes;
+        _window.ConfigureAutomaticBackup(_settings);
         if (_credentials.Load() is { } stored)
         {
             UsernameBox.Text = stored.Username;

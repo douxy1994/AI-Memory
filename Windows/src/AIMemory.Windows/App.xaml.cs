@@ -28,6 +28,8 @@ public sealed partial class App : Application
         await database.InitializeAsync();
         _window = new MainWindow(database);
         _window.Activate();
+        _window.ConfigureAutomaticBackup(
+            await _window.Settings.LoadAsync());
         _ = CheckForUpdatesAtLaunchAsync();
     }
 

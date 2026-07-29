@@ -1,3 +1,4 @@
+using AIMemory.Core.Models;
 using AIMemory.Core.Persistence;
 using AIMemory.Core.Services;
 using AIMemory.Windows.Pages;
@@ -16,6 +17,7 @@ public sealed partial class MainWindow : Window
     public ConversationRepository Conversations { get; }
     public SettingsStore Settings { get; } = new();
     private AboutWindow? _aboutWindow;
+    private CancellationTokenSource? _automaticBackup;
 
     public MainWindow(AIMemoryDatabase database)
     {
@@ -33,6 +35,12 @@ public sealed partial class MainWindow : Window
         Navigation.SelectedItem = Navigation.MenuItems[0];
         Navigate("workbench");
         RegisterAccelerators();
+        Closed += (_, _) =>
+        {
+            _automaticBackup?.Cancel();
+            _automaticBackup?.Dispose();
+            _automaticBackup = null;
+        };
     }
 
     public void BringToFront()
@@ -40,6 +48,48 @@ public sealed partial class MainWindow : Window
         var handle = WindowNative.GetWindowHandle(this);
         NativeMethods.ShowWindow(handle, 9);
         NativeMethods.SetForegroundWindow(handle);
+    }
+
+    public void ConfigureAutomaticBackup(AppSettings settings)
+    {
+        _automaticBackup?.Cancel();
+        _automaticBackup?.Dispose();
+        _automaticBackup = null;
+        if (!settings.AutoBackupEnabled) return;
+
+        _automaticBackup = new CancellationTokenSource();
+        _ = RunAutomaticBackupAsync(
+            TimeSpan.FromMinutes(settings.AutoBackupIntervalMinutes),
+            _automaticBackup.Token);
+    }
+
+    private async Task RunAutomaticBackupAsync(
+        TimeSpan interval,
+        CancellationToken cancellationToken)
+    {
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                await Task.Delay(interval, cancellationToken);
+                await new BackupService(Database)
+                    .CreateRecoveryPointDetailedAsync(
+                        "automatic",
+                        10,
+                        cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+            catch (Exception exception)
+            {
+                DispatcherQueue.TryEnqueue(() =>
+                    ShowFeedback(
+                        $"自动备份失败：{exception.Message}",
+                        InfoBarSeverity.Error));
+            }
+        }
     }
 
     private void Navigation_SelectionChanged(

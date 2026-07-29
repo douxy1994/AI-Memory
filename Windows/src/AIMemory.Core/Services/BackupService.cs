@@ -1,7 +1,16 @@
 using AIMemory.Core.Persistence;
 using Microsoft.Data.Sqlite;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography;
+using System.Text.Json;
 
 namespace AIMemory.Core.Services;
+
+public sealed record BackupResult(
+    string Path,
+    bool Created,
+    bool DatabaseChanged,
+    bool SettingsChanged);
 
 public sealed class BackupService(
     AIMemoryDatabase database,
@@ -15,8 +24,16 @@ public sealed class BackupService(
 
     public async Task<string> CreateRecoveryPointAsync(
         CancellationToken cancellationToken = default)
+        => (await CreateRecoveryPointDetailedAsync(
+            "manual", 10, cancellationToken)).Path;
+
+    public async Task<BackupResult> CreateRecoveryPointDetailedAsync(
+        string reason,
+        int keep = 10,
+        CancellationToken cancellationToken = default)
     {
         Directory.CreateDirectory(_backupDirectory);
+        var previous = ListRecoveryPoints().FirstOrDefault();
         var stamp = DateTime.UtcNow.ToString("yyyyMMdd-HHmmss-fff");
         var candidate = Path.Combine(_backupDirectory, $"aimemory-{stamp}.db");
         if (File.Exists(candidate))
@@ -43,7 +60,86 @@ public sealed class BackupService(
         {
             File.Copy(_settingsPath, settingsCopy, true);
         }
-        return destination;
+        try
+        {
+            var databaseHash = await HashAsync(
+                destination, cancellationToken);
+            var settingsHash = File.Exists(settingsCopy)
+                ? await HashAsync(settingsCopy, cancellationToken)
+                : null;
+            var previousDatabaseHash = previous is null
+                ? null
+                : await HashAsync(previous, cancellationToken);
+            var previousSettings = previous is null
+                ? null
+                : MatchingSettingsPath(previous);
+            var previousSettingsHash =
+                previousSettings is not null
+                && File.Exists(previousSettings)
+                    ? await HashAsync(
+                        previousSettings, cancellationToken)
+                    : null;
+            var databaseChanged = !string.Equals(
+                databaseHash,
+                previousDatabaseHash,
+                StringComparison.Ordinal);
+            var settingsChanged = !string.Equals(
+                settingsHash,
+                previousSettingsHash,
+                StringComparison.Ordinal);
+
+            if (previous is not null
+                && !databaseChanged
+                && !settingsChanged)
+            {
+                File.Delete(destination);
+                File.Delete(settingsCopy);
+                return new BackupResult(
+                    previous, false, false, false);
+            }
+            if (previous is not null && !databaseChanged)
+            {
+                ReplaceWithHardLinkOrCopy(previous, destination);
+            }
+            if (previousSettings is not null
+                && File.Exists(previousSettings)
+                && !settingsChanged)
+            {
+                ReplaceWithHardLinkOrCopy(
+                    previousSettings, settingsCopy);
+            }
+            var manifest = new
+            {
+                schema_version = 2,
+                created_at = DateTimeOffset.UtcNow.ToString("O"),
+                reason,
+                source_database = database.Path,
+                database_sha256 = databaseHash,
+                settings_sha256 = settingsHash,
+                database_changed = databaseChanged,
+                settings_changed = settingsChanged,
+                storage_mode = "incremental-hardlink",
+            };
+            await File.WriteAllTextAsync(
+                MatchingManifestPath(destination),
+                JsonSerializer.Serialize(
+                    manifest,
+                    new JsonSerializerOptions { WriteIndented = true }),
+                cancellationToken);
+            Prune(Math.Clamp(keep, 1, 100));
+            return new BackupResult(
+                destination,
+                true,
+                databaseChanged,
+                settingsChanged);
+        }
+        catch
+        {
+            File.Delete(destination);
+            File.Delete(settingsCopy);
+            File.Delete(MatchingManifestPath(destination));
+            throw;
+        }
     }
 
     public IReadOnlyList<string> ListRecoveryPoints() =>
@@ -155,6 +251,60 @@ public sealed class BackupService(
             Path.GetDirectoryName(recoveryPoint)!,
             $"settings-{suffix}.json");
     }
+
+    private static string MatchingManifestPath(string recoveryPoint)
+    {
+        var fileName = Path.GetFileNameWithoutExtension(recoveryPoint);
+        var suffix = fileName.StartsWith("aimemory-", StringComparison.Ordinal)
+            ? fileName["aimemory-".Length..]
+            : fileName;
+        return Path.Combine(
+            Path.GetDirectoryName(recoveryPoint)!,
+            $"manifest-{suffix}.json");
+    }
+
+    private static async Task<string> HashAsync(
+        string path,
+        CancellationToken cancellationToken)
+    {
+        await using var stream = File.OpenRead(path);
+        return Convert.ToHexString(
+            await SHA256.HashDataAsync(stream, cancellationToken))
+            .ToLowerInvariant();
+    }
+
+    private static void ReplaceWithHardLinkOrCopy(
+        string source,
+        string destination)
+    {
+        File.Delete(destination);
+        if (OperatingSystem.IsWindows()
+            && CreateHardLink(destination, source, IntPtr.Zero))
+        {
+            return;
+        }
+        File.Copy(source, destination, true);
+    }
+
+    private void Prune(int keep)
+    {
+        foreach (var path in ListRecoveryPoints().Skip(keep))
+        {
+            File.Delete(path);
+            File.Delete(MatchingSettingsPath(path));
+            File.Delete(MatchingManifestPath(path));
+        }
+    }
+
+    [DllImport(
+        "kernel32.dll",
+        CharSet = CharSet.Unicode,
+        SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool CreateHardLink(
+        string fileName,
+        string existingFileName,
+        IntPtr securityAttributes);
 
     private static async Task ValidateAsync(
         string path,

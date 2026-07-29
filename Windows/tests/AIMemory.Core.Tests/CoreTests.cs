@@ -81,6 +81,47 @@ public sealed class CoreTests : IDisposable
         Assert.Single(await new ConversationRepository(database).ListAsync());
     }
 
+    [Fact]
+    public async Task IncrementalBackupSkipsUnchangedAndTracksChangedComponents()
+    {
+        var databasePath = Path.Combine(_root, "incremental.db");
+        var backupDirectory = Path.Combine(_root, "incremental-backups");
+        var settingsPath = Path.Combine(_root, "incremental-settings.json");
+        var database = new AIMemoryDatabase(databasePath);
+        await database.InitializeAsync();
+        await InsertRestoreConversationAsync(
+            database, "incremental", "Incremental backup");
+        await File.WriteAllTextAsync(settingsPath, """{"marker":"one"}""");
+        var service = new BackupService(
+            database, backupDirectory, settingsPath);
+
+        var first = await service.CreateRecoveryPointDetailedAsync("manual");
+        var unchanged = await service.CreateRecoveryPointDetailedAsync("manual");
+
+        Assert.True(first.Created);
+        Assert.True(first.DatabaseChanged);
+        Assert.True(first.SettingsChanged);
+        Assert.False(unchanged.Created);
+        Assert.Equal(first.Path, unchanged.Path);
+        Assert.Single(service.ListRecoveryPoints());
+
+        await File.WriteAllTextAsync(settingsPath, """{"marker":"two"}""");
+        var settingsOnly =
+            await service.CreateRecoveryPointDetailedAsync("settings");
+        Assert.True(settingsOnly.Created);
+        Assert.False(settingsOnly.DatabaseChanged);
+        Assert.True(settingsOnly.SettingsChanged);
+
+        await InsertRestoreConversationAsync(
+            database, "incremental-two", "Database changed");
+        var databaseChanged =
+            await service.CreateRecoveryPointDetailedAsync("database");
+        Assert.True(databaseChanged.Created);
+        Assert.True(databaseChanged.DatabaseChanged);
+        Assert.False(databaseChanged.SettingsChanged);
+        Assert.Equal(3, service.ListRecoveryPoints().Count);
+    }
+
     [Theory]
     [InlineData("claude")]
     [InlineData("codex")]

@@ -83,6 +83,38 @@
                                               Toggled="StartupToggle_Toggled" />
                             </Grid>
                         </Border>
+                        <Border Style="{StaticResource CardStyle}">
+                            <StackPanel Spacing="14">
+                                <TextBlock Text="自动备份"
+                                           FontSize="17"
+                                           FontWeight="SemiBold" />
+                                <Grid ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Text="定时备份数据库与设置"
+                                                   FontWeight="SemiBold" />
+                                        <TextBlock Text="没有变化时不会生成重复恢复点；未变化的文件使用 NTFS 硬链接复用。"
+                                                   TextWrapping="Wrap"
+                                                   Opacity="0.6" />
+                                    </StackPanel>
+                                    <ToggleSwitch x:Name="AutoBackupToggle"
+                                                  Grid.Column="1"
+                                                  VerticalAlignment="Center" />
+                                </Grid>
+                                <NumberBox x:Name="AutoBackupIntervalBox"
+                                           Header="备份间隔（分钟）"
+                                           Minimum="5"
+                                           Maximum="1440"
+                                           SmallChange="5"
+                                           SpinButtonPlacementMode="Inline" />
+                                <Button Content="保存自动备份设置"
+                                        HorizontalAlignment="Right"
+                                        Click="SaveGeneralSettings_Click" />
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
 
                     <StackPanel x:Name="AgentsPanel"
