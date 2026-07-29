@@ -4,6 +4,7 @@ using AIMemory.Core.Services;
 using Microsoft.Data.Sqlite;
 using System.Net;
 using System.Text;
+using System.Text.Json;
 using Xunit;
 
 namespace AIMemory.Core.Tests;
@@ -78,6 +79,328 @@ public sealed class CoreTests : IDisposable
         await Assert.ThrowsAnyAsync<Exception>(
             () => service.RestoreRecoveryPointAsync(invalid));
         Assert.Single(await new ConversationRepository(database).ListAsync());
+    }
+
+    [Theory]
+    [InlineData("claude")]
+    [InlineData("codex")]
+    [InlineData("gemini")]
+    [InlineData("opencode")]
+    public async Task NativeConversationCopyWritesAndReimportsTargetStore(
+        string target)
+    {
+        var home = Path.Combine(_root, $"migration-{target}");
+        Directory.CreateDirectory(home);
+        if (target == "opencode")
+        {
+            await CreateOpenCodeMigrationStoreAsync(home);
+        }
+        var database = new AIMemoryDatabase(
+            Path.Combine(home, "aimemory.db"));
+        await database.InitializeAsync();
+        var repository = new ConversationRepository(database);
+        var sourceId = $"source-{target}";
+        await repository.UpsertAsync(new WebDavConversationDetail(
+            sourceId,
+            "hermes",
+            @"C:\repo",
+            "2026-07-01T01:00:00Z",
+            "2026-07-01T01:01:00Z",
+            "Migration fixture",
+            null,
+            null,
+            [
+                new WebDavMessage(
+                    $"user-{target}",
+                    "2026-07-01T01:00:00Z",
+                    "user",
+                    "Preserve this question",
+                    [],
+                    []),
+                new WebDavMessage(
+                    $"assistant-{target}",
+                    "2026-07-01T01:01:00Z",
+                    "assistant",
+                    "Preserve this answer",
+                    [
+                        new WebDavToolCall(
+                            $"tool-{target}",
+                            "read_file",
+                            JsonSerializer.SerializeToElement(
+                                new { path = "README.md" }),
+                            "file contents",
+                            "success"),
+                    ],
+                    []),
+            ],
+            [
+                new WebDavFileChange(
+                    "README.md",
+                    "modified",
+                    "2026-07-01T01:01:00Z",
+                    $"assistant-{target}"),
+            ]));
+
+        var result = await new ConversationMigrationService(repository, home)
+            .CopyAsync("hermes", target, sourceId);
+
+        Assert.True(result.Verified);
+        Assert.Equal(2, result.SourceMessageCount);
+        Assert.Equal(2, result.TargetMessageCount);
+        Assert.Equal(1, result.SourceToolCallCount);
+        Assert.Equal(1, result.TargetToolCallCount);
+        Assert.Equal(1, result.SourceFileCount);
+        Assert.Equal(1, result.TargetFileCount);
+        Assert.True(result.FirstUserPreserved);
+        Assert.NotNull(await repository.FindAsync(sourceId));
+        var migrated = await repository.ExportAsync(result.NewId);
+        Assert.Equal(target, migrated.SourceAgent);
+        Assert.Equal(
+            ["Preserve this question", "Preserve this answer"],
+            migrated.Messages.Select(value => value.Content).ToArray());
+        var migratedTool = Assert.Single(migrated.Messages[1].ToolCalls);
+        Assert.Equal("read_file", migratedTool.Name);
+        Assert.Equal("file contents", migratedTool.Output);
+        Assert.Equal("success", migratedTool.Status);
+        Assert.Equal(
+            "README.md",
+            Assert.Single(migrated.FileChanges).Path);
+    }
+
+    [Fact]
+    public async Task CutMigrationArchivesAndTrashRestoreRecoversRawSource()
+    {
+        var home = Path.Combine(_root, "cut-migration");
+        var sourceDirectory = Path.Combine(
+            home, ".claude", "projects", "C--repo");
+        Directory.CreateDirectory(sourceDirectory);
+        var sourcePath = Path.Combine(sourceDirectory, "source-cut.jsonl");
+        await File.WriteAllTextAsync(
+            sourcePath,
+            """{"type":"user","timestamp":"2026-07-01T01:00:00Z","cwd":"C:\\repo","message":{"role":"user","content":"Original raw source"}}""");
+        var database = new AIMemoryDatabase(
+            Path.Combine(home, "aimemory.db"));
+        await database.InitializeAsync();
+        var repository = new ConversationRepository(database);
+        var input = JsonSerializer.SerializeToElement(
+            new { path = "README.md" });
+        await repository.UpsertAsync(new WebDavConversationDetail(
+            "source-cut",
+            "claude",
+            @"C:\repo",
+            "2026-07-01T01:00:00Z",
+            "2026-07-01T01:01:00Z",
+            "Cut fixture",
+            sourcePath,
+            "claude --resume source-cut",
+            [
+                new WebDavMessage(
+                    "cut-user",
+                    "2026-07-01T01:00:00Z",
+                    "user",
+                    "Cut question",
+                    [],
+                    []),
+                new WebDavMessage(
+                    "cut-assistant",
+                    "2026-07-01T01:01:00Z",
+                    "assistant",
+                    "Cut answer",
+                    [
+                        new WebDavToolCall(
+                            "cut-tool",
+                            "read_file",
+                            input,
+                            "contents",
+                            "success"),
+                    ],
+                    []),
+            ],
+            [
+                new WebDavFileChange(
+                    "README.md",
+                    "modified",
+                    "2026-07-01T01:01:00Z",
+                    "cut-assistant"),
+            ]));
+        var archiveRoot = Path.Combine(home, "trash", "raw");
+        var writer = new NativeAgentConversationWriter(home, archiveRoot);
+        var trash = new TrashService(
+            database,
+            Path.Combine(home, "trash"),
+            null,
+            writer);
+        var migration = new ConversationMigrationService(
+            repository, home, writer);
+
+        var result = await migration.MigrateAsync(
+            "claude",
+            "gemini",
+            "source-cut",
+            "cut",
+            trash);
+
+        Assert.True(result.CutDeletedSource);
+        Assert.False(File.Exists(sourcePath));
+        Assert.Null(await repository.FindAsync("source-cut"));
+        var record = Assert.Single(await trash.ListAsync());
+        await trash.RestoreAsync(record);
+        Assert.True(File.Exists(sourcePath));
+        var restored = await repository.ExportAsync("source-cut");
+        Assert.Single(restored.Messages[1].ToolCalls);
+        Assert.Single(restored.FileChanges);
+
+        var summary = await repository.FindAsync("source-cut");
+        Assert.NotNull(summary);
+        var archive = await writer.ArchiveSourceAsync(restored);
+        var deleteRecord = await trash.TrashAsync(summary!, 14, archive);
+        Assert.True(File.Exists(archive.BackupPath));
+        await trash.DeleteAsync(deleteRecord);
+        Assert.False(File.Exists(archive.BackupPath));
+    }
+
+    [Theory]
+    [InlineData("codex")]
+    [InlineData("opencode")]
+    public async Task DatabaseBackedCutMigrationRestoresAndPurgesRawSource(
+        string source)
+    {
+        var home = Path.Combine(_root, $"cut-{source}");
+        Directory.CreateDirectory(home);
+        if (source == "opencode")
+        {
+            await CreateOpenCodeMigrationStoreAsync(home);
+        }
+        var database = new AIMemoryDatabase(
+            Path.Combine(home, "aimemory.db"));
+        await database.InitializeAsync();
+        var repository = new ConversationRepository(database);
+        var writer = new NativeAgentConversationWriter(
+            home, Path.Combine(home, "trash", "raw"));
+        var seed = new WebDavConversationDetail(
+            $"seed-{source}",
+            "hermes",
+            @"C:\repo",
+            "2026-07-02T01:00:00Z",
+            "2026-07-02T01:01:00Z",
+            "Database-backed cut fixture",
+            null,
+            null,
+            [
+                new WebDavMessage(
+                    $"seed-user-{source}",
+                    "2026-07-02T01:00:00Z",
+                    "user",
+                    "Database-backed question",
+                    [],
+                    []),
+                new WebDavMessage(
+                    $"seed-assistant-{source}",
+                    "2026-07-02T01:01:00Z",
+                    "assistant",
+                    "Database-backed answer",
+                    [],
+                    []),
+            ],
+            []);
+        var written = await writer.WriteAsync(seed, source);
+        await new NativeHistoryImportService(repository, home)
+            .ImportAllAsync();
+        var indexed = await repository.ExportAsync(written.Id);
+        Assert.Equal(source, indexed.SourceAgent);
+        await AssertDatabaseBackedSourceStateAsync(
+            home, source, written, "active");
+
+        var trash = new TrashService(
+            database,
+            Path.Combine(home, "trash"),
+            null,
+            writer);
+        var migration = new ConversationMigrationService(
+            repository, home, writer);
+        var result = await migration.MigrateAsync(
+            source,
+            "gemini",
+            written.Id,
+            "cut",
+            trash);
+
+        Assert.True(result.Verified);
+        Assert.True(result.CutDeletedSource);
+        Assert.Null(await repository.FindAsync(written.Id));
+        await AssertDatabaseBackedSourceStateAsync(
+            home, source, written, "archived");
+
+        var restoreRecord = Assert.Single(await trash.ListAsync());
+        await trash.RestoreAsync(restoreRecord);
+        await AssertDatabaseBackedSourceStateAsync(
+            home, source, written, "active");
+        var restored = await repository.ExportAsync(written.Id);
+        Assert.Equal(
+            ["Database-backed question", "Database-backed answer"],
+            restored.Messages.Select(message => message.Content).ToArray());
+
+        await new NativeHistoryImportService(repository, home)
+            .ImportAllAsync();
+        Assert.NotNull(await repository.FindAsync(written.Id));
+        restored = await repository.ExportAsync(written.Id);
+        var summary = await repository.FindAsync(written.Id);
+        Assert.NotNull(summary);
+        var archive = await writer.ArchiveSourceAsync(restored);
+        var deleteRecord = await trash.TrashAsync(
+            summary!,
+            14,
+            archive,
+            detailOverride: restored);
+        await trash.DeleteAsync(deleteRecord);
+        await AssertDatabaseBackedSourceStateAsync(
+            home, source, written, "missing");
+        if (!string.IsNullOrWhiteSpace(archive.BackupPath))
+        {
+            Assert.False(File.Exists(archive.BackupPath));
+        }
+    }
+
+    [Fact]
+    public async Task CutMigrationRejectsUnarchivableSourceBeforeTargetWrite()
+    {
+        var home = Path.Combine(_root, "cut-unarchivable");
+        var database = new AIMemoryDatabase(
+            Path.Combine(home, "aimemory.db"));
+        await database.InitializeAsync();
+        var repository = new ConversationRepository(database);
+        await repository.UpsertAsync(new WebDavConversationDetail(
+            "hermes-cut",
+            "hermes",
+            @"C:\repo",
+            "2026-07-03T01:00:00Z",
+            "2026-07-03T01:00:00Z",
+            "Hermes source",
+            null,
+            null,
+            [
+                new WebDavMessage(
+                    "hermes-user",
+                    "2026-07-03T01:00:00Z",
+                    "user",
+                    "Keep the source",
+                    [],
+                    []),
+            ],
+            []));
+        var migration = new ConversationMigrationService(repository, home);
+        var exception = await Assert.ThrowsAsync<NotSupportedException>(
+            () => migration.MigrateAsync(
+                "hermes",
+                "gemini",
+                "hermes-cut",
+                "cut",
+                new TrashService(
+                    database, Path.Combine(home, "trash"))));
+
+        Assert.Contains("请选择复制", exception.Message);
+        Assert.NotNull(await repository.FindAsync("hermes-cut"));
+        Assert.False(Directory.Exists(Path.Combine(home, ".gemini")));
     }
 
     [Fact]
@@ -446,6 +769,54 @@ public sealed class CoreTests : IDisposable
         await trash.RestoreAsync(record);
         Assert.Equal(1, await repository.CountAsync());
         Assert.Single(await repository.ReadMessagesAsync("c1"));
+    }
+
+    [Fact]
+    public async Task TrashRestoreReadsLegacyMessageOnlyEnvelope()
+    {
+        var database = new AIMemoryDatabase(
+            Path.Combine(_root, "trash-legacy.db"));
+        await database.InitializeAsync();
+        var now = DateTimeOffset.UtcNow;
+        await using (var connection = database.OpenConnection())
+        {
+            var insert = connection.CreateCommand();
+            insert.CommandText = """
+                INSERT INTO conversations VALUES(
+                  'legacy','repo','codex','source','legacy title',
+                  $now,$now,NULL);
+                INSERT INTO messages VALUES(
+                  'legacy-message','legacy','user','legacy content',$now);
+                """;
+            insert.Parameters.AddWithValue("$now", now.ToString("O"));
+            await insert.ExecuteNonQueryAsync();
+        }
+        var repository = new ConversationRepository(database);
+        var conversation = Assert.Single(await repository.ListAsync());
+        var messages = await repository.ReadMessagesAsync(conversation.Id);
+        var trash = new TrashService(
+            database, Path.Combine(_root, "trash-legacy"));
+        var record = await trash.TrashAsync(conversation, 14);
+        var legacyEnvelope = new
+        {
+            Record = record,
+            Conversation = conversation,
+            Messages = messages,
+        };
+        await File.WriteAllTextAsync(
+            record.RecordPath,
+            JsonSerializer.Serialize(
+                legacyEnvelope,
+                new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy =
+                        JsonNamingPolicy.SnakeCaseLower,
+                }));
+
+        await trash.RestoreAsync(record);
+
+        var restored = await repository.ExportAsync("legacy");
+        Assert.Equal("legacy content", Assert.Single(restored.Messages).Content);
     }
 
     [Fact]
@@ -898,6 +1269,77 @@ public sealed class CoreTests : IDisposable
         command.Parameters.AddWithValue(
             "$now", DateTimeOffset.UtcNow.ToString("O"));
         await command.ExecuteNonQueryAsync();
+    }
+
+    private static async Task CreateOpenCodeMigrationStoreAsync(string home)
+    {
+        var directory = Path.Combine(
+            home, ".local", "share", "opencode");
+        Directory.CreateDirectory(directory);
+        await using var connection = new SqliteConnection(
+            $"Data Source={Path.Combine(directory, "opencode.db")}");
+        await connection.OpenAsync();
+        var command = connection.CreateCommand();
+        command.CommandText = """
+            CREATE TABLE project(
+              id TEXT PRIMARY KEY,worktree TEXT,vcs TEXT,name TEXT,
+              time_created INTEGER,time_updated INTEGER,sandboxes TEXT);
+            CREATE TABLE session(
+              id TEXT PRIMARY KEY,project_id TEXT,slug TEXT,directory TEXT,
+              title TEXT,version TEXT,summary_files INTEGER,
+              time_created INTEGER,time_updated INTEGER,time_archived INTEGER);
+            CREATE TABLE message(
+              id TEXT PRIMARY KEY,session_id TEXT,time_created INTEGER,
+              time_updated INTEGER,data TEXT);
+            CREATE TABLE part(
+              id TEXT PRIMARY KEY,message_id TEXT,session_id TEXT,
+              time_created INTEGER,time_updated INTEGER,data TEXT);
+            """;
+        await command.ExecuteNonQueryAsync();
+    }
+
+    private static async Task AssertDatabaseBackedSourceStateAsync(
+        string home,
+        string source,
+        NativeAgentWriteResult written,
+        string expected)
+    {
+        var databasePath = source == "codex"
+            ? Path.Combine(home, ".codex", "state_5.sqlite")
+            : Path.Combine(
+                home, ".local", "share", "opencode", "opencode.db");
+        await using var connection = new SqliteConnection(
+            $"Data Source={databasePath}");
+        await connection.OpenAsync();
+        var command = connection.CreateCommand();
+        command.CommandText = source == "codex"
+            ? "SELECT COUNT(*) FROM threads WHERE id=$id;"
+            : "SELECT time_archived FROM session WHERE id=$id;";
+        command.Parameters.AddWithValue("$id", written.Id);
+        var value = await command.ExecuteScalarAsync();
+
+        if (source == "codex")
+        {
+            var count = Convert.ToInt32(value);
+            Assert.Equal(expected == "active" ? 1 : 0, count);
+            Assert.Equal(expected == "active", File.Exists(written.StoragePath));
+            return;
+        }
+        switch (expected)
+        {
+            case "active":
+                Assert.Equal(DBNull.Value, value);
+                break;
+            case "archived":
+                Assert.NotNull(value);
+                Assert.NotEqual(DBNull.Value, value);
+                break;
+            case "missing":
+                Assert.Null(value);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(expected));
+        }
     }
 
     public void Dispose()

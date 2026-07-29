@@ -11,6 +11,7 @@
 | 收藏与可恢复回收站 | 已实现 | 已实现核心 |
 | Claude/Codex/Gemini 历史 | 已实现 | 已实现核心 |
 | Kimi/Hermes/Antigravity/OpenCode/ZCode 历史 | 已实现 | 已实现核心 |
+| 原生完整对话迁移与总结式继续卡片 | 已实现 | 已实现核心：Claude/Codex/Gemini/OpenCode 写入后回读验证；移动、恢复及永久删除覆盖文件与 SQLite 来源 |
 | 45 种 Agent/CLI 安装检测 | 已实现集成目录 | 已实现检测目录 |
 | 候选记忆复核 | 已实现 | 已实现核心 |
 | 检查点与交接 | 已实现 | 已实现核心 |

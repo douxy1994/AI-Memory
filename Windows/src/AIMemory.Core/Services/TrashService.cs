@@ -7,12 +7,15 @@ namespace AIMemory.Core.Services;
 public sealed class TrashService(
     AIMemoryDatabase database,
     string? trashDirectory = null,
-    Func<DateTimeOffset>? now = null)
+    Func<DateTimeOffset>? now = null,
+    NativeAgentConversationWriter? writer = null)
 {
     private readonly string _trashDirectory =
         trashDirectory ?? DataPaths.TrashDirectory;
     private readonly Func<DateTimeOffset> _now =
         now ?? (() => DateTimeOffset.UtcNow);
+    private readonly NativeAgentConversationWriter _writer =
+        writer ?? new NativeAgentConversationWriter();
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
@@ -23,10 +26,13 @@ public sealed class TrashService(
     public async Task<TrashRecord> TrashAsync(
         ConversationSummary conversation,
         int retentionDays,
+        NativeSourceArchive? sourceArchive = null,
+        WebDavConversationDetail? detailOverride = null,
         CancellationToken cancellationToken = default)
     {
-        var messages = await new ConversationRepository(database)
-            .ReadMessagesAsync(conversation.Id, cancellationToken);
+        var detail = detailOverride
+            ?? await new ConversationRepository(database)
+                .ExportAsync(conversation.Id, cancellationToken);
         var now = _now();
         var record = new TrashRecord(
             $"{conversation.SourceAgent}-{conversation.Id}-{now.ToUnixTimeMilliseconds()}",
@@ -39,23 +45,34 @@ public sealed class TrashService(
         Directory.CreateDirectory(_trashDirectory);
         var path = Path.Combine(_trashDirectory, SafeName(record.TrashId) + ".json");
         record = record with { RecordPath = path };
-        var envelope = new TrashEnvelope(record, conversation, messages);
+        var envelope = new TrashEnvelope(
+            record, conversation, detail, null, sourceArchive);
         await File.WriteAllTextAsync(
             path,
             JsonSerializer.Serialize(envelope, JsonOptions),
             cancellationToken);
 
-        await using var connection = database.OpenConnection();
-        await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
-        var command = connection.CreateCommand();
-        command.Transaction = (Microsoft.Data.Sqlite.SqliteTransaction)transaction;
-        command.CommandText = """
-            DELETE FROM messages WHERE conversation_id=$id;
-            DELETE FROM conversations WHERE conversation_id=$id;
-            """;
-        command.Parameters.AddWithValue("$id", conversation.Id);
-        await command.ExecuteNonQueryAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+        try
+        {
+            await using var connection = database.OpenConnection();
+            await using var transaction =
+                await connection.BeginTransactionAsync(cancellationToken);
+            var command = connection.CreateCommand();
+            command.Transaction =
+                (Microsoft.Data.Sqlite.SqliteTransaction)transaction;
+            command.CommandText = """
+                DELETE FROM messages WHERE conversation_id=$id;
+                DELETE FROM conversations WHERE conversation_id=$id;
+                """;
+            command.Parameters.AddWithValue("$id", conversation.Id);
+            await command.ExecuteNonQueryAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            if (File.Exists(path)) File.Delete(path);
+            throw;
+        }
         return record;
     }
 
@@ -76,6 +93,11 @@ public sealed class TrashService(
                     var record = envelope.Record with { RecordPath = path };
                     if (record.ExpiresAt <= _now())
                     {
+                        if (envelope.SourceArchive is not null)
+                        {
+                            await _writer.DeleteSourceArchiveAsync(
+                                envelope.SourceArchive, cancellationToken);
+                        }
                         File.Delete(path);
                         continue;
                     }
@@ -107,6 +129,27 @@ public sealed class TrashService(
         {
             throw new InvalidOperationException("原位置已有同 ID 对话，拒绝覆盖。");
         }
+        if (envelope.Detail is not null)
+        {
+            var repository = new ConversationRepository(database);
+            await repository.UpsertAsync(envelope.Detail, cancellationToken);
+            try
+            {
+                if (envelope.SourceArchive is not null)
+                {
+                    await _writer.RestoreSourceArchiveAsync(
+                        envelope.SourceArchive, cancellationToken);
+                }
+            }
+            catch
+            {
+                await repository.DeleteAsync(
+                    envelope.Detail.Id, cancellationToken);
+                throw;
+            }
+            File.Delete(record.RecordPath);
+            return;
+        }
 
         await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
         var conversation = connection.CreateCommand();
@@ -127,7 +170,7 @@ public sealed class TrashService(
         conversation.Parameters.AddWithValue("$path", (object?)envelope.Conversation.StoragePath ?? DBNull.Value);
         await conversation.ExecuteNonQueryAsync(cancellationToken);
 
-        foreach (var message in envelope.Messages)
+        foreach (var message in envelope.Messages ?? [])
         {
             var insert = connection.CreateCommand();
             insert.Transaction = (Microsoft.Data.Sqlite.SqliteTransaction)transaction;
@@ -146,7 +189,18 @@ public sealed class TrashService(
         File.Delete(record.RecordPath);
     }
 
-    public void Delete(TrashRecord record) => File.Delete(record.RecordPath);
+    public async Task DeleteAsync(
+        TrashRecord record,
+        CancellationToken cancellationToken = default)
+    {
+        var envelope = ReadEnvelope(record.RecordPath);
+        if (envelope?.SourceArchive is not null)
+        {
+            await _writer.DeleteSourceArchiveAsync(
+                envelope.SourceArchive, cancellationToken);
+        }
+        File.Delete(record.RecordPath);
+    }
 
     public async Task<int> EmptyAsync(
         CancellationToken cancellationToken = default)
@@ -154,7 +208,7 @@ public sealed class TrashService(
         var records = await ListAsync(cancellationToken);
         foreach (var record in records)
         {
-            File.Delete(record.RecordPath);
+            await DeleteAsync(record, cancellationToken);
         }
         return records.Count;
     }
@@ -166,5 +220,21 @@ public sealed class TrashService(
     private sealed record TrashEnvelope(
         TrashRecord Record,
         ConversationSummary Conversation,
-        IReadOnlyList<ConversationMessage> Messages);
+        WebDavConversationDetail? Detail,
+        IReadOnlyList<ConversationMessage>? Messages,
+        NativeSourceArchive? SourceArchive);
+
+    private static TrashEnvelope? ReadEnvelope(string path)
+    {
+        try
+        {
+            return JsonSerializer.Deserialize<TrashEnvelope>(
+                File.ReadAllText(path),
+                JsonOptions);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
 }

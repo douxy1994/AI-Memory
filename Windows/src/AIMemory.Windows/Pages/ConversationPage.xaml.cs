@@ -101,6 +101,122 @@ public sealed partial class ConversationPage : Page
         Show("恢复命令已复制。", InfoBarSeverity.Success);
     }
 
+    private async void Migrate_Click(object sender, RoutedEventArgs args)
+    {
+        if (_context is null || _detail is null) return;
+        var targets = new AgentCatalog().Detect()
+            .Where(value =>
+                value.IsDetected
+                && NativeAgentConversationWriter.WritableTargets.Contains(value.Id)
+                && !value.Id.Equals(
+                    _context.Conversation.SourceAgent,
+                    StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+
+        var kind = new RadioButtons
+        {
+            ItemsSource = new[]
+            {
+                "完整对话复制",
+                "总结式迁移（复制继续卡片）",
+            },
+            SelectedIndex = 0,
+        };
+        var target = new ComboBox
+        {
+            Header = "目标 Agent",
+            ItemsSource = targets,
+            DisplayMemberPath = "Label",
+            SelectedIndex = targets.Length > 0 ? 0 : -1,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+        };
+        var migrationMode = new RadioButtons
+        {
+            ItemsSource =
+                NativeAgentConversationWriter.ArchivableSources.Contains(
+                    _context.Conversation.SourceAgent)
+                    ? new[]
+                    {
+                        "复制（保留源）",
+                        "移动（验证后将源移入回收站）",
+                    }
+                    : new[] { "复制（此来源不支持安全移动）" },
+            SelectedIndex = 0,
+        };
+        var content = new StackPanel { Spacing = 12 };
+        content.Children.Add(new TextBlock
+        {
+            Text = "完整迁移会写入目标 Agent 的真实本地历史，并在回读验证失败时撤销写入。",
+            TextWrapping = TextWrapping.Wrap,
+        });
+        content.Children.Add(kind);
+        content.Children.Add(target);
+        content.Children.Add(migrationMode);
+        kind.SelectionChanged += (_, _) =>
+        {
+            var visibility = kind.SelectedIndex == 0
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+            target.Visibility = visibility;
+            migrationMode.Visibility = visibility;
+        };
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = "迁移对话",
+            Content = content,
+            PrimaryButtonText = "继续",
+            CloseButtonText = "取消",
+            DefaultButton = ContentDialogButton.Primary,
+        };
+        if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
+
+        if (kind.SelectedIndex == 1)
+        {
+            CopyText(ConversationMigrationService.ContinuationCard(_detail));
+            Show("继续卡片已复制。", InfoBarSeverity.Success);
+            return;
+        }
+        if (target.SelectedItem is not AgentIntegrationStatus selected)
+        {
+            Show(
+                targets.Length == 0
+                    ? "没有检测到可安全写入的目标 Agent。"
+                    : "请选择目标 Agent。",
+                InfoBarSeverity.Warning);
+            return;
+        }
+
+        try
+        {
+            var settings = await _context.Window.Settings.LoadAsync();
+            var result = await new ConversationMigrationService(
+                    _context.Window.Conversations)
+                .MigrateAsync(
+                    _context.Conversation.SourceAgent,
+                    selected.Id,
+                    _context.Conversation.Id,
+                    migrationMode.SelectedIndex == 1 ? "cut" : "copy",
+                    new TrashService(_context.Window.Database),
+                    settings.TrashRetentionDays);
+            if (result.CutDeletedSource)
+            {
+                _context.Window.ShowFeedback(
+                    $"移动成功：{selected.Label} · 源对话已进入回收站",
+                    InfoBarSeverity.Success);
+                _context.Window.NavigateTo("trash");
+                return;
+            }
+            Show(
+                $"迁移成功：{selected.Label} · {result.NewId[..8]}…",
+                InfoBarSeverity.Success);
+        }
+        catch (Exception exception)
+        {
+            Show($"迁移失败：{exception.Message}", InfoBarSeverity.Error);
+        }
+    }
+
     private async void Trash_Click(object sender, RoutedEventArgs args)
     {
         if (_context is null) return;

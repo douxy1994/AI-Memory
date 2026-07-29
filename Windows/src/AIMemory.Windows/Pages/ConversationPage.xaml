@@ -35,6 +35,9 @@
                 <AppBarButton Icon="Copy"
                               Label="复制路径"
                               Click="CopyPath_Click" />
+                <AppBarButton Icon="Forward"
+                              Label="迁移"
+                              Click="Migrate_Click" />
                 <AppBarButton Icon="Delete"
                               Label="移到回收站"
                               Click="Trash_Click" />

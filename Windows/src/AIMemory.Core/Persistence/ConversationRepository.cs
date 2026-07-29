@@ -119,6 +119,27 @@ public sealed class ConversationRepository(AIMemoryDatabase database)
         return Convert.ToInt32(await command.ExecuteScalarAsync(cancellationToken));
     }
 
+    public async Task DeleteAsync(
+        string conversationId,
+        CancellationToken cancellationToken = default)
+    {
+        await using var connection = database.OpenConnection();
+        await using var transaction =
+            await connection.BeginTransactionAsync(cancellationToken);
+        var command = connection.CreateCommand();
+        command.Transaction = (SqliteTransaction)transaction;
+        command.CommandText = """
+            DELETE FROM tool_calls WHERE message_id IN (
+              SELECT message_id FROM messages WHERE conversation_id=$id);
+            DELETE FROM file_changes WHERE conversation_id=$id;
+            DELETE FROM messages WHERE conversation_id=$id;
+            DELETE FROM conversations WHERE conversation_id=$id;
+            """;
+        command.Parameters.AddWithValue("$id", conversationId);
+        await command.ExecuteNonQueryAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+    }
+
     public async Task<WebDavConversationDetail> ExportAsync(
         string conversationId,
         CancellationToken cancellationToken = default)

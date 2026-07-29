@@ -31,6 +31,10 @@ AI Memory 的 Windows 11 原生版本，使用 C#、WinUI 3 与 Windows App SDK 
 - 45 种主流 Agent/CLI 安装检测，已安装项优先，未安装项默认关闭；
 - Claude、Codex、Gemini、Kimi、Hermes、Antigravity、OpenCode 与 ZCode
   本地历史只读导入；
+- 完整对话可原生复制到 Claude、Codex、Gemini 或 OpenCode，并在写入后
+  重新导入核对消息数与首条用户消息；“移动”模式会把来源原始历史和完整
+  数据快照放入可恢复回收站，恢复及永久删除均覆盖文件型与 SQLite 型来源；
+- 总结式迁移可生成带来源证据的继续卡片，不伪装成目标 Agent 的原生历史；
 - 记忆复核、检查点与交接核心流程；
 - 菜单与快捷键；
 - 与 macOS 对齐的 22 项原生 MCP 工具，覆盖历史检索、记忆治理、

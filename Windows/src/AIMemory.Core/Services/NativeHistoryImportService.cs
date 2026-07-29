@@ -150,6 +150,7 @@ public sealed class NativeHistoryImportService
         CancellationToken cancellationToken)
     {
         var messages = new List<WebDavMessage>();
+        var fileChanges = new List<WebDavFileChange>();
         var cwd = entry.Cwd;
         var first = entry.CreatedAt;
         var last = entry.UpdatedAt;
@@ -167,6 +168,44 @@ public sealed class NativeHistoryImportService
             if (outerType == "session_meta")
             {
                 cwd = GetString(payload, "cwd") ?? cwd;
+                fileChanges.AddRange(ReadFileChanges(
+                    payload, "aimemory_file_changes", timestamp));
+                continue;
+            }
+            if (outerType == "response_item"
+                && payloadType == "function_call")
+            {
+                var callId = GetString(payload, "call_id")
+                    ?? Guid.NewGuid().ToString();
+                var input = payload.TryGetProperty(
+                    "arguments", out var arguments)
+                    ? arguments.ValueKind == JsonValueKind.String
+                        ? ParseJson(arguments.GetString())
+                        : arguments.Clone()
+                    : EmptyJson();
+                AppendToolCall(
+                    messages,
+                    new WebDavToolCall(
+                        callId,
+                        GetString(payload, "name") ?? "tool",
+                        input,
+                        null,
+                        "success"),
+                    timestamp);
+                continue;
+            }
+            if (outerType == "response_item"
+                && payloadType == "function_call_output")
+            {
+                var callId = GetString(payload, "call_id");
+                if (!string.IsNullOrWhiteSpace(callId))
+                {
+                    ApplyToolResult(
+                        messages,
+                        callId,
+                        JsonText(payload, "output"),
+                        "success");
+                }
                 continue;
             }
             var role = payloadType switch
@@ -199,7 +238,7 @@ public sealed class NativeHistoryImportService
             entry.Path,
             $"codex resume {entry.Id}",
             messages,
-            []);
+            fileChanges);
     }
 
     private async Task<int> ImportClaudeAsync(CancellationToken cancellationToken)
@@ -231,6 +270,7 @@ public sealed class NativeHistoryImportService
         CancellationToken cancellationToken)
     {
         var messages = new List<WebDavMessage>();
+        var fileChanges = new List<WebDavFileChange>();
         var summary = "";
         var cwd = "";
         var fallback = File.GetLastWriteTimeUtc(path).ToString("O");
@@ -247,6 +287,11 @@ public sealed class NativeHistoryImportService
                 continue;
             }
             cwd = GetString(root, "cwd") ?? cwd;
+            if (GetString(root, "type") == "file-history-snapshot")
+            {
+                fileChanges.AddRange(ReadClaudeFileChanges(root, fallback));
+                continue;
+            }
             if (GetString(root, "type") == "summary")
             {
                 summary = GetString(root, "summary") ?? summary;
@@ -264,9 +309,29 @@ public sealed class NativeHistoryImportService
             last = Later(last, timestamp);
             if (!payload.TryGetProperty("content", out var content)) continue;
             var text = ExtractText(content);
-            if (string.IsNullOrWhiteSpace(text)) continue;
+            if (role == "user")
+            {
+                foreach (var result in ReadClaudeToolResults(content))
+                {
+                    ApplyToolResult(
+                        messages,
+                        result.Id,
+                        result.Output,
+                        result.Status);
+                }
+            }
+            var tools = role == "assistant"
+                ? ReadClaudeToolCalls(content)
+                : [];
+            if (string.IsNullOrWhiteSpace(text) && tools.Count == 0) continue;
             if (role == "user" && !MeaningfulUserText(text)) continue;
-            messages.Add(Message(role, text, timestamp));
+            messages.Add(new WebDavMessage(
+                GetString(root, "uuid") ?? Guid.NewGuid().ToString(),
+                timestamp,
+                role,
+                text,
+                tools,
+                []));
         }
         var id = Path.GetFileNameWithoutExtension(path);
         var title = UsefulTitle(summary)
@@ -283,7 +348,7 @@ public sealed class NativeHistoryImportService
             path,
             $"claude --resume {id}",
             messages,
-            []);
+            fileChanges);
     }
 
     private async Task<int> ImportGeminiAsync(CancellationToken cancellationToken)
@@ -331,25 +396,32 @@ public sealed class NativeHistoryImportService
                         };
                         if (role is null) continue;
                         var content = GetString(value, "content") ?? "";
-                        if (string.IsNullOrWhiteSpace(content)) continue;
+                        var tools = ReadGeminiToolCalls(value);
+                        if (string.IsNullOrWhiteSpace(content)
+                            && tools.Count == 0)
+                        {
+                            continue;
+                        }
                         if (role == "user" && !MeaningfulUserText(content)) continue;
                         messages.Add(new WebDavMessage(
                             GetString(value, "id") ?? Guid.NewGuid().ToString(),
                             GetString(value, "timestamp") ?? created,
                             role,
                             content,
-                            [],
+                            tools,
                             []));
                     }
                 }
                 if (messages.Count == 0) continue;
                 var title = GetString(data, "summary")
                     ?? messages.FirstOrDefault(value => value.Role == "user")?.Content;
+                var fileChanges = ReadFileChanges(
+                    data, "fileChanges", updated);
                 await _repository.UpsertAsync(
                     new WebDavConversationDetail(
                         id, "gemini", project, created, updated,
                         Truncate(title, 100), path, $"gemini --resume {id}",
-                        messages, []),
+                        messages, fileChanges),
                     cancellationToken);
                 count++;
             }
@@ -754,12 +826,15 @@ public sealed class NativeHistoryImportService
             var messages = await ReadOpenCodeMessagesAsync(
                 connection, id, cancellationToken);
             if (messages.Count == 0) continue;
+            var fileChanges = await ReadOpenCodeFileChangesAsync(
+                connection, id, cancellationToken);
             await _repository.UpsertAsync(
                 new WebDavConversationDetail(
                     id, "opencode", row.Project, created, updated,
                     Truncate(UsefulTitle(row.Title)
                         ?? messages.FirstOrDefault(value => value.Role == "user")?.Content, 100),
-                    databasePath, $"opencode --session {id}", messages, []),
+                    databasePath, $"opencode --session {id}",
+                    messages, fileChanges),
                 cancellationToken);
             count++;
         }
@@ -852,6 +927,47 @@ public sealed class NativeHistoryImportService
                 $"opencode:{sessionId}:{row.Id}",
                 EpochToIso(row.Created), role,
                 string.Join("\n\n", content), tools, []));
+        }
+        return result;
+    }
+
+    private static async Task<IReadOnlyList<WebDavFileChange>>
+        ReadOpenCodeFileChangesAsync(
+            SqliteConnection connection,
+            string sessionId,
+            CancellationToken cancellationToken)
+    {
+        var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT message_id,time_created,data FROM part
+            WHERE session_id=$session
+            ORDER BY time_created,rowid;
+            """;
+        command.Parameters.AddWithValue("$session", sessionId);
+        var result = new List<WebDavFileChange>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            if (reader.IsDBNull(2)) continue;
+            using var document = JsonDocument.Parse(reader.GetString(2));
+            var part = document.RootElement;
+            if (GetString(part, "type") != "patch"
+                || !part.TryGetProperty("files", out var files)
+                || files.ValueKind != JsonValueKind.Array)
+            {
+                continue;
+            }
+            var messageId =
+                $"opencode:{sessionId}:{reader.GetString(0)}";
+            var timestamp = EpochToIso(reader.GetValue(1));
+            foreach (var file in files.EnumerateArray())
+            {
+                if (file.ValueKind != JsonValueKind.String) continue;
+                var path = file.GetString();
+                if (string.IsNullOrWhiteSpace(path)) continue;
+                result.Add(new WebDavFileChange(
+                    path, "modified", timestamp, messageId));
+            }
         }
         return result;
     }
@@ -970,6 +1086,206 @@ public sealed class NativeHistoryImportService
                 }
                 return null;
             }).Where(text => !string.IsNullOrWhiteSpace(text)));
+    }
+
+    private static IReadOnlyList<WebDavToolCall> ReadClaudeToolCalls(
+        JsonElement content)
+    {
+        if (content.ValueKind != JsonValueKind.Array) return [];
+        var result = new List<WebDavToolCall>();
+        foreach (var block in content.EnumerateArray())
+        {
+            if (GetString(block, "type") != "tool_use") continue;
+            result.Add(new WebDavToolCall(
+                GetString(block, "id") ?? Guid.NewGuid().ToString(),
+                GetString(block, "name") ?? "tool",
+                block.TryGetProperty("input", out var input)
+                    ? input.Clone()
+                    : EmptyJson(),
+                null,
+                "success"));
+        }
+        return result;
+    }
+
+    private static IReadOnlyList<(
+        string Id,
+        string? Output,
+        string Status)> ReadClaudeToolResults(JsonElement content)
+    {
+        if (content.ValueKind != JsonValueKind.Array) return [];
+        var result = new List<(string, string?, string)>();
+        foreach (var block in content.EnumerateArray())
+        {
+            if (GetString(block, "type") != "tool_result") continue;
+            var id = GetString(block, "tool_use_id");
+            if (string.IsNullOrWhiteSpace(id)) continue;
+            var failed = block.TryGetProperty(
+                    "is_error", out var isError)
+                && isError.ValueKind == JsonValueKind.True;
+            result.Add((
+                id,
+                JsonText(block, "content"),
+                failed ? "error" : "success"));
+        }
+        return result;
+    }
+
+    private static IReadOnlyList<WebDavToolCall> ReadGeminiToolCalls(
+        JsonElement message)
+    {
+        if (!message.TryGetProperty("toolCalls", out var values)
+            || values.ValueKind != JsonValueKind.Array)
+        {
+            return [];
+        }
+        var result = new List<WebDavToolCall>();
+        foreach (var value in values.EnumerateArray())
+        {
+            result.Add(new WebDavToolCall(
+                GetString(value, "id") ?? Guid.NewGuid().ToString(),
+                GetString(value, "name") ?? "tool",
+                value.TryGetProperty("args", out var input)
+                    ? input.Clone()
+                    : EmptyJson(),
+                GetString(value, "resultDisplay")
+                    ?? JsonText(value, "result"),
+                string.Equals(
+                    GetString(value, "status"),
+                    "error",
+                    StringComparison.OrdinalIgnoreCase)
+                    ? "error"
+                    : "success"));
+        }
+        return result;
+    }
+
+    private static IReadOnlyList<WebDavFileChange> ReadFileChanges(
+        JsonElement parent,
+        string property,
+        string fallbackTimestamp)
+    {
+        if (!parent.TryGetProperty(property, out var values)
+            || values.ValueKind != JsonValueKind.Array)
+        {
+            return [];
+        }
+        var result = new List<WebDavFileChange>();
+        foreach (var value in values.EnumerateArray())
+        {
+            var path = GetString(value, "path");
+            if (string.IsNullOrWhiteSpace(path)) continue;
+            result.Add(new WebDavFileChange(
+                path,
+                GetString(value, "change_type")
+                    ?? GetString(value, "changeType")
+                    ?? "modified",
+                GetString(value, "timestamp") ?? fallbackTimestamp,
+                GetString(value, "message_id")
+                    ?? GetString(value, "messageId")));
+        }
+        return result;
+    }
+
+    private static IReadOnlyList<WebDavFileChange> ReadClaudeFileChanges(
+        JsonElement root,
+        string fallbackTimestamp)
+    {
+        if (!root.TryGetProperty("snapshot", out var snapshot)
+            || snapshot.ValueKind != JsonValueKind.Object
+            || !snapshot.TryGetProperty(
+                "trackedFileBackups", out var backups)
+            || backups.ValueKind != JsonValueKind.Object)
+        {
+            return [];
+        }
+        var fallback = GetString(snapshot, "timestamp")
+            ?? fallbackTimestamp;
+        return backups.EnumerateObject()
+            .Select(value => new WebDavFileChange(
+                value.Name,
+                "modified",
+                value.Value.ValueKind == JsonValueKind.Object
+                    ? GetString(value.Value, "backupTime") ?? fallback
+                    : fallback,
+                null))
+            .ToArray();
+    }
+
+    private static void AppendToolCall(
+        List<WebDavMessage> messages,
+        WebDavToolCall tool,
+        string timestamp)
+    {
+        var index = messages.FindLastIndex(message =>
+            message.Role.Equals(
+                "assistant", StringComparison.OrdinalIgnoreCase));
+        if (index < 0)
+        {
+            messages.Add(new WebDavMessage(
+                Guid.NewGuid().ToString(),
+                timestamp,
+                "assistant",
+                "",
+                [tool],
+                []));
+            return;
+        }
+        var message = messages[index];
+        messages[index] = message with
+        {
+            ToolCalls = [.. message.ToolCalls, tool],
+        };
+    }
+
+    private static void ApplyToolResult(
+        List<WebDavMessage> messages,
+        string toolId,
+        string? output,
+        string status)
+    {
+        for (var messageIndex = messages.Count - 1;
+             messageIndex >= 0;
+             messageIndex--)
+        {
+            var message = messages[messageIndex];
+            var toolIndex = message.ToolCalls
+                .Select((tool, index) => (tool, index))
+                .FirstOrDefault(value =>
+                    value.tool.Id.Equals(
+                        toolId, StringComparison.Ordinal))
+                .index;
+            if (toolIndex < 0
+                || toolIndex >= message.ToolCalls.Count
+                || !message.ToolCalls[toolIndex].Id.Equals(
+                    toolId, StringComparison.Ordinal))
+            {
+                continue;
+            }
+            var tools = message.ToolCalls.ToArray();
+            tools[toolIndex] = tools[toolIndex] with
+            {
+                Output = output,
+                Status = status,
+            };
+            messages[messageIndex] = message with { ToolCalls = tools };
+            return;
+        }
+    }
+
+    private static string? JsonText(
+        JsonElement parent,
+        string property)
+    {
+        if (!parent.TryGetProperty(property, out var value)
+            || value.ValueKind is JsonValueKind.Null
+                or JsonValueKind.Undefined)
+        {
+            return null;
+        }
+        return value.ValueKind == JsonValueKind.String
+            ? value.GetString()
+            : value.GetRawText();
     }
 
     private static string? JsonTimestamp(JsonElement value, string property)

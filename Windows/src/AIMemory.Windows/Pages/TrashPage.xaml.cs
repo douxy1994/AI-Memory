@@ -122,7 +122,7 @@ public sealed partial class TrashPage : Page
         if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
         try
         {
-            _trash.Delete(record);
+            await _trash.DeleteAsync(record);
             await ReloadAsync();
             Show("回收站记录已永久删除。", InfoBarSeverity.Success);
         }
