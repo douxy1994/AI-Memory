@@ -6,6 +6,7 @@ using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
 using Windows.System;
 using WinRT.Interop;
 
@@ -48,6 +49,15 @@ public sealed partial class MainWindow : Window
         var handle = WindowNative.GetWindowHandle(this);
         NativeMethods.ShowWindow(handle, 9);
         NativeMethods.SetForegroundWindow(handle);
+    }
+
+    public void ApplyFontFamily(string preference)
+    {
+        App.ApplyApplicationFont(preference);
+        var font = new FontFamily(
+            FontPreferenceService.ResolveWindowsFamily(preference));
+        Navigation.FontFamily = font;
+        MainMenuBar.FontFamily = font;
     }
 
     public void ConfigureAutomaticBackup(AppSettings settings)

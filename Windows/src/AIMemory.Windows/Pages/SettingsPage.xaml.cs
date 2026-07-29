@@ -41,6 +41,10 @@ public sealed partial class SettingsPage : Page
             AutoBackupToggle.IsOn = _settings.AutoBackupEnabled;
             AutoBackupIntervalBox.Value =
                 _settings.AutoBackupIntervalMinutes;
+            FontFamilyBox.ItemsSource = FontPreferenceService.Options;
+            FontFamilyBox.SelectedItem = FontPreferenceService.Options.First(
+                option => option.Id == FontPreferenceService.NormalizeId(
+                    _settings.FontFamily));
             if (_credentials.Load() is { } stored)
             {
                 UsernameBox.Text = stored.Username;
@@ -144,6 +148,30 @@ public sealed partial class SettingsPage : Page
         catch (Exception exception)
         {
             Show($"保存自动备份设置失败：{exception.Message}",
+                InfoBarSeverity.Error);
+        }
+    }
+
+    private async void FontFamilyBox_SelectionChanged(
+        object sender,
+        SelectionChangedEventArgs args)
+    {
+        if (_loading
+            || _window is null
+            || FontFamilyBox.SelectedItem is not FontPreferenceOption option)
+        {
+            return;
+        }
+        try
+        {
+            _settings.FontFamily = option.Id;
+            await _window.Settings.SaveAsync(_settings);
+            _window.ApplyFontFamily(option.Id);
+            Show($"已应用{option.Label}。", InfoBarSeverity.Success);
+        }
+        catch (Exception exception)
+        {
+            Show($"保存字体设置失败：{exception.Message}",
                 InfoBarSeverity.Error);
         }
     }

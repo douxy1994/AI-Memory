@@ -59,9 +59,23 @@
                             <TextBlock Text="常规"
                                        FontSize="22"
                                        FontWeight="SemiBold" />
-                            <TextBlock Text="控制登录启动和窗口相关行为。"
+                            <TextBlock Text="控制字体、登录启动和自动备份。"
                                        Opacity="0.65" />
                         </StackPanel>
+                        <Border Style="{StaticResource CardStyle}">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="语言与字体"
+                                           FontSize="17"
+                                           FontWeight="SemiBold" />
+                                <ComboBox x:Name="FontFamilyBox"
+                                          Header="字体"
+                                          DisplayMemberPath="Label"
+                                          SelectionChanged="FontFamilyBox_SelectionChanged" />
+                                <TextBlock Text="字体会立即应用；所选字体未安装时由 Windows 自动回退到系统字体。"
+                                           TextWrapping="Wrap"
+                                           Opacity="0.6" />
+                            </StackPanel>
+                        </Border>
                         <Border Style="{StaticResource CardStyle}">
                             <Grid ColumnSpacing="16">
                                 <Grid.ColumnDefinitions>

@@ -1,6 +1,7 @@
 using AIMemory.Core.Persistence;
 using AIMemory.Core.Services;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Media;
 using Microsoft.Windows.AppLifecycle;
 
 namespace AIMemory.Windows;
@@ -26,11 +27,20 @@ public sealed partial class App : Application
         DataPaths.EnsureDirectories();
         var database = new AIMemoryDatabase();
         await database.InitializeAsync();
+        var settings = await new SettingsStore().LoadAsync();
+        ApplyApplicationFont(settings.FontFamily);
         _window = new MainWindow(database);
+        _window.ApplyFontFamily(settings.FontFamily);
         _window.Activate();
-        _window.ConfigureAutomaticBackup(
-            await _window.Settings.LoadAsync());
+        _window.ConfigureAutomaticBackup(settings);
         _ = CheckForUpdatesAtLaunchAsync();
+    }
+
+    public static void ApplyApplicationFont(string preference)
+    {
+        Current.Resources["ContentControlThemeFontFamily"] =
+            new FontFamily(
+                FontPreferenceService.ResolveWindowsFamily(preference));
     }
 
     private async Task CheckForUpdatesAtLaunchAsync()

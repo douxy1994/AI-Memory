@@ -559,6 +559,24 @@ public sealed class CoreTests : IDisposable
         Assert.Equal("dav.example.com", loaded.Sync.WebdavHost);
     }
 
+    [Theory]
+    [InlineData("system", "system", "Segoe UI Variable")]
+    [InlineData("Segoe UI Variable", "system", "Segoe UI Variable")]
+    [InlineData("sourceSans", "sourceSans", "Noto Sans CJK SC")]
+    [InlineData("Noto Serif CJK SC", "sourceSerif", "Noto Serif CJK SC")]
+    [InlineData("wenkai", "wenkai", "LXGW WenKai")]
+    [InlineData("unknown-font", "system", "Segoe UI Variable")]
+    public void FontPreferencesNormalizeMacAndLegacyWindowsValues(
+        string input,
+        string expectedId,
+        string expectedWindowsFamily)
+    {
+        Assert.Equal(expectedId, FontPreferenceService.NormalizeId(input));
+        Assert.Equal(
+            expectedWindowsFamily,
+            FontPreferenceService.ResolveWindowsFamily(input));
+    }
+
     [Fact]
     public async Task FavoritesCanBeCreatedEditedPinnedAndRemoved()
     {

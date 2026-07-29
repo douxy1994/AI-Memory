@@ -20,7 +20,7 @@
             </StackPanel>
         </Grid>
 
-        <MenuBar Grid.Row="1">
+        <MenuBar x:Name="MainMenuBar" Grid.Row="1">
             <MenuBarItem Title="工作台">
                 <MenuFlyoutItem Text="返回工作台"
                                 KeyboardAcceleratorTextOverride="Ctrl+1"

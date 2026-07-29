@@ -10,7 +10,7 @@
             <Color x:Key="AIMemoryGreen">#2F9E68</Color>
             <SolidColorBrush x:Key="AIMemoryGreenBrush" Color="{StaticResource AIMemoryGreen}" />
             <Style x:Key="PageTitleStyle" TargetType="TextBlock">
-                <Setter Property="FontFamily" Value="Segoe UI Variable Display" />
+                <Setter Property="FontFamily" Value="{ThemeResource ContentControlThemeFontFamily}" />
                 <Setter Property="FontSize" Value="28" />
                 <Setter Property="FontWeight" Value="SemiBold" />
             </Style>
