@@ -17,19 +17,9 @@ public sealed class AgentIntegrationService
     public IReadOnlyList<AgentIntegrationStatus> Detect() =>
         new AgentCatalog().Detect()
             .Select(status =>
-            {
-                var integrated = IsIntegrated(status.Id);
-                return status with
-                {
-                    IsIntegrated = integrated,
-                    State = integrated
-                        ? AgentIntegrationState.Integrated
-                        : status.State,
-                    Detail = integrated
-                        ? "AI Memory MCP 已启用。"
-                        : status.Detail,
-                };
-            })
+                AgentIntegrationStateService.ApplyConfigurationState(
+                    status,
+                    IsIntegrated(status.Id)))
             .OrderByDescending(value => value.IsDetected)
             .ThenByDescending(value => value.IsIntegrated)
             .ThenBy(value => AgentCatalog.All

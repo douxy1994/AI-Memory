@@ -847,6 +847,7 @@ public sealed class CoreTests : IDisposable
         Directory.CreateDirectory(bin);
         File.WriteAllText(Path.Combine(bin, "goose.exe"), "");
         File.WriteAllText(Path.Combine(bin, "vibe.cmd"), "");
+        File.WriteAllText(Path.Combine(bin, "opencode.cmd"), "");
         var statuses = new AgentCatalog(_root, [bin]).Detect();
         Assert.Equal(
         [
@@ -863,8 +864,8 @@ public sealed class CoreTests : IDisposable
         var firstMissing = statuses
             .Select((status, index) => (status, index))
             .First(value => !value.status.IsDetected).index;
-        Assert.Equal(2, firstMissing);
-        Assert.Equal(["goose", "vibe"], statuses
+        Assert.Equal(3, firstMissing);
+        Assert.Equal(["opencode", "goose", "vibe"], statuses
             .Take(firstMissing).Select(value => value.Id).ToArray());
         Assert.All(statuses.Take(firstMissing), value => Assert.True(value.IsDetected));
         Assert.All(statuses.Skip(firstMissing), value =>
@@ -874,6 +875,25 @@ public sealed class CoreTests : IDisposable
             Assert.Equal(AgentIntegrationState.Missing, value.State);
         });
         Assert.Equal(45, statuses.Count);
+
+        var missingWithStaleConfiguration =
+            AgentIntegrationStateService.ApplyConfigurationState(
+                statuses.First(value => !value.IsDetected),
+                true);
+        Assert.False(missingWithStaleConfiguration.IsIntegrated);
+        Assert.Equal(
+            AgentIntegrationState.Missing,
+            missingWithStaleConfiguration.State);
+        Assert.Contains("当前不会启动", missingWithStaleConfiguration.Detail);
+
+        var detectedWithConfiguration =
+            AgentIntegrationStateService.ApplyConfigurationState(
+                statuses.First(value => value.Id == "opencode"),
+                true);
+        Assert.True(detectedWithConfiguration.IsIntegrated);
+        Assert.Equal(
+            AgentIntegrationState.Integrated,
+            detectedWithConfiguration.State);
     }
 
     [Fact]

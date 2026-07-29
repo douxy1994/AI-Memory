@@ -14,7 +14,7 @@
     { "id": "approved-memory-reader", "status": "implemented", "evidence": "MemoryPage" },
     { "id": "favorites", "status": "implemented", "evidence": "create/remove, pin, note/tag editing, continuation-card copy and source conversation navigation with persistence tests" },
     { "id": "trash-restore-delete", "status": "implemented", "evidence": "recoverable delete, restore, permanent delete, empty, retention setting and expiry purge with round-trip tests" },
-    { "id": "agent-catalog", "status": "implemented", "evidence": "45 products, detected-first and missing-disabled" },
+    { "id": "agent-catalog", "status": "implemented", "evidence": "45 products; PATH detection covers extensionless, .exe and .cmd launchers; detected-first; missing and stale-config entries remain disabled" },
     { "id": "credential-storage", "status": "implemented", "evidence": "Windows PasswordVault" },
     { "id": "webdav-verification", "status": "implemented", "evidence": "PROPFIND verification with visible result" },
     { "id": "backup", "status": "implemented", "evidence": "SQLite online backup, SHA-256 no-change skip, NTFS hard-link reuse, settings sidecar, configurable scheduler, validated restore, pre-restore safety backup and automatic rollback" },
