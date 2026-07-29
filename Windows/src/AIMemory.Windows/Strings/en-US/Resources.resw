@@ -28,6 +28,7 @@
   <data name="AutomaticBackupEnabled" xml:space="preserve"><value>Automatic backup is enabled and checks for changes every {0} minutes.</value></data>
   <data name="AutomaticBackupDisabled" xml:space="preserve"><value>Automatic backup is disabled.</value></data>
   <data name="AutomaticBackupSaveFailed" xml:space="preserve"><value>Could not save automatic backup settings: {0}</value></data>
+  <data name="AutomaticRecoverySettingsSaved" xml:space="preserve"><value>Automatic memory recovery points and scheduled backup settings were saved.</value></data>
   <data name="AgentIntegrationEnabled" xml:space="preserve"><value>{0} integration enabled.</value></data>
   <data name="AgentIntegrationDisabled" xml:space="preserve"><value>{0} integration disabled.</value></data>
   <data name="AgentIntegrationUpdateFailed" xml:space="preserve"><value>Could not update the Agent integration: {0}</value></data>
@@ -233,7 +234,7 @@
   <data name="SettingsCategorySync.Text" xml:space="preserve"><value>Data Sync &amp; Backup</value></data>
   <data name="SettingsCategoryUpdates.Text" xml:space="preserve"><value>Updates &amp; Diagnostics</value></data>
   <data name="SettingsGeneralTitle.Text" xml:space="preserve"><value>General</value></data>
-  <data name="SettingsGeneralSubtitle.Text" xml:space="preserve"><value>Control fonts, login startup, and automatic backups.</value></data>
+  <data name="SettingsGeneralSubtitle.Text" xml:space="preserve"><value>Control fonts, login startup, memory recovery points, and automatic backups.</value></data>
   <data name="SettingsLanguageFontTitle.Text" xml:space="preserve"><value>Language &amp; Font</value></data>
   <data name="SettingsLanguage.Header" xml:space="preserve"><value>Display language</value></data>
   <data name="SettingsLanguageRestartHint.Text" xml:space="preserve"><value>Restart AI Memory to apply language changes.</value></data>
@@ -241,7 +242,9 @@
   <data name="SettingsFontHint.Text" xml:space="preserve"><value>Font changes apply immediately. Windows uses the system font when the selected font is unavailable.</value></data>
   <data name="SettingsStartupTitle.Text" xml:space="preserve"><value>Start at login</value></data>
   <data name="SettingsStartupLoading.Text" xml:space="preserve"><value>Reading system status…</value></data>
-  <data name="SettingsAutoBackupTitle.Text" xml:space="preserve"><value>Automatic Backup</value></data>
+  <data name="SettingsAutoBackupTitle.Text" xml:space="preserve"><value>Automatic Recovery and Backup</value></data>
+  <data name="SettingsAutoCaptureTitle.Text" xml:space="preserve"><value>Keep automatic memory recovery points</value></data>
+  <data name="SettingsAutoCaptureHint.Text" xml:space="preserve"><value>When a conversation is open, refresh its Agent source and continuously update that conversation’s single automatic checkpoint.</value></data>
   <data name="SettingsAutoBackupToggleTitle.Text" xml:space="preserve"><value>Back up the database and settings on a schedule</value></data>
   <data name="SettingsAutoBackupHint.Text" xml:space="preserve"><value>Unchanged data does not create duplicate recovery points. Unchanged files are reused with NTFS hard links.</value></data>
   <data name="SettingsBackupInterval.Header" xml:space="preserve"><value>Backup interval (minutes)</value></data>

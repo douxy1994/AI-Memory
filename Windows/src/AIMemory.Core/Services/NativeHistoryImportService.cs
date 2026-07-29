@@ -52,6 +52,22 @@ public sealed class NativeHistoryImportService
         return new NativeHistoryImportReport(imported, warnings);
     }
 
+    public Task<int> ImportAgentAsync(
+        string sourceAgent,
+        CancellationToken cancellationToken = default) =>
+        sourceAgent.Trim().ToLowerInvariant() switch
+        {
+            "codex" => ImportCodexAsync(cancellationToken),
+            "claude" => ImportClaudeAsync(cancellationToken),
+            "gemini" => ImportGeminiAsync(cancellationToken),
+            "hermes" => ImportHermesAsync(cancellationToken),
+            "kimi" => ImportKimiAsync(cancellationToken),
+            "antigravity" => ImportAntigravityAsync(cancellationToken),
+            "opencode" => ImportOpenCodeAsync(cancellationToken),
+            "zcode" => ImportZCodeAsync(cancellationToken),
+            _ => Task.FromResult(0),
+        };
+
     private static async Task<int> ImportSafelyAsync(
         string label,
         Func<CancellationToken, Task<int>> operation,

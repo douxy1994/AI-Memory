@@ -8,6 +8,7 @@ public sealed class AppSettings
     public string Language { get; set; } = "system";
     public string FontFamily { get; set; } = "system";
     public int TrashRetentionDays { get; set; } = 14;
+    public bool AutoCaptureMemory { get; set; } = true;
     public bool AutoBackupEnabled { get; set; }
     public int AutoBackupIntervalMinutes { get; set; } = 30;
     public bool AutoCheckUpdates { get; set; } = true;

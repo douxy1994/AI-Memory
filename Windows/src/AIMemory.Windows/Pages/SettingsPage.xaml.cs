@@ -38,6 +38,7 @@ public sealed partial class SettingsPage : Page
             SyncFolderBox.Text = _settings.Sync.SyncFolder;
             AutoUpdateToggle.IsOn = _settings.AutoCheckUpdates;
             UpdateFeedBox.Text = _settings.UpdateFeedUrl;
+            AutoCaptureToggle.IsOn = _settings.AutoCaptureMemory;
             AutoBackupToggle.IsOn = _settings.AutoBackupEnabled;
             AutoBackupIntervalBox.Value =
                 _settings.AutoBackupIntervalMinutes;
@@ -172,6 +173,7 @@ public sealed partial class SettingsPage : Page
         RoutedEventArgs args)
     {
         if (_window is null) return;
+        _settings.AutoCaptureMemory = AutoCaptureToggle.IsOn;
         _settings.AutoBackupEnabled = AutoBackupToggle.IsOn;
         _settings.AutoBackupIntervalMinutes = double.IsNaN(
                 AutoBackupIntervalBox.Value)
@@ -182,11 +184,8 @@ public sealed partial class SettingsPage : Page
             await _window.Settings.SaveAsync(_settings);
             _window.ConfigureAutomaticBackup(_settings);
             Show(
-                _settings.AutoBackupEnabled
-                    ? LocalizationService.Format(
-                        "AutomaticBackupEnabled",
-                        _settings.AutoBackupIntervalMinutes)
-                    : LocalizationService.Get("AutomaticBackupDisabled"),
+                LocalizationService.Get(
+                    "AutomaticRecoverySettingsSaved"),
                 InfoBarSeverity.Success);
         }
         catch (Exception exception)
@@ -491,6 +490,7 @@ public sealed partial class SettingsPage : Page
         SyncFolderBox.Text = _settings.Sync.SyncFolder;
         AutoUpdateToggle.IsOn = _settings.AutoCheckUpdates;
         UpdateFeedBox.Text = _settings.UpdateFeedUrl;
+        AutoCaptureToggle.IsOn = _settings.AutoCaptureMemory;
         AutoBackupToggle.IsOn = _settings.AutoBackupEnabled;
         AutoBackupIntervalBox.Value =
             _settings.AutoBackupIntervalMinutes;

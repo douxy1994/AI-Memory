@@ -573,12 +573,127 @@ public sealed class CoreTests : IDisposable
         var settings = new AppSettings
         {
             TrashRetentionDays = 999,
+            AutoCaptureMemory = false,
             Sync = new SyncSettings { WebdavHost = "dav.example.com" },
         };
         await store.SaveAsync(settings);
         var loaded = await store.LoadAsync();
         Assert.Equal(365, loaded.TrashRetentionDays);
+        Assert.False(loaded.AutoCaptureMemory);
         Assert.Equal("dav.example.com", loaded.Sync.WebdavHost);
+    }
+
+    [Fact]
+    public async Task AutomaticCaptureRefreshesAndUpsertsOneRecoveryPoint()
+    {
+        var home = Path.Combine(_root, "automatic-capture");
+        var sourceDirectory = Path.Combine(
+            home,
+            ".claude",
+            "projects",
+            "C--repo");
+        Directory.CreateDirectory(sourceDirectory);
+        var sourcePath = Path.Combine(sourceDirectory, "auto-1.jsonl");
+        await File.WriteAllLinesAsync(sourcePath,
+        [
+            """{"type":"user","uuid":"u1","timestamp":"2026-07-01T01:00:00Z","cwd":"C:\\repo","message":{"role":"user","content":"First question"}}""",
+            """{"type":"assistant","uuid":"a1","timestamp":"2026-07-01T01:01:00Z","cwd":"C:\\repo","message":{"role":"assistant","content":"First answer"}}""",
+        ]);
+        var database = new AIMemoryDatabase(
+            Path.Combine(home, "aimemory.db"));
+        await database.InitializeAsync();
+        var repository = new ConversationRepository(database);
+        var service = new AutomaticCaptureService(
+            database,
+            repository,
+            home);
+
+        var first = await service.CaptureAsync("claude", "auto-1");
+        Assert.Equal(2, first.Detail.Messages.Count);
+        Assert.Equal("claude:auto-1", first.Checkpoint.ConversationId);
+        Assert.Contains(
+            "\"capture\":\"auto\"",
+            first.Checkpoint.MetadataJson);
+
+        await File.AppendAllTextAsync(
+            sourcePath,
+            Environment.NewLine
+            + """{"type":"assistant","uuid":"a2","timestamp":"2026-07-01T01:02:00Z","cwd":"C:\\repo","message":{"role":"assistant","content":"Updated answer"}}""");
+        var second = await service.CaptureAsync("claude", "auto-1");
+
+        Assert.Equal(first.Checkpoint.Id, second.Checkpoint.Id);
+        Assert.Equal(3, second.Detail.Messages.Count);
+        Assert.Contains(
+            "\"message_count\":3",
+            second.Checkpoint.MetadataJson);
+        Assert.Single(
+            await new RecoveryService(database).ListCheckpointsAsync(),
+            value => value.MetadataJson.Contains(
+                "\"capture\":\"auto\"",
+                StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task AutomaticCheckpointNeverReplacesManualOrHandoffPoint()
+    {
+        var database = new AIMemoryDatabase(
+            Path.Combine(_root, "automatic-checkpoints.db"));
+        await database.InitializeAsync();
+        var repository = new ConversationRepository(database);
+        await repository.UpsertAsync(new WebDavConversationDetail(
+            "capture-1",
+            "codex",
+            @"C:\repo",
+            "2026-07-01T01:00:00Z",
+            "2026-07-01T01:01:00Z",
+            "Capture fixture",
+            null,
+            "codex resume capture-1",
+            [
+                new WebDavMessage(
+                    "m1",
+                    "2026-07-01T01:00:00Z",
+                    "user",
+                    "Remember this",
+                    [],
+                    []),
+            ],
+            []));
+        var conversation = await repository.FindAsync("capture-1");
+        Assert.NotNull(conversation);
+        var recovery = new RecoveryService(database);
+        var manual = await recovery.CreateCheckpointAsync(conversation!, 1);
+        var automatic = await recovery.UpsertAutomaticCheckpointAsync(
+            conversation,
+            "codex:capture-1",
+            "Automatic one",
+            null,
+            """{"capture":"auto","message_count":1}""");
+        var updated = await recovery.UpsertAutomaticCheckpointAsync(
+            conversation,
+            "codex:capture-1",
+            "Automatic two",
+            null,
+            """{"capture":"auto","message_count":2}""");
+
+        Assert.Equal(automatic.Id, updated.Id);
+        Assert.Equal(2, (await recovery.ListCheckpointsAsync()).Count);
+        Assert.Contains(
+            await recovery.ListCheckpointsAsync(),
+            value => value.Id == manual.Id
+                && value.MetadataJson.Contains(
+                    "\"capture\":\"manual\"",
+                    StringComparison.Ordinal));
+
+        await recovery.CreateHandoffAsync(updated, "claude");
+        var replacement = await recovery.UpsertAutomaticCheckpointAsync(
+            conversation,
+            "codex:capture-1",
+            "Automatic three",
+            null,
+            """{"capture":"auto","message_count":3}""");
+        Assert.NotEqual(updated.Id, replacement.Id);
+        Assert.Equal(3, (await recovery.ListCheckpointsAsync()).Count);
     }
 
     [Theory]

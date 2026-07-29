@@ -13,6 +13,7 @@ public sealed partial class ConversationPage : Page
     private ConversationNavigation? _context;
     private WebDavConversationDetail? _detail;
     private FavoriteService? _favorites;
+    private CancellationTokenSource? _automaticCapture;
 
     public ConversationPage() => InitializeComponent();
 
@@ -26,25 +27,7 @@ public sealed partial class ConversationPage : Page
             : context.Conversation.Summary;
         _detail = await context.Window.Conversations.ExportAsync(
             context.Conversation.Id);
-        MetadataText.Text =
-            $"{context.Conversation.SourceAgent} · {_detail.ProjectDir} · {_detail.UpdatedAt}";
-        MessageList.ItemsSource = _detail.Messages;
-        FileChangeList.ItemsSource = _detail.FileChanges;
-        MessageCountText.Text = _detail.Messages.Count.ToString();
-        FileCountText.Text = _detail.FileChanges.Count.ToString();
-        ToolCallCountText.Text = _detail.Messages
-            .Sum(value => value.ToolCalls.Count)
-            .ToString();
-        NoFileChangesText.Visibility = _detail.FileChanges.Count == 0
-            ? Visibility.Visible
-            : Visibility.Collapsed;
-        ResumeCommandBox.Text = _detail.ResumeCommand ?? "";
-        ResumePanel.Visibility = string.IsNullOrWhiteSpace(_detail.ResumeCommand)
-            ? Visibility.Collapsed
-            : Visibility.Visible;
-        StoragePathText.Text = string.IsNullOrWhiteSpace(_detail.StoragePath)
-            ? LocalizationService.Get("NotProvided")
-            : _detail.StoragePath;
+        ApplyDetail(_detail);
         await ReloadFavoriteStateAsync();
         var detected = new AgentCatalog().Detect()
             .Where(value => value.IsDetected)
@@ -53,6 +36,98 @@ public sealed partial class ConversationPage : Page
             ? detected
             : new AgentCatalog().Detect();
         TargetAgentBox.SelectedIndex = 0;
+        StartAutomaticCapture();
+    }
+
+    protected override void OnNavigatedFrom(NavigationEventArgs args)
+    {
+        _automaticCapture?.Cancel();
+        _automaticCapture?.Dispose();
+        _automaticCapture = null;
+        base.OnNavigatedFrom(args);
+    }
+
+    private void ApplyDetail(WebDavConversationDetail detail)
+    {
+        TitleText.Text = string.IsNullOrWhiteSpace(detail.Summary)
+            ? LocalizationService.Get("UntitledConversation")
+            : detail.Summary;
+        MetadataText.Text =
+            $"{detail.SourceAgent} · {detail.ProjectDir} · {detail.UpdatedAt}";
+        MessageList.ItemsSource = detail.Messages;
+        FileChangeList.ItemsSource = detail.FileChanges;
+        MessageCountText.Text = detail.Messages.Count.ToString();
+        FileCountText.Text = detail.FileChanges.Count.ToString();
+        ToolCallCountText.Text = detail.Messages
+            .Sum(value => value.ToolCalls.Count)
+            .ToString();
+        NoFileChangesText.Visibility = detail.FileChanges.Count == 0
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        ResumeCommandBox.Text = detail.ResumeCommand ?? "";
+        ResumePanel.Visibility = string.IsNullOrWhiteSpace(detail.ResumeCommand)
+            ? Visibility.Collapsed
+            : Visibility.Visible;
+        StoragePathText.Text = string.IsNullOrWhiteSpace(detail.StoragePath)
+            ? LocalizationService.Get("NotProvided")
+            : detail.StoragePath;
+    }
+
+    private void StartAutomaticCapture()
+    {
+        _automaticCapture?.Cancel();
+        _automaticCapture?.Dispose();
+        _automaticCapture = new CancellationTokenSource();
+        _ = RunAutomaticCaptureAsync(_automaticCapture.Token);
+    }
+
+    private async Task RunAutomaticCaptureAsync(
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Delay(
+                TimeSpan.FromMilliseconds(350),
+                cancellationToken);
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                if (_context is null) return;
+                var settings = await _context.Window.Settings.LoadAsync(
+                    cancellationToken);
+                if (!settings.AutoCaptureMemory) return;
+                try
+                {
+                    var result = await new AutomaticCaptureService(
+                            _context.Window.Database,
+                            _context.Window.Conversations)
+                        .CaptureAsync(
+                            _context.Conversation.SourceAgent,
+                            _context.Conversation.Id,
+                            cancellationToken);
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        _detail = result.Detail;
+                        ApplyDetail(result.Detail);
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    return;
+                }
+                catch (Exception exception)
+                {
+                    System.Diagnostics.Debug.WriteLine(
+                        $"Automatic memory capture skipped: {exception}");
+                }
+                await Task.Delay(
+                    TimeSpan.FromMinutes(2),
+                    cancellationToken);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Leaving the conversation page intentionally stops capture.
+        }
     }
 
     private async Task ReloadFavoriteStateAsync()

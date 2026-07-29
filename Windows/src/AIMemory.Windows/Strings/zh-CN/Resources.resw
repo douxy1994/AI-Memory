@@ -28,6 +28,7 @@
   <data name="AutomaticBackupEnabled" xml:space="preserve"><value>自动备份已开启，每 {0} 分钟检查一次变化。</value></data>
   <data name="AutomaticBackupDisabled" xml:space="preserve"><value>自动备份已关闭。</value></data>
   <data name="AutomaticBackupSaveFailed" xml:space="preserve"><value>保存自动备份设置失败：{0}</value></data>
+  <data name="AutomaticRecoverySettingsSaved" xml:space="preserve"><value>自动记忆恢复点与定时备份设置已保存。</value></data>
   <data name="AgentIntegrationEnabled" xml:space="preserve"><value>{0} 集成已启用。</value></data>
   <data name="AgentIntegrationDisabled" xml:space="preserve"><value>{0} 集成已关闭。</value></data>
   <data name="AgentIntegrationUpdateFailed" xml:space="preserve"><value>更新 Agent 集成失败：{0}</value></data>
@@ -233,7 +234,7 @@
   <data name="SettingsCategorySync.Text" xml:space="preserve"><value>数据同步与备份</value></data>
   <data name="SettingsCategoryUpdates.Text" xml:space="preserve"><value>更新与诊断</value></data>
   <data name="SettingsGeneralTitle.Text" xml:space="preserve"><value>常规</value></data>
-  <data name="SettingsGeneralSubtitle.Text" xml:space="preserve"><value>控制字体、登录启动和自动备份。</value></data>
+  <data name="SettingsGeneralSubtitle.Text" xml:space="preserve"><value>控制字体、登录启动、记忆恢复点和自动备份。</value></data>
   <data name="SettingsLanguageFontTitle.Text" xml:space="preserve"><value>语言与字体</value></data>
   <data name="SettingsLanguage.Header" xml:space="preserve"><value>界面语言</value></data>
   <data name="SettingsLanguageRestartHint.Text" xml:space="preserve"><value>语言更改将在重新启动 AI Memory 后生效。</value></data>
@@ -241,7 +242,9 @@
   <data name="SettingsFontHint.Text" xml:space="preserve"><value>字体会立即应用；所选字体未安装时由 Windows 自动回退到系统字体。</value></data>
   <data name="SettingsStartupTitle.Text" xml:space="preserve"><value>登录时自动启动</value></data>
   <data name="SettingsStartupLoading.Text" xml:space="preserve"><value>正在读取系统状态…</value></data>
-  <data name="SettingsAutoBackupTitle.Text" xml:space="preserve"><value>自动备份</value></data>
+  <data name="SettingsAutoBackupTitle.Text" xml:space="preserve"><value>自动恢复与备份</value></data>
+  <data name="SettingsAutoCaptureTitle.Text" xml:space="preserve"><value>自动保留记忆恢复点</value></data>
+  <data name="SettingsAutoCaptureHint.Text" xml:space="preserve"><value>打开对话后刷新对应 Agent 来源，并持续更新该对话唯一的自动检查点。</value></data>
   <data name="SettingsAutoBackupToggleTitle.Text" xml:space="preserve"><value>定时备份数据库与设置</value></data>
   <data name="SettingsAutoBackupHint.Text" xml:space="preserve"><value>没有变化时不会生成重复恢复点；未变化的文件使用 NTFS 硬链接复用。</value></data>
   <data name="SettingsBackupInterval.Header" xml:space="preserve"><value>备份间隔（分钟）</value></data>

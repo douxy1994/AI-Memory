@@ -26,6 +26,7 @@
     { "id": "native-conversation-migration", "status": "implemented", "evidence": "Verified full-copy writes to Claude, Codex, Gemini and OpenCode; cut mode archives file/SQLite sources, preserves a complete trash snapshot, restores raw history and supports permanent purge with 29 Core tests" },
     { "id": "memory-review-editing", "status": "implemented", "evidence": "MemoryGovernanceService and MemoryPage review actions" },
     { "id": "checkpoint-handoff-actions", "status": "implemented", "evidence": "RecoveryService and MemoryPage checkpoint/handoff actions" },
+    { "id": "automatic-memory-capture", "status": "implemented", "evidence": "opening a conversation refreshes that source and upserts one active automatic checkpoint every two minutes while enabled; manual and handoff checkpoints are preserved" },
     { "id": "mcp-tool-contract", "status": "implemented", "evidence": "22-tool contract aligned with macOS, including continuation, Wiki/index rebuild, conflicts and entity graph" },
     { "id": "menu-and-shortcut-parity", "status": "implemented", "evidence": "MainWindow MenuBar and keyboard accelerator map" },
     { "id": "settings-navigation", "status": "implemented", "evidence": "Windows 11 category navigation for General, Agent integrations, Data sync and backup, Updates and diagnostics" },

@@ -150,6 +150,138 @@ public sealed class RecoveryService(AIMemoryDatabase database)
             now);
     }
 
+    public async Task<CheckpointRecord> UpsertAutomaticCheckpointAsync(
+        ConversationSummary conversation,
+        string checkpointConversationId,
+        string summary,
+        string? resumeCommand,
+        string metadataJson,
+        CancellationToken cancellationToken = default)
+    {
+        using var metadataDocument = JsonDocument.Parse(metadataJson);
+        if (metadataDocument.RootElement.ValueKind != JsonValueKind.Object
+            || !metadataDocument.RootElement.TryGetProperty(
+                "capture",
+                out var capture)
+            || capture.ValueKind != JsonValueKind.String
+            || capture.GetString() != "auto")
+        {
+            throw new ArgumentException(
+                "自动恢复点 metadata 必须包含 capture=auto。",
+                nameof(metadataJson));
+        }
+
+        var now = DateTimeOffset.UtcNow.ToString("O");
+        var checkpointSummary = string.IsNullOrWhiteSpace(summary)
+            ? conversation.Id
+            : summary.Trim();
+        var resume = string.IsNullOrWhiteSpace(resumeCommand)
+            ? ResumeCommand(conversation.SourceAgent, conversation.Id)
+            : resumeCommand.Trim();
+
+        await using var connection = database.OpenConnection();
+        await using var transaction =
+            await connection.BeginTransactionAsync(cancellationToken);
+        var find = connection.CreateCommand();
+        find.Transaction = (Microsoft.Data.Sqlite.SqliteTransaction)transaction;
+        find.CommandText = """
+            SELECT checkpoint_id,metadata_json
+            FROM checkpoints
+            WHERE repo_id=$repo
+              AND conversation_id=$conversation
+              AND lower(source_agent)=lower($agent)
+              AND status='active'
+              AND handoff_id IS NULL
+            ORDER BY created_at DESC;
+            """;
+        find.Parameters.AddWithValue("$repo", conversation.RepoId);
+        find.Parameters.AddWithValue(
+            "$conversation",
+            checkpointConversationId);
+        find.Parameters.AddWithValue("$agent", conversation.SourceAgent);
+        string? existingId = null;
+        await using (var reader =
+                     await find.ExecuteReaderAsync(cancellationToken))
+        {
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                try
+                {
+                    using var existingMetadata = JsonDocument.Parse(
+                        reader.GetString(1));
+                    if (existingMetadata.RootElement.TryGetProperty(
+                            "capture",
+                            out var existingCapture)
+                        && existingCapture.ValueKind
+                            == JsonValueKind.String
+                        && existingCapture.GetString() == "auto")
+                    {
+                        existingId = reader.GetString(0);
+                        break;
+                    }
+                }
+                catch (JsonException)
+                {
+                    // A malformed manual checkpoint must not block capture.
+                }
+            }
+        }
+
+        var checkpointId = existingId ?? Guid.NewGuid().ToString();
+        var command = connection.CreateCommand();
+        command.Transaction =
+            (Microsoft.Data.Sqlite.SqliteTransaction)transaction;
+        if (existingId is null)
+        {
+            command.CommandText = """
+                INSERT INTO checkpoints(
+                  checkpoint_id,repo_id,conversation_id,source_agent,status,
+                  summary,resume_command,metadata_json,handoff_id,created_at)
+                VALUES($id,$repo,$conversation,$agent,'active',$summary,
+                       $resume,$metadata,NULL,$now);
+                """;
+            command.Parameters.AddWithValue(
+                "$repo",
+                conversation.RepoId);
+            command.Parameters.AddWithValue(
+                "$conversation",
+                checkpointConversationId);
+            command.Parameters.AddWithValue(
+                "$agent",
+                conversation.SourceAgent);
+        }
+        else
+        {
+            command.CommandText = """
+                UPDATE checkpoints
+                SET summary=$summary,resume_command=$resume,
+                    metadata_json=$metadata,created_at=$now
+                WHERE checkpoint_id=$id;
+                """;
+        }
+        command.Parameters.AddWithValue("$id", checkpointId);
+        command.Parameters.AddWithValue("$summary", checkpointSummary);
+        command.Parameters.AddWithValue(
+            "$resume",
+            (object?)resume ?? DBNull.Value);
+        command.Parameters.AddWithValue("$metadata", metadataJson);
+        command.Parameters.AddWithValue("$now", now);
+        await command.ExecuteNonQueryAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+
+        return new CheckpointRecord(
+            checkpointId,
+            conversation.RepoId,
+            checkpointConversationId,
+            conversation.SourceAgent,
+            "active",
+            checkpointSummary,
+            resume,
+            metadataJson,
+            null,
+            now);
+    }
+
     public async Task<HandoffRecord> CreateHandoffAsync(
         CheckpointRecord checkpoint,
         string toAgent,

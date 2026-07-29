@@ -59,7 +59,7 @@
                             <TextBlock x:Uid="SettingsGeneralTitle" Text="常规"
                                        FontSize="22"
                                        FontWeight="SemiBold" />
-                            <TextBlock x:Uid="SettingsGeneralSubtitle" Text="控制字体、登录启动和自动备份。"
+                            <TextBlock x:Uid="SettingsGeneralSubtitle" Text="控制字体、登录启动、记忆恢复点和自动备份。"
                                        Opacity="0.65" />
                         </StackPanel>
                         <Border Style="{StaticResource CardStyle}">
@@ -111,9 +111,25 @@
                         </Border>
                         <Border Style="{StaticResource CardStyle}">
                             <StackPanel Spacing="14">
-                                <TextBlock x:Uid="SettingsAutoBackupTitle" Text="自动备份"
+                                <TextBlock x:Uid="SettingsAutoBackupTitle" Text="自动恢复与备份"
                                            FontSize="17"
                                            FontWeight="SemiBold" />
+                                <Grid ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Spacing="4">
+                                        <TextBlock x:Uid="SettingsAutoCaptureTitle" Text="自动保留记忆恢复点"
+                                                   FontWeight="SemiBold" />
+                                        <TextBlock x:Uid="SettingsAutoCaptureHint" Text="打开对话后刷新对应 Agent 来源，并持续更新该对话唯一的自动检查点。"
+                                                   TextWrapping="Wrap"
+                                                   Opacity="0.6" />
+                                    </StackPanel>
+                                    <ToggleSwitch x:Name="AutoCaptureToggle"
+                                                  Grid.Column="1"
+                                                  VerticalAlignment="Center" />
+                                </Grid>
                                 <Grid ColumnSpacing="16">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
