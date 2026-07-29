@@ -558,7 +558,9 @@ actor NativeAgentIntegrationStore {
             return home.appendingPathComponent(".aimemory/integrations/jules")
         case .alquimia, .auggie, .firebender, .forge, .ibmBob,
              .iflow, .lingma, .ohMyPi, .qoder, .shai, .sweAgent,
-             .tabnineCLI, .zed:
+             .tabnineCLI, .zed, .deepagentsCode, .mimoCode, .codebuff,
+             .kode, .lettaCode, .nanocoder, .raAid, .conductor, .waza,
+             .langsmithCLI, .cortexCode, .clineKanban:
             return home.appendingPathComponent(
                 ".aimemory/integrations/\(agent.rawValue)"
             )
@@ -608,7 +610,9 @@ actor NativeAgentIntegrationStore {
              .googleAgentsCLI, .rovoDev, .gitlabDuo, .grokBuild, .jules,
              .alquimia, .auggie, .firebender, .forge, .ibmBob,
              .iflow, .lingma, .ohMyPi, .qoder, .shai, .sweAgent,
-             .tabnineCLI, .zed:
+             .tabnineCLI, .zed, .deepagentsCode, .mimoCode, .codebuff,
+             .kode, .lettaCode, .nanocoder, .raAid, .conductor, .waza,
+             .langsmithCLI, .cortexCode, .clineKanban:
             return home.appendingPathComponent(".aimemory/integrations/\(agent.rawValue)")
         }
     }
@@ -881,6 +885,16 @@ private enum IntegrationAgent: String, CaseIterable {
     case sweAgent = "swe-agent"
     case tabnineCLI = "tabnine-cli"
     case zed
+    case deepagentsCode = "deepagents-code"
+    case mimoCode = "mimo-code"
+    case codebuff, kode
+    case lettaCode = "letta-code"
+    case nanocoder
+    case raAid = "ra-aid"
+    case conductor, waza
+    case langsmithCLI = "langsmith-cli"
+    case cortexCode = "cortex-code"
+    case clineKanban = "cline-kanban"
 
     static func catalogIndex(_ rawValue: String) -> Int {
         allCases.firstIndex { $0.rawValue == rawValue } ?? Int.max
@@ -946,6 +960,18 @@ private enum IntegrationAgent: String, CaseIterable {
         case .sweAgent: "SWE-agent"
         case .tabnineCLI: "Tabnine CLI"
         case .zed: "Zed"
+        case .deepagentsCode: "Deep Agents Code"
+        case .mimoCode: "MiMo Code"
+        case .codebuff: "Codebuff"
+        case .kode: "Kode CLI"
+        case .lettaCode: "Letta Code"
+        case .nanocoder: "Nanocoder"
+        case .raAid: "RA.Aid"
+        case .conductor: "Microsoft Conductor"
+        case .waza: "Microsoft Waza"
+        case .langsmithCLI: "LangSmith CLI"
+        case .cortexCode: "Snowflake Cortex Code"
+        case .clineKanban: "Cline Kanban"
         }
     }
 
@@ -972,7 +998,9 @@ private enum IntegrationAgent: String, CaseIterable {
             .googleAgentsCLI, .rovoDev, .gitlabDuo, .grokBuild, .jules,
             .alquimia, .auggie, .firebender, .forge, .ibmBob,
             .iflow, .lingma, .ohMyPi, .qoder, .shai, .sweAgent,
-            .tabnineCLI, .zed,
+            .tabnineCLI, .zed, .deepagentsCode, .mimoCode, .codebuff,
+            .kode, .lettaCode, .nanocoder, .raAid, .conductor, .waza,
+            .langsmithCLI, .cortexCode, .clineKanban,
         ].contains(self)
     }
 
@@ -985,7 +1013,9 @@ private enum IntegrationAgent: String, CaseIterable {
              .googleAgentsCLI, .rovoDev, .gitlabDuo, .grokBuild, .jules,
              .alquimia, .auggie, .firebender, .forge, .ibmBob,
              .iflow, .lingma, .ohMyPi, .qoder, .shai, .sweAgent,
-             .tabnineCLI, .zed:
+             .tabnineCLI, .zed, .deepagentsCode, .mimoCode, .codebuff,
+             .kode, .lettaCode, .nanocoder, .raAid, .conductor, .waza,
+             .langsmithCLI, .cortexCode, .clineKanban:
             false
         default:
             true
@@ -1017,7 +1047,7 @@ private enum IntegrationAgent: String, CaseIterable {
         case .aider: ["aider", "aider-chat"]
         case .amp: ["amp"]
         case .warp: ["warp"]
-        case .trae: ["trae", "traecli"]
+        case .trae: ["trae", "traecli", "trae-cli"]
         case .junie: ["junie"]
         case .crush: ["crush"]
         case .augment: ["augment"]
@@ -1052,6 +1082,18 @@ private enum IntegrationAgent: String, CaseIterable {
         case .sweAgent: ["sweagent"]
         case .tabnineCLI: ["tabnine", "tabnine-cli"]
         case .zed: ["zed"]
+        case .deepagentsCode: ["deepagents"]
+        case .mimoCode: ["mimo"]
+        case .codebuff: ["codebuff", "freebuff"]
+        case .kode: ["kode"]
+        case .lettaCode: ["letta"]
+        case .nanocoder: ["nanocoder"]
+        case .raAid: ["ra-aid"]
+        case .conductor: ["conductor"]
+        case .waza: ["waza"]
+        case .langsmithCLI: ["langsmith"]
+        case .cortexCode: ["cortex"]
+        case .clineKanban: ["kanban"]
         }
     }
 
@@ -1143,6 +1185,8 @@ private enum IntegrationAgent: String, CaseIterable {
             []
         case .sweAgent:
             [home.appendingPathComponent(".config/swe-agent")]
+        case .clineKanban:
+            []
         default:
             [defaultDetectionPath(home: home)]
         }
@@ -1228,6 +1272,19 @@ private enum IntegrationAgent: String, CaseIterable {
         case .sweAgent: home.appendingPathComponent(".config/swe-agent")
         case .tabnineCLI: home.appendingPathComponent(".tabnine")
         case .zed: home.appendingPathComponent(".config/zed")
+        case .deepagentsCode: home.appendingPathComponent(".deepagents")
+        case .mimoCode: home.appendingPathComponent(".mimocode")
+        case .codebuff: home.appendingPathComponent(".codebuff")
+        case .kode: home.appendingPathComponent(".kode")
+        case .lettaCode: home.appendingPathComponent(".letta")
+        case .nanocoder: home.appendingPathComponent(".nanocoder")
+        case .raAid: home.appendingPathComponent(".ra-aid")
+        case .conductor: home.appendingPathComponent(".conductor")
+        case .waza: home.appendingPathComponent(".waza")
+        case .langsmithCLI: home.appendingPathComponent(".langsmith")
+        case .cortexCode: home.appendingPathComponent(".snowflake/cortex")
+        case .clineKanban:
+            home.appendingPathComponent(".aimemory/integrations/cline-kanban")
         }
     }
 }

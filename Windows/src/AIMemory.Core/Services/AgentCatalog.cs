@@ -51,7 +51,7 @@ public sealed class AgentCatalog
         new("aider", "Aider", ["aider", "aider-chat"], [".aider.conf.yml"], false),
         new("amp", "Amp", ["amp"], [".config\\amp"], false),
         new("warp", "Warp Agent", ["warp"], ["AppData\\Local\\Programs\\Warp"], false),
-        new("trae", "Trae", ["trae", "traecli"], ["AppData\\Local\\Programs\\Trae"], false),
+        new("trae", "Trae", ["trae", "traecli", "trae-cli"], ["AppData\\Local\\Programs\\Trae"], false),
         new("junie", "JetBrains Junie", ["junie"], [".junie"], false),
         new("crush", "Crush", ["crush"], [".config\\crush"], false),
         new("augment", "Augment Code", ["augment"], ["AppData\\Roaming\\Code\\User\\globalStorage\\augment.vscode-augment"], false),
@@ -86,6 +86,18 @@ public sealed class AgentCatalog
         new("swe-agent", "SWE-agent", ["sweagent"], [".config\\swe-agent"], false),
         new("tabnine-cli", "Tabnine CLI", ["tabnine", "tabnine-cli"], [".tabnine"], false),
         new("zed", "Zed", ["zed"], [".config\\zed", "AppData\\Local\\Programs\\Zed"], false),
+        new("deepagents-code", "Deep Agents Code", ["deepagents"], [".deepagents"], false),
+        new("mimo-code", "MiMo Code", ["mimo"], [".mimocode"], false),
+        new("codebuff", "Codebuff", ["codebuff", "freebuff"], [".codebuff"], false),
+        new("kode", "Kode CLI", ["kode"], [".kode", ".kode.json"], false),
+        new("letta-code", "Letta Code", ["letta"], [".letta"], false),
+        new("nanocoder", "Nanocoder", ["nanocoder"], [".nanocoder"], false),
+        new("ra-aid", "RA.Aid", ["ra-aid"], [".ra-aid"], false),
+        new("conductor", "Microsoft Conductor", ["conductor"], [".conductor"], false),
+        new("waza", "Microsoft Waza", ["waza"], [".waza"], false),
+        new("langsmith-cli", "LangSmith CLI", ["langsmith"], [".langsmith"], false),
+        new("cortex-code", "Snowflake Cortex Code", ["cortex"], [".snowflake\\cortex"], false),
+        new("cline-kanban", "Cline Kanban", ["kanban"], [], false),
     ];
 
     public IReadOnlyList<AgentIntegrationStatus> Detect()
