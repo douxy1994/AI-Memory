@@ -7,7 +7,7 @@
     { "id": "launch-at-login", "status": "implemented", "evidence": "MSIX StartupTask plus Settings toggle" },
     { "id": "independent-data", "status": "implemented", "evidence": "%LOCALAPPDATA%/AIMemory" },
     { "id": "database-schema", "status": "implemented", "evidence": "SchemaV1.sql table-compatible with macOS" },
-    { "id": "settings-persistence", "status": "implemented", "evidence": "atomic JSON SettingsStore" },
+    { "id": "settings-persistence", "status": "implemented", "evidence": "atomic JSON SettingsStore with macOS/Windows schemaVersion, locale/language and legacy snake_case compatibility" },
     { "id": "workbench", "status": "implemented", "evidence": "source filter, four parity metrics, actionable recent conversations, automatic machine grouping, custom machine names, project moves, merges and reset" },
     { "id": "history-search", "status": "implemented", "evidence": "debounced conversation search, source and multi-project filtering, updated/created/title sorting, selection mode, and actionable memory, checkpoint, handoff, run, artifact, episode and Wiki projections" },
     { "id": "conversation-reader", "status": "implemented", "evidence": "message, tool call and file change counts; resume command, storage path, favorite, trash, checkpoint and handoff actions" },

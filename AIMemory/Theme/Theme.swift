@@ -17,8 +17,8 @@ enum Theme {
 
     enum FontFamily: String, CaseIterable, Identifiable {
         case system        // 系统默认
-        case sourceSans    // 思源黑体
-        case sourceSerif   // 思源宋体
+        case sourceSans = "source-sans"    // 思源黑体
+        case sourceSerif = "source-serif"  // 思源宋体
         case wenkai        // 霞鹜文楷
 
         var id: String { rawValue }

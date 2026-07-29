@@ -166,6 +166,8 @@ struct AppPreferences: Codable, Hashable, Sendable {
         case schemaVersion, locale, fontFamily, autoCheckUpdates, updateFeedURL, autoCaptureMemory
         case trashRetentionDays, sync, autoBackupEnabled, autoBackupIntervalMinutes
         case favorites, machineGroupNames, machineGroupOverrides, favoriteConversations
+        case windowsSettingsVersion = "settingsVersion"
+        case windowsLanguage = "language"
         case legacySchemaVersion = "schema_version"
         case legacyFontFamily = "font_family"
         case legacyAutoCheckUpdates = "auto_check_updates"
@@ -184,9 +186,12 @@ struct AppPreferences: Codable, Hashable, Sendable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         schemaVersion = try container.decodeIfPresent(Int.self, forKey: .schemaVersion)
+            ?? container.decodeIfPresent(Int.self, forKey: .windowsSettingsVersion)
             ?? container.decodeIfPresent(Int.self, forKey: .legacySchemaVersion)
             ?? 0
-        locale = try container.decodeIfPresent(String.self, forKey: .locale) ?? "zh-CN"
+        locale = try container.decodeIfPresent(String.self, forKey: .locale)
+            ?? container.decodeIfPresent(String.self, forKey: .windowsLanguage)
+            ?? "zh-CN"
         fontFamily = try container.decodeIfPresent(String.self, forKey: .fontFamily)
             ?? container.decodeIfPresent(String.self, forKey: .legacyFontFamily)
             ?? "system"
@@ -255,6 +260,8 @@ struct AppPreferences: Codable, Hashable, Sendable {
 
     mutating func normalize() {
         locale = locale == "en" ? "en" : "zh-CN"
+        if fontFamily == "sourceSans" { fontFamily = "source-sans" }
+        if fontFamily == "sourceSerif" { fontFamily = "source-serif" }
         if updateFeedURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             updateFeedURL = Self.defaultUpdateFeedURL
         }

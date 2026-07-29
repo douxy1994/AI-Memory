@@ -64,10 +64,10 @@ public sealed partial class SettingsPage : Page
                     "system",
                     LocalizationService.Get("FontSystem")),
                 new LocalizedOption(
-                    "sourceSans",
+                    "source-sans",
                     LocalizationService.Get("FontSourceSans")),
                 new LocalizedOption(
-                    "sourceSerif",
+                    "source-serif",
                     LocalizationService.Get("FontSourceSerif")),
                 new LocalizedOption(
                     "wenkai",

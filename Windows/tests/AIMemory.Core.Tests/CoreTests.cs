@@ -584,6 +584,53 @@ public sealed class CoreTests : IDisposable
     }
 
     [Fact]
+    public async Task WindowsSettingsImportMacCanonicalAndLegacyKeys()
+    {
+        var path = Path.Combine(_root, "mac-settings.json");
+        await File.WriteAllTextAsync(path, """
+            {
+              "schemaVersion": 3,
+              "locale": "en",
+              "font_family": "source-serif",
+              "auto_capture_memory": false,
+              "trash_retention_days": 21,
+              "unrelatedExtension": "preserved",
+              "sync": {
+                "webdav_scheme": "http",
+                "webdav_host": "dav.example.test",
+                "webdav_username": "alvis",
+                "sync_folder": "D:\\AI Memory"
+              }
+            }
+            """);
+        var store = new SettingsStore(path);
+
+        var settings = await store.LoadAsync();
+
+        Assert.Equal(3, settings.SettingsVersion);
+        Assert.Equal("en", settings.Language);
+        Assert.Equal("source-serif", settings.FontFamily);
+        Assert.False(settings.AutoCaptureMemory);
+        Assert.Equal(21, settings.TrashRetentionDays);
+        Assert.Equal("http", settings.Sync.WebdavScheme);
+        Assert.Equal("dav.example.test", settings.Sync.WebdavHost);
+        Assert.Equal("alvis", settings.Sync.Username);
+        Assert.Equal(@"D:\AI Memory", settings.Sync.SyncFolder);
+        Assert.NotNull(settings.ExtensionData);
+        Assert.True(settings.ExtensionData!.ContainsKey(
+            "unrelatedExtension"));
+
+        await store.SaveAsync(settings);
+        var saved = await File.ReadAllTextAsync(path);
+        Assert.Contains("\"settingsVersion\": 3", saved);
+        Assert.Contains("\"language\": \"en\"", saved);
+        Assert.Contains("\"unrelatedExtension\": \"preserved\"", saved);
+        Assert.DoesNotContain("\"locale\"", saved);
+        Assert.DoesNotContain("font_family", saved);
+        Assert.DoesNotContain("webdav_host", saved);
+    }
+
+    [Fact]
     public async Task AutomaticCaptureRefreshesAndUpsertsOneRecoveryPoint()
     {
         var home = Path.Combine(_root, "automatic-capture");
@@ -699,8 +746,10 @@ public sealed class CoreTests : IDisposable
     [Theory]
     [InlineData("system", "system", "Segoe UI Variable")]
     [InlineData("Segoe UI Variable", "system", "Segoe UI Variable")]
-    [InlineData("sourceSans", "sourceSans", "Noto Sans CJK SC")]
-    [InlineData("Noto Serif CJK SC", "sourceSerif", "Noto Serif CJK SC")]
+    [InlineData("sourceSans", "source-sans", "Noto Sans CJK SC")]
+    [InlineData("source-sans", "source-sans", "Noto Sans CJK SC")]
+    [InlineData("sourceSerif", "source-serif", "Noto Serif CJK SC")]
+    [InlineData("Noto Serif CJK SC", "source-serif", "Noto Serif CJK SC")]
     [InlineData("wenkai", "wenkai", "LXGW WenKai")]
     [InlineData("unknown-font", "system", "Segoe UI Variable")]
     public void FontPreferencesNormalizeMacAndLegacyWindowsValues(

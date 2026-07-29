@@ -10,8 +10,8 @@ public static class FontPreferenceService
     public static IReadOnlyList<FontPreferenceOption> Options { get; } =
     [
         new("system", "系统默认", "Segoe UI Variable"),
-        new("sourceSans", "思源黑体", "Noto Sans CJK SC"),
-        new("sourceSerif", "思源宋体", "Noto Serif CJK SC"),
+        new("source-sans", "思源黑体", "Noto Sans CJK SC"),
+        new("source-serif", "思源宋体", "Noto Serif CJK SC"),
         new("wenkai", "霞鹜文楷", "LXGW WenKai"),
     ];
 
@@ -19,6 +19,12 @@ public static class FontPreferenceService
     {
         var candidate = value?.Trim() ?? "";
         if (string.IsNullOrWhiteSpace(candidate)) return "system";
+        candidate = candidate switch
+        {
+            "sourceSans" => "source-sans",
+            "sourceSerif" => "source-serif",
+            _ => candidate,
+        };
         var option = Options.FirstOrDefault(item =>
             item.Id.Equals(candidate, StringComparison.OrdinalIgnoreCase)
             || item.WindowsFamily.Equals(

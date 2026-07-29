@@ -61,4 +61,46 @@ final class NativeSettingsStoreTests: XCTestCase {
         let second = try Data(contentsOf: url)
         XCTAssertEqual(first, second)
     }
+
+    func testWindowsSettingsKeysLoadAndSaveAsMacCanonicalForm() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("AIMemoryWindowsSettingsTests-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let url = root.appendingPathComponent("settings.json")
+        let windows = """
+        {
+          "settingsVersion": 1,
+          "language": "en",
+          "fontFamily": "sourceSerif",
+          "autoCaptureMemory": false,
+          "trashRetentionDays": 21,
+          "sync": {
+            "webdavScheme": "https",
+            "webdavHost": "dav.example.test",
+            "username": "alvis"
+          }
+        }
+        """
+        try Data(windows.utf8).write(to: url)
+
+        let store = NativeSettingsStore(url: url)
+        let settings = try await store.load()
+
+        XCTAssertEqual(settings.schemaVersion, 1)
+        XCTAssertEqual(settings.locale, "en")
+        XCTAssertEqual(settings.fontFamily, "source-serif")
+        XCTAssertFalse(settings.autoCaptureMemory)
+        XCTAssertEqual(settings.trashRetentionDays, 21)
+        XCTAssertEqual(settings.sync.webdavHost, "dav.example.test")
+        XCTAssertEqual(settings.sync.username, "alvis")
+
+        try await store.save(settings)
+        let saved = String(decoding: try Data(contentsOf: url), as: UTF8.self)
+        XCTAssertTrue(saved.contains("\"schemaVersion\" : 1"))
+        XCTAssertTrue(saved.contains("\"locale\" : \"en\""))
+        XCTAssertTrue(saved.contains("\"fontFamily\" : \"source-serif\""))
+        XCTAssertFalse(saved.contains("settingsVersion"))
+        XCTAssertFalse(saved.contains("\"language\""))
+    }
 }
