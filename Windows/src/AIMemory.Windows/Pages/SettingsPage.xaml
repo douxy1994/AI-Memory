@@ -346,6 +346,10 @@
                                            TextWrapping="Wrap"
                                            Opacity="0.65"
                                            IsTextSelectionEnabled="True" />
+                                <TextBlock x:Name="ChatMemSourceText"
+                                           TextWrapping="Wrap"
+                                           Opacity="0.65"
+                                           IsTextSelectionEnabled="True" />
                                 <CommandBar Background="Transparent"
                                             HorizontalAlignment="Stretch"
                                             DefaultLabelPosition="Right">

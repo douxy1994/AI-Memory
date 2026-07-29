@@ -90,7 +90,12 @@ public sealed partial class SettingsPage : Page
                 "DataDirectoryPath",
                 DataPaths.SupportDirectory);
             var importer = new ChatMemImportService(_window.Database);
-            ImportChatMemButton.IsEnabled = importer.FindSource() is not null;
+            var chatMemSource = importer.FindSource();
+            ChatMemSourceText.Text = chatMemSource is null
+                ? LocalizationService.Get("ChatMemSourceNotDetected")
+                : LocalizationService.Format(
+                    "ChatMemSourceDetected",
+                    chatMemSource);
             await RefreshDiagnosticsAsync();
             if (SettingsCategories.SelectedIndex < 0)
             {
@@ -755,24 +760,62 @@ public sealed partial class SettingsPage : Page
     {
         if (_window is null) return;
         var importer = new ChatMemImportService(_window.Database);
-        var source = importer.FindSource();
-        if (source is null)
-        {
-            Show(
-                LocalizationService.Get("ChatMemDatabaseNotFound"),
-                InfoBarSeverity.Warning);
-            return;
-        }
+        string source;
         try
         {
-            var backup = await importer.ImportAsync(source);
+            var picker = new FileOpenPicker(_window.WindowId)
+            {
+                Title = LocalizationService.Get("ChooseChatMemDatabaseTitle"),
+                CommitButtonText =
+                    LocalizationService.Get("ChooseChatMemDatabaseCommit"),
+                SettingsIdentifier = "AIMemory.ChatMemDatabase",
+            };
+            picker.FileTypeFilter.Add(".db");
+            picker.FileTypeFilter.Add(".sqlite");
+            picker.FileTypeFilter.Add(".sqlite3");
+            var selected = await picker.PickSingleFileAsync();
+            if (selected is null) return;
+            source = selected.Path;
+        }
+        catch (Exception exception)
+        {
             Show(
-                string.IsNullOrWhiteSpace(backup)
+                LocalizationService.Format(
+                    "ChooseChatMemDatabaseFailed",
+                    exception.Message),
+                InfoBarSeverity.Error);
+            return;
+        }
+
+        var confirmation = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = LocalizationService.Get("ChatMemImportConfirmTitle"),
+            Content = LocalizationService.Format(
+                "ChatMemImportConfirmBody",
+                source),
+            PrimaryButtonText =
+                LocalizationService.Get("ChatMemImportConfirmAction"),
+            CloseButtonText = LocalizationService.Get("Cancel"),
+            DefaultButton = ContentDialogButton.Close,
+        };
+        if (await confirmation.ShowAsync() != ContentDialogResult.Primary)
+        {
+            return;
+        }
+
+        ImportChatMemButton.IsEnabled = false;
+        SyncProgress.Visibility = Visibility.Visible;
+        try
+        {
+            var result = await importer.ImportAsync(source);
+            var message = string.IsNullOrWhiteSpace(result.BackupPath)
                     ? LocalizationService.Get("ChatMemImportCompleted")
                     : LocalizationService.Format(
                         "ChatMemImportCompletedWithBackup",
-                        backup),
-                InfoBarSeverity.Success);
+                        result.BackupPath);
+            _window.ShowFeedback(message, InfoBarSeverity.Success);
+            _window.NavigateTo("workbench");
         }
         catch (Exception exception)
         {
@@ -781,6 +824,11 @@ public sealed partial class SettingsPage : Page
                     "ImportFailed",
                     exception.Message),
                 InfoBarSeverity.Error);
+        }
+        finally
+        {
+            ImportChatMemButton.IsEnabled = true;
+            SyncProgress.Visibility = Visibility.Collapsed;
         }
     }
 

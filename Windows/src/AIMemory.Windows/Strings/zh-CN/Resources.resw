@@ -55,6 +55,14 @@
   <data name="LocalSyncCompleted" xml:space="preserve"><value>本地同步完成：上传 {0}，下载 {1}，跳过 {2}。</value></data>
   <data name="LocalSyncFailed" xml:space="preserve"><value>本地同步失败：{0}</value></data>
   <data name="ChatMemDatabaseNotFound" xml:space="preserve"><value>没有找到可导入的 ChatMem 数据库。</value></data>
+  <data name="ChatMemSourceDetected" xml:space="preserve"><value>已检测到 ChatMem 数据库：{0}。点击“导入”后仍可选择其他数据库文件。</value></data>
+  <data name="ChatMemSourceNotDetected" xml:space="preserve"><value>未自动检测到 ChatMem 数据库；仍可点击“导入”手动选择 .db、.sqlite 或 .sqlite3 文件。</value></data>
+  <data name="ChooseChatMemDatabaseTitle" xml:space="preserve"><value>选择 ChatMem 数据库</value></data>
+  <data name="ChooseChatMemDatabaseCommit" xml:space="preserve"><value>导入</value></data>
+  <data name="ChooseChatMemDatabaseFailed" xml:space="preserve"><value>选择 ChatMem 数据库失败：{0}</value></data>
+  <data name="ChatMemImportConfirmTitle" xml:space="preserve"><value>导入这个数据库？</value></data>
+  <data name="ChatMemImportConfirmBody" xml:space="preserve"><value>来源：{0}&#x0a;&#x0a;AI Memory 将以只读方式复制来源，校验并迁移副本。当前 AI Memory 数据库会先建立可恢复备份，再以原子方式替换。</value></data>
+  <data name="ChatMemImportConfirmAction" xml:space="preserve"><value>导入</value></data>
   <data name="ChatMemImportCompleted" xml:space="preserve"><value>ChatMem 数据已导入。</value></data>
   <data name="ChatMemImportCompletedWithBackup" xml:space="preserve"><value>ChatMem 数据已导入，原数据备份：{0}</value></data>
   <data name="ImportFailed" xml:space="preserve"><value>导入失败：{0}</value></data>

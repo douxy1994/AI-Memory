@@ -55,6 +55,14 @@
   <data name="LocalSyncCompleted" xml:space="preserve"><value>Local sync complete: {0} uploaded, {1} downloaded, {2} unchanged.</value></data>
   <data name="LocalSyncFailed" xml:space="preserve"><value>Local sync failed: {0}</value></data>
   <data name="ChatMemDatabaseNotFound" xml:space="preserve"><value>No ChatMem database is available to import.</value></data>
+  <data name="ChatMemSourceDetected" xml:space="preserve"><value>Detected ChatMem database: {0}. You can still choose a different database after selecting Import.</value></data>
+  <data name="ChatMemSourceNotDetected" xml:space="preserve"><value>No ChatMem database was detected automatically. Select Import to choose a .db, .sqlite, or .sqlite3 file manually.</value></data>
+  <data name="ChooseChatMemDatabaseTitle" xml:space="preserve"><value>Choose a ChatMem Database</value></data>
+  <data name="ChooseChatMemDatabaseCommit" xml:space="preserve"><value>Import</value></data>
+  <data name="ChooseChatMemDatabaseFailed" xml:space="preserve"><value>Could not choose the ChatMem database: {0}</value></data>
+  <data name="ChatMemImportConfirmTitle" xml:space="preserve"><value>Import This Database?</value></data>
+  <data name="ChatMemImportConfirmBody" xml:space="preserve"><value>Source: {0}&#x0a;&#x0a;AI Memory will copy the source read-only, then validate and migrate the copy. The current AI Memory database is backed up before it is atomically replaced.</value></data>
+  <data name="ChatMemImportConfirmAction" xml:space="preserve"><value>Import</value></data>
   <data name="ChatMemImportCompleted" xml:space="preserve"><value>ChatMem data imported.</value></data>
   <data name="ChatMemImportCompletedWithBackup" xml:space="preserve"><value>ChatMem data imported. Original data backup: {0}</value></data>
   <data name="ImportFailed" xml:space="preserve"><value>Import failed: {0}</value></data>

@@ -30,7 +30,10 @@ AI Memory 的 Windows 11 原生版本，使用 C#、WinUI 3 与 Windows App SDK 
   所有来源型条目均可打开原始对话；
 - 完整对话详情、收藏备注/标签/置顶/继续卡片，以及带确认、失败反馈和保留期说明的
   可恢复批量回收站；
-- SQLite 数据库、可双向读取 macOS/Windows 键名的版本化设置和 ChatMem 安全导入；
+- SQLite 数据库、可双向读取 macOS/Windows 键名的版本化设置，以及可自动探测或
+  用 Windows App SDK 原生文件选择器手动选库的 ChatMem 安全导入；导入使用
+  只读 SQLite 在线快照保留已提交 WAL 数据，先备份现有数据库，再迁移、校验
+  临时副本并替换；
 - WebDAV 与本地文件夹增量同步；本地目录使用 Windows App SDK 原生
   `FolderPicker` 选择，并可在同步前检查云盘锁文件及短时变动；
 - 无变化跳过、未变化文件使用 NTFS 硬链接复用的增量恢复点，支持定时备份、
