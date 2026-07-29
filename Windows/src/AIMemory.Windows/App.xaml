@@ -8,7 +8,9 @@
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
             </ResourceDictionary.MergedDictionaries>
             <Color x:Key="AIMemoryGreen">#2F9E68</Color>
+            <Color x:Key="AIMemoryGreenSoft">#1F2F9E68</Color>
             <SolidColorBrush x:Key="AIMemoryGreenBrush" Color="{StaticResource AIMemoryGreen}" />
+            <SolidColorBrush x:Key="AIMemoryGreenSoftBrush" Color="{StaticResource AIMemoryGreenSoft}" />
             <Style x:Key="PageTitleStyle" TargetType="TextBlock">
                 <Setter Property="FontFamily" Value="{ThemeResource ContentControlThemeFontFamily}" />
                 <Setter Property="FontSize" Value="28" />

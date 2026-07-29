@@ -211,6 +211,8 @@
   <data name="SortRecentlyUpdated" xml:space="preserve"><value>最近更新</value></data>
   <data name="SortRecentlyCreated" xml:space="preserve"><value>最近创建</value></data>
   <data name="SortByTitle" xml:space="preserve"><value>标题</value></data>
+  <data name="ArrangeByProject" xml:space="preserve"><value>按项目</value></data>
+  <data name="ArrangeTimeline" xml:space="preserve"><value>时间线</value></data>
   <data name="HistoryTrashSelectedCount" xml:space="preserve"><value>移到回收站（{0}）</value></data>
   <data name="MoveConversationsToTrashQuestion" xml:space="preserve"><value>将选中的 {0} 条对话移到回收站？</value></data>
   <data name="MoveConversationsToTrashDescription" xml:space="preserve"><value>对话会保留可恢复快照 {0} 天，不会永久删除。</value></data>
@@ -339,6 +341,7 @@
   <data name="HistorySearch.PlaceholderText" xml:space="preserve"><value>搜索本地历史</value></data>
   <data name="HistorySourceFilter.Header" xml:space="preserve"><value>来源</value></data>
   <data name="HistoryProjectFilter.Content" xml:space="preserve"><value>全部项目</value></data>
+  <data name="HistoryArrange.Header" xml:space="preserve"><value>排列</value></data>
   <data name="HistorySort.Header" xml:space="preserve"><value>排序</value></data>
   <data name="HistoryBeginSelection.Label" xml:space="preserve"><value>批量选择</value></data>
   <data name="HistoryCancelSelection.Label" xml:space="preserve"><value>取消</value></data>

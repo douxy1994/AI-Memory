@@ -1802,6 +1802,13 @@ public sealed class CoreTests : IDisposable
         Assert.Contains(projects, value =>
             value.Label.Equals("Alpha", StringComparison.OrdinalIgnoreCase));
         Assert.Contains(projects, value => value.Label == "fallback");
+        var groups =
+            ConversationListProjectionService.GroupByProject(conversations);
+        Assert.Equal(3, groups.Count);
+        Assert.Equal("Alpha", groups[0].Label,
+            ignoreCase: true);
+        Assert.Equal(["a", "c"],
+            groups[0].Conversations.Select(value => value.Id));
 
         var alpha = new HashSet<string>(
             [@"C:\REPOS\ALPHA"],

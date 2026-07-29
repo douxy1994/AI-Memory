@@ -211,6 +211,8 @@
   <data name="SortRecentlyUpdated" xml:space="preserve"><value>Recently Updated</value></data>
   <data name="SortRecentlyCreated" xml:space="preserve"><value>Recently Created</value></data>
   <data name="SortByTitle" xml:space="preserve"><value>Title</value></data>
+  <data name="ArrangeByProject" xml:space="preserve"><value>By Project</value></data>
+  <data name="ArrangeTimeline" xml:space="preserve"><value>Timeline</value></data>
   <data name="HistoryTrashSelectedCount" xml:space="preserve"><value>Move to Trash ({0})</value></data>
   <data name="MoveConversationsToTrashQuestion" xml:space="preserve"><value>Move {0} selected conversations to Trash?</value></data>
   <data name="MoveConversationsToTrashDescription" xml:space="preserve"><value>Recoverable snapshots will be retained for {0} days. Nothing is permanently deleted.</value></data>
@@ -339,6 +341,7 @@
   <data name="HistorySearch.PlaceholderText" xml:space="preserve"><value>Search local history</value></data>
   <data name="HistorySourceFilter.Header" xml:space="preserve"><value>Source</value></data>
   <data name="HistoryProjectFilter.Content" xml:space="preserve"><value>All Projects</value></data>
+  <data name="HistoryArrange.Header" xml:space="preserve"><value>Arrange</value></data>
   <data name="HistorySort.Header" xml:space="preserve"><value>Sort</value></data>
   <data name="HistoryBeginSelection.Label" xml:space="preserve"><value>Select Multiple</value></data>
   <data name="HistoryCancelSelection.Label" xml:space="preserve"><value>Cancel</value></data>

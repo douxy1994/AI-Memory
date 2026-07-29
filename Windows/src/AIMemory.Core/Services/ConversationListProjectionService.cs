@@ -9,9 +9,25 @@ public enum ConversationSortMode
     TitleAscending,
 }
 
+public enum ConversationArrangeMode
+{
+    ByProject,
+    Timeline,
+}
+
 public sealed record ConversationProjectFilter(
     string Key,
     string Label);
+
+public sealed record ConversationProjectGroup(
+    string Key,
+    string Label,
+    IReadOnlyList<ConversationSummary> Conversations)
+{
+    public DateTimeOffset LatestAt =>
+        Conversations.Max(conversation => conversation.UpdatedAt);
+    public int Count => Conversations.Count;
+}
 
 public static class ConversationListProjectionService
 {
@@ -80,6 +96,19 @@ public static class ConversationListProjectionService
                 StringComparer.CurrentCultureIgnoreCase)
             .ThenBy(project => project.Key,
                 StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+    public static IReadOnlyList<ConversationProjectGroup> GroupByProject(
+        IEnumerable<ConversationSummary> conversations) =>
+        conversations
+            .GroupBy(ProjectKey, StringComparer.OrdinalIgnoreCase)
+            .Select(group => new ConversationProjectGroup(
+                group.Key,
+                ProjectLabel(group.Key),
+                group.ToArray()))
+            .OrderByDescending(group => group.LatestAt)
+            .ThenBy(group => group.Label,
+                StringComparer.CurrentCultureIgnoreCase)
             .ToArray();
 
     public static string ProjectKey(ConversationSummary conversation)

@@ -3,6 +3,7 @@ using AIMemory.Core.Services;
 using AIMemory.Windows.Services;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Navigation;
 
 namespace AIMemory.Windows.Pages;
@@ -17,13 +18,31 @@ public sealed partial class HistoryPage : Page
     private IReadOnlyList<ConversationProjectFilter> _projects = [];
     private readonly HashSet<string> _projectFilters =
         new(StringComparer.OrdinalIgnoreCase);
+    private readonly CollectionViewSource _conversationGroupsView = new()
+    {
+        IsSourceGrouped = true,
+    };
     private bool _loadingSources;
+    private bool _loadingArrange;
     private bool _loadingSort;
     private bool _bulkSelectionMode;
 
     public HistoryPage()
     {
         InitializeComponent();
+        var arrangeOptions = new[]
+        {
+            new LocalizedOption(
+                ConversationArrangeMode.ByProject.ToString(),
+                LocalizationService.Get("ArrangeByProject")),
+            new LocalizedOption(
+                ConversationArrangeMode.Timeline.ToString(),
+                LocalizationService.Get("ArrangeTimeline")),
+        };
+        _loadingArrange = true;
+        ArrangeBox.ItemsSource = arrangeOptions;
+        ArrangeBox.SelectedIndex = 0;
+        _loadingArrange = false;
         var options = new[]
         {
             new LocalizedOption(
@@ -222,7 +241,25 @@ public sealed partial class HistoryPage : Page
             SearchBox.Text,
             _projectFilters,
             sortMode);
-        ConversationList.ItemsSource = items;
+        var arrangeMode = Enum.TryParse<ConversationArrangeMode>(
+            (ArrangeBox.SelectedItem as LocalizedOption)?.Id,
+            out var selectedArrange)
+            ? selectedArrange
+            : ConversationArrangeMode.ByProject;
+        if (arrangeMode == ConversationArrangeMode.ByProject)
+        {
+            _conversationGroupsView.Source =
+                ConversationListProjectionService
+                    .GroupByProject(items)
+                    .Select(group => new ConversationProjectGroupView(group))
+                    .ToArray();
+            ConversationList.ItemsSource = _conversationGroupsView.View;
+        }
+        else
+        {
+            _conversationGroupsView.Source = null;
+            ConversationList.ItemsSource = items;
+        }
         EmptyText.Visibility = items.Count == 0
             ? Visibility.Visible
             : Visibility.Collapsed;
@@ -268,6 +305,13 @@ public sealed partial class HistoryPage : Page
         SelectionChangedEventArgs args)
     {
         if (!_loadingSort) ApplyConversationProjection();
+    }
+
+    private void ArrangeBox_SelectionChanged(
+        object sender,
+        SelectionChangedEventArgs args)
+    {
+        if (!_loadingArrange) ApplyConversationProjection();
     }
 
     private void SourceBox_SelectionChanged(
@@ -566,3 +610,23 @@ public sealed partial class HistoryPage : Page
 public sealed record ConversationNavigation(
     MainWindow Window,
     ConversationSummary Conversation);
+
+public sealed class ConversationProjectGroupView
+    : List<ConversationSummary>
+{
+    public ConversationProjectGroupView(ConversationProjectGroup group)
+        : base(group.Conversations)
+    {
+        Key = group.Key;
+        Label = string.IsNullOrWhiteSpace(group.Label)
+            ? LocalizationService.Get("UnknownProject")
+            : group.Label;
+        Path = string.IsNullOrWhiteSpace(group.Key)
+            ? LocalizationService.Get("UnknownProject")
+            : group.Key;
+    }
+
+    public string Key { get; }
+    public string Label { get; }
+    public string Path { get; }
+}

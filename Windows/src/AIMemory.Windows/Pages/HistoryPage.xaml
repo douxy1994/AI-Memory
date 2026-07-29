@@ -48,6 +48,12 @@
                                 <DropDownButton x:Name="ProjectFilterButton"
                                                 x:Uid="HistoryProjectFilter"
                                                 Content="全部项目" />
+                                <ComboBox x:Name="ArrangeBox"
+                                          x:Uid="HistoryArrange"
+                                          Header="排列"
+                                          Width="160"
+                                          DisplayMemberPath="Label"
+                                          SelectionChanged="ArrangeBox_SelectionChanged" />
                                 <ComboBox x:Name="SortBox"
                                           x:Uid="HistorySort"
                                           Header="排序"
@@ -90,6 +96,39 @@
                               IsItemClickEnabled="True"
                               SelectionChanged="ConversationList_SelectionChanged"
                               ItemClick="ConversationList_ItemClick">
+                        <ListView.GroupStyle>
+                            <GroupStyle>
+                                <GroupStyle.HeaderTemplate>
+                                    <DataTemplate>
+                                        <Grid Padding="10,12,10,6"
+                                              ColumnSpacing="12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Spacing="2">
+                                                <TextBlock Text="{Binding Label}"
+                                                           FontWeight="SemiBold"
+                                                           TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="{Binding Path}"
+                                                           Opacity="0.55"
+                                                           FontFamily="Cascadia Mono"
+                                                           TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                            <Border Grid.Column="1"
+                                                    Background="{StaticResource AIMemoryGreenSoftBrush}"
+                                                    CornerRadius="10"
+                                                    Padding="8,2"
+                                                    VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Count}"
+                                                           Foreground="{StaticResource AIMemoryGreenBrush}"
+                                                           FontWeight="SemiBold" />
+                                            </Border>
+                                        </Grid>
+                                    </DataTemplate>
+                                </GroupStyle.HeaderTemplate>
+                            </GroupStyle>
+                        </ListView.GroupStyle>
                         <ListView.ItemTemplate>
                             <DataTemplate>
                                 <Grid Padding="10" ColumnSpacing="12">
