@@ -4,6 +4,8 @@ import Foundation
 /// Existing ChatMem entries are deliberately left untouched so the two apps
 /// can coexist. Every changed pre-existing file receives a timestamped backup.
 actor NativeAgentIntegrationStore {
+    static var catalogCount: Int { IntegrationAgent.allCases.count }
+
     private static let blockStart = "<!-- AIMEMORY-INTEGRATION:START -->"
     private static let blockEnd = "<!-- AIMEMORY-INTEGRATION:END -->"
     private static let tomlStart = "# AIMEMORY-INTEGRATION:START"
