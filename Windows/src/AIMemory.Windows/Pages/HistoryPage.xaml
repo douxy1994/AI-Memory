@@ -39,6 +39,12 @@
                                 IsOpen="False">
                         <CommandBar.Content>
                             <StackPanel Orientation="Horizontal" Spacing="10">
+                                <ComboBox x:Name="SourceBox"
+                                          x:Uid="HistorySourceFilter"
+                                          Header="来源"
+                                          Width="180"
+                                          DisplayMemberPath="Label"
+                                          SelectionChanged="SourceBox_SelectionChanged" />
                                 <DropDownButton x:Name="ProjectFilterButton"
                                                 x:Uid="HistoryProjectFilter"
                                                 Content="全部项目" />

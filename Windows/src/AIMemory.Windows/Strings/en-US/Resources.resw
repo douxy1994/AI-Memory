@@ -337,6 +337,7 @@
   <data name="HistoryRefresh.Content" xml:space="preserve"><value>Refresh</value></data>
   <data name="HistoryConversationsTab.Header" xml:space="preserve"><value>Conversations</value></data>
   <data name="HistorySearch.PlaceholderText" xml:space="preserve"><value>Search local history</value></data>
+  <data name="HistorySourceFilter.Header" xml:space="preserve"><value>Source</value></data>
   <data name="HistoryProjectFilter.Content" xml:space="preserve"><value>All Projects</value></data>
   <data name="HistorySort.Header" xml:space="preserve"><value>Sort</value></data>
   <data name="HistoryBeginSelection.Label" xml:space="preserve"><value>Select Multiple</value></data>

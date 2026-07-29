@@ -1762,6 +1762,7 @@ public sealed class CoreTests : IDisposable
             ConversationListProjectionService.Apply(
                     conversations,
                     null,
+                    null,
                     alpha,
                     ConversationSortMode.UpdatedDescending)
                 .Select(value => value.Id));
@@ -1769,6 +1770,7 @@ public sealed class CoreTests : IDisposable
             ["c", "a"],
             ConversationListProjectionService.Apply(
                     conversations,
+                    null,
                     null,
                     alpha,
                     ConversationSortMode.CreatedDescending)
@@ -1778,6 +1780,7 @@ public sealed class CoreTests : IDisposable
             ConversationListProjectionService.Apply(
                     conversations,
                     null,
+                    null,
                     alpha,
                     ConversationSortMode.TitleAscending)
                 .Select(value => value.Id));
@@ -1785,6 +1788,7 @@ public sealed class CoreTests : IDisposable
             "b",
             Assert.Single(ConversationListProjectionService.Apply(
                 conversations,
+                null,
                 "beta",
                 null,
                 ConversationSortMode.UpdatedDescending)).Id);
@@ -1792,7 +1796,16 @@ public sealed class CoreTests : IDisposable
             "d",
             Assert.Single(ConversationListProjectionService.Apply(
                 conversations,
+                null,
                 "query",
+                null,
+                ConversationSortMode.UpdatedDescending)).Id);
+        Assert.Equal(
+            "b",
+            Assert.Single(ConversationListProjectionService.Apply(
+                conversations,
+                "claude",
+                null,
                 null,
                 ConversationSortMode.UpdatedDescending)).Id);
     }

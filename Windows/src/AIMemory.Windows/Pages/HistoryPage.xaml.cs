@@ -17,6 +17,7 @@ public sealed partial class HistoryPage : Page
     private IReadOnlyList<ConversationProjectFilter> _projects = [];
     private readonly HashSet<string> _projectFilters =
         new(StringComparer.OrdinalIgnoreCase);
+    private bool _loadingSources;
     private bool _loadingSort;
     private bool _bulkSelectionMode;
 
@@ -99,6 +100,7 @@ public sealed partial class HistoryPage : Page
                 cancellationToken: cancellation.Token);
             if (cancellation.IsCancellationRequested) return;
             _allConversations = items;
+            ReloadSourceOptions();
             ReloadProjectFilters();
             ApplyConversationProjection();
         }
@@ -108,10 +110,42 @@ public sealed partial class HistoryPage : Page
         }
     }
 
+    private void ReloadSourceOptions()
+    {
+        var selectedId = (SourceBox.SelectedItem as LocalizedOption)?.Id
+            ?? "all";
+        var options = new[]
+            {
+                new LocalizedOption(
+                    "all",
+                    LocalizationService.Get("AllSources")),
+            }
+            .Concat(_allConversations
+                .Select(conversation => conversation.SourceAgent)
+                .Where(source => !string.IsNullOrWhiteSpace(source))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(source => source, StringComparer.OrdinalIgnoreCase)
+                .Select(source => new LocalizedOption(source, source)))
+            .ToArray();
+        _loadingSources = true;
+        SourceBox.ItemsSource = options;
+        SourceBox.SelectedItem = options.FirstOrDefault(option =>
+            option.Id.Equals(selectedId, StringComparison.OrdinalIgnoreCase))
+            ?? options[0];
+        _loadingSources = false;
+    }
+
     private void ReloadProjectFilters()
     {
+        var sourceAgent = SelectedSourceAgent();
+        var sourceConversations = sourceAgent is null
+            ? _allConversations
+            : _allConversations
+                .Where(conversation => conversation.SourceAgent.Equals(
+                    sourceAgent,
+                    StringComparison.OrdinalIgnoreCase));
         _projects = ConversationListProjectionService.Projects(
-            _allConversations);
+            sourceConversations);
         var validKeys = _projects
             .Select(project => project.Key)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
@@ -184,6 +218,7 @@ public sealed partial class HistoryPage : Page
         ConversationList.SelectedItems.Clear();
         var items = ConversationListProjectionService.Apply(
             _allConversations,
+            SelectedSourceAgent(),
             SearchBox.Text,
             _projectFilters,
             sortMode);
@@ -192,6 +227,15 @@ public sealed partial class HistoryPage : Page
             ? Visibility.Visible
             : Visibility.Collapsed;
         UpdateSelectionActions();
+    }
+
+    private string? SelectedSourceAgent()
+    {
+        var id = (SourceBox.SelectedItem as LocalizedOption)?.Id;
+        return string.IsNullOrWhiteSpace(id)
+            || id.Equals("all", StringComparison.OrdinalIgnoreCase)
+            ? null
+            : id;
     }
 
     private async void Refresh_Click(object sender, RoutedEventArgs args)
@@ -224,6 +268,15 @@ public sealed partial class HistoryPage : Page
         SelectionChangedEventArgs args)
     {
         if (!_loadingSort) ApplyConversationProjection();
+    }
+
+    private void SourceBox_SelectionChanged(
+        object sender,
+        SelectionChangedEventArgs args)
+    {
+        if (_loadingSources) return;
+        ReloadProjectFilters();
+        ApplyConversationProjection();
     }
 
     private void ConversationList_ItemClick(object sender, ItemClickEventArgs args)

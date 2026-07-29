@@ -17,11 +17,19 @@ public static class ConversationListProjectionService
 {
     public static IReadOnlyList<ConversationSummary> Apply(
         IEnumerable<ConversationSummary> conversations,
+        string? sourceAgent,
         string? search,
         IReadOnlySet<string>? projectFilters,
         ConversationSortMode sortMode)
     {
         var query = conversations;
+        if (!string.IsNullOrWhiteSpace(sourceAgent))
+        {
+            query = query.Where(conversation =>
+                conversation.SourceAgent.Equals(
+                    sourceAgent,
+                    StringComparison.OrdinalIgnoreCase));
+        }
         var normalizedSearch = search?.Trim();
         if (!string.IsNullOrWhiteSpace(normalizedSearch))
         {
