@@ -206,7 +206,17 @@
   <data name="HandoffSourceCheckpointUnavailable" xml:space="preserve"><value>该交接包没有可用的来源检查点。</value></data>
   <data name="HistorySourceUnavailable" xml:space="preserve"><value>来源对话当前不可用；历史条目仍会保留。</value></data>
   <data name="SelectConversationToTrash" xml:space="preserve"><value>请先选择要移到回收站的对话。</value></data>
-  <data name="ConversationMovedToTrash" xml:space="preserve"><value>对话已移到回收站。</value></data>
+  <data name="AllProjects" xml:space="preserve"><value>全部项目</value></data>
+  <data name="ProjectsSelected" xml:space="preserve"><value>已选 {0} 个项目</value></data>
+  <data name="SortRecentlyUpdated" xml:space="preserve"><value>最近更新</value></data>
+  <data name="SortRecentlyCreated" xml:space="preserve"><value>最近创建</value></data>
+  <data name="SortByTitle" xml:space="preserve"><value>标题</value></data>
+  <data name="HistoryTrashSelectedCount" xml:space="preserve"><value>移到回收站（{0}）</value></data>
+  <data name="MoveConversationsToTrashQuestion" xml:space="preserve"><value>将选中的 {0} 条对话移到回收站？</value></data>
+  <data name="MoveConversationsToTrashDescription" xml:space="preserve"><value>对话会保留可恢复快照 {0} 天，不会永久删除。</value></data>
+  <data name="MoveToTrashRecoverable" xml:space="preserve"><value>移到回收站（可恢复）</value></data>
+  <data name="ConversationsMovedToTrash" xml:space="preserve"><value>已将 {0} 条对话移到回收站。</value></data>
+  <data name="BulkTrashCompletedWithFailures" xml:space="preserve"><value>批量处理完成：{0} 条已移入回收站，{1} 条失败。</value></data>
 
   <data name="MenuWorkbench.Title" xml:space="preserve"><value>工作台</value></data>
   <data name="MenuReturnWorkbench.Text" xml:space="preserve"><value>返回工作台</value></data>
@@ -327,7 +337,11 @@
   <data name="HistoryRefresh.Content" xml:space="preserve"><value>刷新</value></data>
   <data name="HistoryConversationsTab.Header" xml:space="preserve"><value>对话</value></data>
   <data name="HistorySearch.PlaceholderText" xml:space="preserve"><value>搜索本地历史</value></data>
-  <data name="HistoryTrashSelected.Content" xml:space="preserve"><value>移到回收站</value></data>
+  <data name="HistoryProjectFilter.Content" xml:space="preserve"><value>全部项目</value></data>
+  <data name="HistorySort.Header" xml:space="preserve"><value>排序</value></data>
+  <data name="HistoryBeginSelection.Label" xml:space="preserve"><value>批量选择</value></data>
+  <data name="HistoryCancelSelection.Label" xml:space="preserve"><value>取消</value></data>
+  <data name="HistoryTrashSelected.Label" xml:space="preserve"><value>移到回收站</value></data>
   <data name="HistoryNoConversations.Text" xml:space="preserve"><value>还没有可显示的对话。</value></data>
   <data name="HistoryMemoryTab.Header" xml:space="preserve"><value>记忆</value></data>
   <data name="HistoryOpenMemory.Text" xml:space="preserve"><value>打开记忆管理</value></data>

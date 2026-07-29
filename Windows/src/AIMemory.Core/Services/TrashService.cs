@@ -4,6 +4,10 @@ using AIMemory.Core.Persistence;
 
 namespace AIMemory.Core.Services;
 
+public sealed record BulkTrashResult(
+    int Moved,
+    IReadOnlyList<string> FailedConversationIds);
+
 public sealed class TrashService(
     AIMemoryDatabase database,
     string? trashDirectory = null,
@@ -74,6 +78,37 @@ public sealed class TrashService(
             throw;
         }
         return record;
+    }
+
+    public async Task<BulkTrashResult> TrashManyAsync(
+        IEnumerable<ConversationSummary> conversations,
+        int retentionDays,
+        CancellationToken cancellationToken = default)
+    {
+        var moved = 0;
+        var failed = new List<string>();
+        foreach (var conversation in conversations)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            try
+            {
+                await TrashAsync(
+                    conversation,
+                    retentionDays,
+                    cancellationToken: cancellationToken);
+                moved += 1;
+            }
+            catch (OperationCanceledException)
+                when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch
+            {
+                failed.Add(conversation.Id);
+            }
+        }
+        return new BulkTrashResult(moved, failed);
     }
 
     public async Task<IReadOnlyList<TrashRecord>> ListAsync(

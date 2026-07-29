@@ -27,26 +27,62 @@
                 <Grid RowSpacing="12">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
-                    <Grid ColumnSpacing="10">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <TextBox x:Name="SearchBox"
-                                 x:Uid="HistorySearch"
-                                 PlaceholderText="搜索本地历史"
-                                 TextChanged="SearchBox_TextChanged" />
-                        <Button x:Uid="HistoryTrashSelected"
-                                Grid.Column="1"
-                                Content="移到回收站"
-                                Click="TrashSelected_Click" />
-                    </Grid>
+                    <TextBox x:Name="SearchBox"
+                             x:Uid="HistorySearch"
+                             PlaceholderText="搜索本地历史"
+                             TextChanged="SearchBox_TextChanged" />
+                    <CommandBar Grid.Row="1"
+                                DefaultLabelPosition="Right"
+                                IsOpen="False">
+                        <CommandBar.Content>
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <DropDownButton x:Name="ProjectFilterButton"
+                                                x:Uid="HistoryProjectFilter"
+                                                Content="全部项目" />
+                                <ComboBox x:Name="SortBox"
+                                          x:Uid="HistorySort"
+                                          Header="排序"
+                                          Width="180"
+                                          DisplayMemberPath="Label"
+                                          SelectionChanged="SortBox_SelectionChanged" />
+                            </StackPanel>
+                        </CommandBar.Content>
+                        <AppBarButton x:Name="BeginSelectionButton"
+                                      x:Uid="HistoryBeginSelection"
+                                      Label="批量选择"
+                                      Click="BeginSelection_Click">
+                            <AppBarButton.Icon>
+                                <SymbolIcon Symbol="SelectAll" />
+                            </AppBarButton.Icon>
+                        </AppBarButton>
+                        <AppBarButton x:Name="CancelSelectionButton"
+                                      x:Uid="HistoryCancelSelection"
+                                      Label="取消"
+                                      Visibility="Collapsed"
+                                      Click="CancelSelection_Click">
+                            <AppBarButton.Icon>
+                                <SymbolIcon Symbol="Cancel" />
+                            </AppBarButton.Icon>
+                        </AppBarButton>
+                        <AppBarButton x:Name="TrashSelectedButton"
+                                      x:Uid="HistoryTrashSelected"
+                                      Label="移到回收站"
+                                      Visibility="Collapsed"
+                                      IsEnabled="False"
+                                      Click="TrashSelected_Click">
+                            <AppBarButton.Icon>
+                                <SymbolIcon Symbol="Delete" />
+                            </AppBarButton.Icon>
+                        </AppBarButton>
+                    </CommandBar>
                     <ListView x:Name="ConversationList"
-                              Grid.Row="1"
-                              SelectionMode="Single"
+                              Grid.Row="2"
+                              SelectionMode="None"
                               IsItemClickEnabled="True"
+                              SelectionChanged="ConversationList_SelectionChanged"
                               ItemClick="ConversationList_ItemClick">
                         <ListView.ItemTemplate>
                             <DataTemplate>
@@ -79,7 +115,7 @@
                     </ListView>
                     <TextBlock x:Name="EmptyText"
                                x:Uid="HistoryNoConversations"
-                               Grid.Row="1"
+                               Grid.Row="2"
                                Text="还没有可显示的对话。"
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center"

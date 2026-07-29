@@ -1219,6 +1219,58 @@ public sealed class CoreTests : IDisposable
     }
 
     [Fact]
+    public async Task BulkTrashContinuesAfterFailureAndKeepsRecoverableCopies()
+    {
+        var database = new AIMemoryDatabase(
+            Path.Combine(_root, "trash-bulk.db"));
+        await database.InitializeAsync();
+        var now = DateTimeOffset.UtcNow;
+        await using (var connection = database.OpenConnection())
+        {
+            var insert = connection.CreateCommand();
+            insert.CommandText = """
+                INSERT INTO conversations VALUES(
+                  'bulk-1','repo','codex','source-1','first',$now,$now,NULL);
+                INSERT INTO conversations VALUES(
+                  'bulk-2','repo','claude','source-2','second',$now,$now,NULL);
+                INSERT INTO messages VALUES(
+                  'bulk-m1','bulk-1','user','first message',$now);
+                INSERT INTO messages VALUES(
+                  'bulk-m2','bulk-2','user','second message',$now);
+                """;
+            insert.Parameters.AddWithValue("$now", now.ToString("O"));
+            await insert.ExecuteNonQueryAsync();
+        }
+        var repository = new ConversationRepository(database);
+        var conversations = await repository.ListAsync();
+        var missing = conversations[0] with
+        {
+            Id = "missing",
+            SourceConversationId = "missing",
+        };
+        var trash = new TrashService(
+            database,
+            Path.Combine(_root, "trash-bulk"));
+
+        var result = await trash.TrashManyAsync(
+            [conversations[0], missing, conversations[1]],
+            14);
+
+        Assert.Equal(2, result.Moved);
+        Assert.Equal(["missing"], result.FailedConversationIds);
+        Assert.Equal(0, await repository.CountAsync());
+        var records = await trash.ListAsync();
+        Assert.Equal(2, records.Count);
+        foreach (var record in records)
+        {
+            await trash.RestoreAsync(record);
+        }
+        Assert.Equal(2, await repository.CountAsync());
+        Assert.Single(await repository.ReadMessagesAsync("bulk-1"));
+        Assert.Single(await repository.ReadMessagesAsync("bulk-2"));
+    }
+
+    [Fact]
     public async Task TrashRestoreReadsLegacyMessageOnlyEnvelope()
     {
         var database = new AIMemoryDatabase(
@@ -1666,6 +1718,83 @@ public sealed class CoreTests : IDisposable
         Assert.Equal("AI-Memory.msixbundle", result.Release.AssetName);
         Assert.Equal(0, UpdateService.CompareVersions("1.2", "1.2.0"));
         Assert.True(UpdateService.CompareVersions("2.0", "1.99") > 0);
+    }
+
+    [Fact]
+    public void ConversationProjectionFiltersProjectsSearchesAndSorts()
+    {
+        var conversations = new[]
+        {
+            new ConversationSummary(
+                "a", "alpha", "codex", "source-a", "Zebra",
+                DateTimeOffset.Parse("2026-07-01T00:00:00Z"),
+                DateTimeOffset.Parse("2026-07-04T00:00:00Z"),
+                null, @"C:\repos\Alpha"),
+            new ConversationSummary(
+                "b", "beta", "claude", "source-b", "Alpha",
+                DateTimeOffset.Parse("2026-07-04T00:00:00Z"),
+                DateTimeOffset.Parse("2026-07-01T00:00:00Z"),
+                null, @"C:\repos\Beta"),
+            new ConversationSummary(
+                "c", "alpha", "gemini", "source-c", "Bravo",
+                DateTimeOffset.Parse("2026-07-02T00:00:00Z"),
+                DateTimeOffset.Parse("2026-07-03T00:00:00Z"),
+                null, @"c:\repos\alpha\"),
+            new ConversationSummary(
+                "d", "fallback", "opencode", "source-d", "Query match",
+                DateTimeOffset.Parse("2026-07-03T00:00:00Z"),
+                DateTimeOffset.Parse("2026-07-02T00:00:00Z"),
+                null),
+        };
+
+        var projects =
+            ConversationListProjectionService.Projects(conversations);
+        Assert.Equal(3, projects.Count);
+        Assert.Contains(projects, value =>
+            value.Label.Equals("Alpha", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(projects, value => value.Label == "fallback");
+
+        var alpha = new HashSet<string>(
+            [@"C:\REPOS\ALPHA"],
+            StringComparer.OrdinalIgnoreCase);
+        Assert.Equal(
+            ["a", "c"],
+            ConversationListProjectionService.Apply(
+                    conversations,
+                    null,
+                    alpha,
+                    ConversationSortMode.UpdatedDescending)
+                .Select(value => value.Id));
+        Assert.Equal(
+            ["c", "a"],
+            ConversationListProjectionService.Apply(
+                    conversations,
+                    null,
+                    alpha,
+                    ConversationSortMode.CreatedDescending)
+                .Select(value => value.Id));
+        Assert.Equal(
+            ["c", "a"],
+            ConversationListProjectionService.Apply(
+                    conversations,
+                    null,
+                    alpha,
+                    ConversationSortMode.TitleAscending)
+                .Select(value => value.Id));
+        Assert.Equal(
+            "b",
+            Assert.Single(ConversationListProjectionService.Apply(
+                conversations,
+                "beta",
+                null,
+                ConversationSortMode.UpdatedDescending)).Id);
+        Assert.Equal(
+            "d",
+            Assert.Single(ConversationListProjectionService.Apply(
+                conversations,
+                "query",
+                null,
+                ConversationSortMode.UpdatedDescending)).Id);
     }
 
     [Fact]

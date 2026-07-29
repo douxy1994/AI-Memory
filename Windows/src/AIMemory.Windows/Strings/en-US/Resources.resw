@@ -206,7 +206,17 @@
   <data name="HandoffSourceCheckpointUnavailable" xml:space="preserve"><value>This handoff has no available source checkpoint.</value></data>
   <data name="HistorySourceUnavailable" xml:space="preserve"><value>The source conversation is unavailable. The history entry is retained.</value></data>
   <data name="SelectConversationToTrash" xml:space="preserve"><value>Select a conversation to move to Trash.</value></data>
-  <data name="ConversationMovedToTrash" xml:space="preserve"><value>Conversation moved to Trash.</value></data>
+  <data name="AllProjects" xml:space="preserve"><value>All Projects</value></data>
+  <data name="ProjectsSelected" xml:space="preserve"><value>{0} Projects Selected</value></data>
+  <data name="SortRecentlyUpdated" xml:space="preserve"><value>Recently Updated</value></data>
+  <data name="SortRecentlyCreated" xml:space="preserve"><value>Recently Created</value></data>
+  <data name="SortByTitle" xml:space="preserve"><value>Title</value></data>
+  <data name="HistoryTrashSelectedCount" xml:space="preserve"><value>Move to Trash ({0})</value></data>
+  <data name="MoveConversationsToTrashQuestion" xml:space="preserve"><value>Move {0} selected conversations to Trash?</value></data>
+  <data name="MoveConversationsToTrashDescription" xml:space="preserve"><value>Recoverable snapshots will be retained for {0} days. Nothing is permanently deleted.</value></data>
+  <data name="MoveToTrashRecoverable" xml:space="preserve"><value>Move to Trash (Recoverable)</value></data>
+  <data name="ConversationsMovedToTrash" xml:space="preserve"><value>Moved {0} conversations to Trash.</value></data>
+  <data name="BulkTrashCompletedWithFailures" xml:space="preserve"><value>Bulk operation completed: {0} moved to Trash and {1} failed.</value></data>
 
   <data name="MenuWorkbench.Title" xml:space="preserve"><value>Workbench</value></data>
   <data name="MenuReturnWorkbench.Text" xml:space="preserve"><value>Return to Workbench</value></data>
@@ -327,7 +337,11 @@
   <data name="HistoryRefresh.Content" xml:space="preserve"><value>Refresh</value></data>
   <data name="HistoryConversationsTab.Header" xml:space="preserve"><value>Conversations</value></data>
   <data name="HistorySearch.PlaceholderText" xml:space="preserve"><value>Search local history</value></data>
-  <data name="HistoryTrashSelected.Content" xml:space="preserve"><value>Move to Trash</value></data>
+  <data name="HistoryProjectFilter.Content" xml:space="preserve"><value>All Projects</value></data>
+  <data name="HistorySort.Header" xml:space="preserve"><value>Sort</value></data>
+  <data name="HistoryBeginSelection.Label" xml:space="preserve"><value>Select Multiple</value></data>
+  <data name="HistoryCancelSelection.Label" xml:space="preserve"><value>Cancel</value></data>
+  <data name="HistoryTrashSelected.Label" xml:space="preserve"><value>Move to Trash</value></data>
   <data name="HistoryNoConversations.Text" xml:space="preserve"><value>No conversations to display.</value></data>
   <data name="HistoryMemoryTab.Header" xml:space="preserve"><value>Memory</value></data>
   <data name="HistoryOpenMemory.Text" xml:space="preserve"><value>Open memory management</value></data>

@@ -28,6 +28,6 @@ rg -q 'OrderByDescending\(value => value.detected\)' \
   "${windows_dir}/src/AIMemory.Core/Services/AgentCatalog.cs"
 agent_count=$(rg -c 'new\("' \
   "${windows_dir}/src/AIMemory.Core/Services/AgentCatalog.cs")
-test "${agent_count}" -eq 34
+test "${agent_count}" -eq 70
 
 printf '%s\n' "Windows source structure verification passed."

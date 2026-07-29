@@ -13,8 +13,33 @@ public sealed partial class HistoryPage : Page
     private CancellationTokenSource? _searchCancellation;
     private CancellationTokenSource? _searchDebounce;
     private IReadOnlyList<CheckpointRecord> _checkpoints = [];
+    private IReadOnlyList<ConversationSummary> _allConversations = [];
+    private IReadOnlyList<ConversationProjectFilter> _projects = [];
+    private readonly HashSet<string> _projectFilters =
+        new(StringComparer.OrdinalIgnoreCase);
+    private bool _loadingSort;
+    private bool _bulkSelectionMode;
 
-    public HistoryPage() => InitializeComponent();
+    public HistoryPage()
+    {
+        InitializeComponent();
+        var options = new[]
+        {
+            new LocalizedOption(
+                ConversationSortMode.UpdatedDescending.ToString(),
+                LocalizationService.Get("SortRecentlyUpdated")),
+            new LocalizedOption(
+                ConversationSortMode.CreatedDescending.ToString(),
+                LocalizationService.Get("SortRecentlyCreated")),
+            new LocalizedOption(
+                ConversationSortMode.TitleAscending.ToString(),
+                LocalizationService.Get("SortByTitle")),
+        };
+        _loadingSort = true;
+        SortBox.ItemsSource = options;
+        SortBox.SelectedIndex = 0;
+        _loadingSort = false;
+    }
 
     protected override async void OnNavigatedTo(NavigationEventArgs args)
     {
@@ -65,23 +90,108 @@ public sealed partial class HistoryPage : Page
     {
         if (_window is null) return;
         _searchCancellation?.Cancel();
-        _searchCancellation = new CancellationTokenSource();
+        var cancellation = new CancellationTokenSource();
+        _searchCancellation = cancellation;
         try
         {
             var items = await _window.Conversations.ListAsync(
-                search: string.IsNullOrWhiteSpace(SearchBox.Text)
-                    ? null
-                    : SearchBox.Text,
-                cancellationToken: _searchCancellation.Token);
-            ConversationList.ItemsSource = items;
-            EmptyText.Visibility = items.Count == 0
-                ? Visibility.Visible
-                : Visibility.Collapsed;
+                limit: 5_000,
+                cancellationToken: cancellation.Token);
+            if (cancellation.IsCancellationRequested) return;
+            _allConversations = items;
+            ReloadProjectFilters();
+            ApplyConversationProjection();
         }
         catch (OperationCanceledException)
         {
-            // A newer search superseded this one.
+            // A newer refresh superseded this one.
         }
+    }
+
+    private void ReloadProjectFilters()
+    {
+        _projects = ConversationListProjectionService.Projects(
+            _allConversations);
+        var validKeys = _projects
+            .Select(project => project.Key)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        _projectFilters.RemoveWhere(key => !validKeys.Contains(key));
+
+        var flyout = new MenuFlyout();
+        var allProjects = new ToggleMenuFlyoutItem
+        {
+            Text = LocalizationService.Get("AllProjects"),
+            IsChecked = _projectFilters.Count == 0,
+        };
+        allProjects.Click += (_, _) =>
+        {
+            _projectFilters.Clear();
+            ReloadProjectFilters();
+            ApplyConversationProjection();
+        };
+        flyout.Items.Add(allProjects);
+        if (_projects.Count > 0)
+        {
+            flyout.Items.Add(new MenuFlyoutSeparator());
+        }
+        foreach (var project in _projects)
+        {
+            var option = new ToggleMenuFlyoutItem
+            {
+                Text = string.IsNullOrWhiteSpace(project.Label)
+                    ? LocalizationService.Get("UnknownProject")
+                    : project.Label,
+                IsChecked = _projectFilters.Contains(project.Key),
+                Tag = project.Key,
+            };
+            option.Click += ProjectFilter_Click;
+            flyout.Items.Add(option);
+        }
+        ProjectFilterButton.Flyout = flyout;
+        ProjectFilterButton.Content = _projectFilters.Count == 0
+            ? LocalizationService.Get("AllProjects")
+            : LocalizationService.Format(
+                "ProjectsSelected",
+                _projectFilters.Count);
+    }
+
+    private void ProjectFilter_Click(object sender, RoutedEventArgs args)
+    {
+        if (sender is not ToggleMenuFlyoutItem option
+            || option.Tag is not string key)
+        {
+            return;
+        }
+        if (option.IsChecked)
+        {
+            _projectFilters.Add(key);
+        }
+        else
+        {
+            _projectFilters.Remove(key);
+        }
+        ReloadProjectFilters();
+        ApplyConversationProjection();
+    }
+
+    private void ApplyConversationProjection()
+    {
+        var sortMode = Enum.TryParse<ConversationSortMode>(
+            (SortBox.SelectedItem as LocalizedOption)?.Id,
+            out var selectedSort)
+            ? selectedSort
+            : ConversationSortMode.UpdatedDescending;
+        ConversationList.SelectedItems.Clear();
+        var items = ConversationListProjectionService.Apply(
+            _allConversations,
+            SearchBox.Text,
+            _projectFilters,
+            sortMode);
+        ConversationList.ItemsSource = items;
+        EmptyText.Visibility = items.Count == 0
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        UpdateSelectionActions();
     }
 
     private async void Refresh_Click(object sender, RoutedEventArgs args)
@@ -101,7 +211,7 @@ public sealed partial class HistoryPage : Page
         try
         {
             await Task.Delay(180, _searchDebounce.Token);
-            await ReloadConversationsAsync();
+            ApplyConversationProjection();
         }
         catch (OperationCanceledException)
         {
@@ -109,13 +219,63 @@ public sealed partial class HistoryPage : Page
         }
     }
 
+    private void SortBox_SelectionChanged(
+        object sender,
+        SelectionChangedEventArgs args)
+    {
+        if (!_loadingSort) ApplyConversationProjection();
+    }
+
     private void ConversationList_ItemClick(object sender, ItemClickEventArgs args)
     {
-        if (_window is not null
+        if (!_bulkSelectionMode
+            && _window is not null
             && args.ClickedItem is ConversationSummary conversation)
         {
             OpenConversation(conversation);
         }
+    }
+
+    private void BeginSelection_Click(object sender, RoutedEventArgs args)
+    {
+        _bulkSelectionMode = true;
+        ConversationList.SelectionMode = ListViewSelectionMode.Multiple;
+        ConversationList.IsItemClickEnabled = false;
+        BeginSelectionButton.Visibility = Visibility.Collapsed;
+        CancelSelectionButton.Visibility = Visibility.Visible;
+        TrashSelectedButton.Visibility = Visibility.Visible;
+        UpdateSelectionActions();
+    }
+
+    private void CancelSelection_Click(object sender, RoutedEventArgs args) =>
+        ExitBulkSelection();
+
+    private void ConversationList_SelectionChanged(
+        object sender,
+        SelectionChangedEventArgs args) =>
+        UpdateSelectionActions();
+
+    private void ExitBulkSelection()
+    {
+        ConversationList.SelectedItems.Clear();
+        ConversationList.SelectionMode = ListViewSelectionMode.None;
+        ConversationList.IsItemClickEnabled = true;
+        _bulkSelectionMode = false;
+        BeginSelectionButton.Visibility = Visibility.Visible;
+        CancelSelectionButton.Visibility = Visibility.Collapsed;
+        TrashSelectedButton.Visibility = Visibility.Collapsed;
+        UpdateSelectionActions();
+    }
+
+    private void UpdateSelectionActions()
+    {
+        var count = ConversationList.SelectedItems.Count;
+        TrashSelectedButton.IsEnabled = count > 0;
+        TrashSelectedButton.Label = count == 0
+            ? LocalizationService.Get("MoveToTrash")
+            : LocalizationService.Format(
+                "HistoryTrashSelectedCount",
+                count);
     }
 
     private void MemoryList_ItemClick(object sender, ItemClickEventArgs args)
@@ -256,22 +416,91 @@ public sealed partial class HistoryPage : Page
 
     private async void TrashSelected_Click(object sender, RoutedEventArgs args)
     {
-        if (_window is null
-            || ConversationList.SelectedItem is not ConversationSummary conversation)
+        if (_window is null) return;
+        var conversations = ConversationList.SelectedItems
+            .OfType<ConversationSummary>()
+            .ToArray();
+        if (conversations.Length == 0)
         {
             Show(
                 LocalizationService.Get("SelectConversationToTrash"),
                 InfoBarSeverity.Warning);
             return;
         }
-        var settings = await _window.Settings.LoadAsync();
-        await new TrashService(_window.Database).TrashAsync(
-            conversation,
-            settings.TrashRetentionDays);
+        AppSettings settings;
+        try
+        {
+            settings = await _window.Settings.LoadAsync();
+        }
+        catch (Exception error)
+        {
+            Show(
+                LocalizationService.Format(
+                    "MoveToTrashFailed",
+                    error.Message),
+                InfoBarSeverity.Error);
+            return;
+        }
+        var confirmation = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = LocalizationService.Format(
+                "MoveConversationsToTrashQuestion",
+                conversations.Length),
+            Content = LocalizationService.Format(
+                "MoveConversationsToTrashDescription",
+                settings.TrashRetentionDays),
+            PrimaryButtonText = LocalizationService.Get(
+                "MoveToTrashRecoverable"),
+            CloseButtonText = LocalizationService.Get("Cancel"),
+            DefaultButton = ContentDialogButton.Close,
+        };
+        if (await confirmation.ShowAsync() != ContentDialogResult.Primary)
+        {
+            return;
+        }
+
+        TrashSelectedButton.IsEnabled = false;
+        CancelSelectionButton.IsEnabled = false;
+        var service = new TrashService(_window.Database);
+        BulkTrashResult result;
+        try
+        {
+            result = await service.TrashManyAsync(
+                conversations,
+                settings.TrashRetentionDays);
+        }
+        catch (Exception error)
+        {
+            CancelSelectionButton.IsEnabled = true;
+            UpdateSelectionActions();
+            Show(
+                LocalizationService.Format(
+                    "MoveToTrashFailed",
+                    error.Message),
+                InfoBarSeverity.Error);
+            return;
+        }
+        CancelSelectionButton.IsEnabled = true;
+        ExitBulkSelection();
         await ReloadConversationsAsync();
+        if (result.FailedConversationIds.Count == 0)
+        {
+            Show(
+                LocalizationService.Format(
+                    "ConversationsMovedToTrash",
+                    result.Moved),
+                InfoBarSeverity.Success);
+            return;
+        }
         Show(
-            LocalizationService.Get("ConversationMovedToTrash"),
-            InfoBarSeverity.Success);
+            LocalizationService.Format(
+                "BulkTrashCompletedWithFailures",
+                result.Moved,
+                result.FailedConversationIds.Count),
+            result.Moved == 0
+                ? InfoBarSeverity.Error
+                : InfoBarSeverity.Warning);
     }
 
     private void Show(string message, InfoBarSeverity severity)
