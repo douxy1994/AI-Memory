@@ -11,7 +11,12 @@ public sealed record MemoryCandidateRecord(
     string WhyItMatters,
     double Confidence,
     string Status,
-    string CreatedAt);
+    string CreatedAt)
+{
+    public IReadOnlyList<string> EvidenceRefs { get; init; } = [];
+    public string? MergeSuggestion { get; init; }
+    public string? ConflictSuggestion { get; init; }
+}
 
 public sealed record ApprovedMemoryRecord(
     string Id,
@@ -34,11 +39,27 @@ public sealed class MemoryGovernanceService(AIMemoryDatabase database)
         await using var connection = database.OpenConnection();
         var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT candidate_id,repo_id,kind,summary,value,why_it_matters,
-                   confidence,status,created_at
-            FROM memory_candidates
-            WHERE $all=1 OR status IN ('pending','pending_review')
-            ORDER BY created_at DESC;
+            SELECT mc.candidate_id,mc.repo_id,mc.kind,mc.summary,mc.value,
+                   mc.why_it_matters,mc.confidence,mc.status,mc.created_at,
+                   (
+                     SELECT mp.proposed_title || ': ' || mp.proposed_value
+                     FROM memory_merge_proposals mp
+                     WHERE mp.candidate_id=mc.candidate_id
+                       AND mp.status IN ('pending','pending_review')
+                     ORDER BY mp.updated_at DESC
+                     LIMIT 1
+                   ),
+                   (
+                     SELECT cf.reason
+                     FROM memory_conflicts cf
+                     WHERE cf.candidate_id=mc.candidate_id
+                       AND cf.status='open'
+                     ORDER BY cf.created_at DESC
+                     LIMIT 1
+                   )
+            FROM memory_candidates mc
+            WHERE $all=1 OR mc.status IN ('pending','pending_review')
+            ORDER BY mc.created_at DESC;
             """;
         command.Parameters.AddWithValue("$all", includeReviewed ? 1 : 0);
         var result = new List<MemoryCandidateRecord>();
@@ -54,7 +75,49 @@ public sealed class MemoryGovernanceService(AIMemoryDatabase database)
                 reader.GetString(5),
                 reader.GetDouble(6),
                 reader.GetString(7),
-                reader.GetString(8)));
+                reader.GetString(8))
+            {
+                MergeSuggestion =
+                    reader.IsDBNull(9) ? null : reader.GetString(9),
+                ConflictSuggestion =
+                    reader.IsDBNull(10) ? null : reader.GetString(10),
+            });
+        }
+        await reader.CloseAsync();
+
+        if (result.Count > 0)
+        {
+            var evidenceCommand = connection.CreateCommand();
+            evidenceCommand.CommandText = """
+                SELECT owner_id,excerpt
+                FROM evidence_refs
+                WHERE owner_type IN ('candidate','memory_candidate')
+                ORDER BY created_at,evidence_id;
+                """;
+            var evidence = new Dictionary<string, List<string>>(
+                StringComparer.Ordinal);
+            await using var evidenceReader =
+                await evidenceCommand.ExecuteReaderAsync(cancellationToken);
+            while (await evidenceReader.ReadAsync(cancellationToken))
+            {
+                var owner = evidenceReader.GetString(0);
+                if (!evidence.TryGetValue(owner, out var excerpts))
+                {
+                    excerpts = [];
+                    evidence[owner] = excerpts;
+                }
+                excerpts.Add(evidenceReader.GetString(1));
+            }
+            for (var index = 0; index < result.Count; index++)
+            {
+                if (evidence.TryGetValue(result[index].Id, out var excerpts))
+                {
+                    result[index] = result[index] with
+                    {
+                        EvidenceRefs = excerpts,
+                    };
+                }
+            }
         }
         return result;
     }

@@ -1831,12 +1831,28 @@ public sealed class CoreTests : IDisposable
                 VALUES(
                   'candidate-1','repo','rule','Use tests','Run tests',
                   'Prevents regressions',0.9,'test','pending_review',$now,NULL);
+                INSERT INTO evidence_refs VALUES(
+                  'evidence-1','candidate','candidate-1',NULL,NULL,NULL,NULL,
+                  'A previous release regressed without tests.',$now);
+                INSERT INTO memory_merge_proposals VALUES(
+                  'proposal-1','repo','candidate-1','existing-memory',
+                  'Unified test rule','Run targeted and full tests',
+                  'Before release','Review scope','test','pending_review',
+                  $now,$now);
+                INSERT INTO memory_conflicts VALUES(
+                  'conflict-1','repo','candidate-1','existing-memory',
+                  'The commands differ.','open',$now,NULL);
                 """;
             insert.Parameters.AddWithValue("$now", DateTimeOffset.UtcNow.ToString("O"));
             await insert.ExecuteNonQueryAsync();
         }
         var service = new MemoryGovernanceService(database);
-        Assert.Single(await service.ListCandidatesAsync());
+        var pending = Assert.Single(await service.ListCandidatesAsync());
+        Assert.Equal(
+            ["A previous release regressed without tests."],
+            pending.EvidenceRefs);
+        Assert.Contains("Unified test rule", pending.MergeSuggestion);
+        Assert.Equal("The commands differ.", pending.ConflictSuggestion);
         await service.ApproveCandidateAsync(
             "candidate-1", "Test rule", "Run all tests", "Before release");
         Assert.Empty(await service.ListCandidatesAsync());

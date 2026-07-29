@@ -461,6 +461,10 @@
   <data name="MemoryRefresh.Content" xml:space="preserve"><value>刷新</value></data>
   <data name="MemoryReviewTab.Header" xml:space="preserve"><value>待复核</value></data>
   <data name="MemoryRejectAll.Content" xml:space="preserve"><value>全部忽略</value></data>
+  <data name="MemoryCandidateEvidence.Text" xml:space="preserve"><value>证据</value></data>
+  <data name="CandidateConfidence" xml:space="preserve"><value>置信度 {0:0.00}</value></data>
+  <data name="CandidateMergeSuggestion" xml:space="preserve"><value>合并建议：{0}</value></data>
+  <data name="CandidateConflictSuggestion" xml:space="preserve"><value>冲突：{0}</value></data>
   <data name="MemoryApprove.Content" xml:space="preserve"><value>批准/编辑</value></data>
   <data name="MemorySnooze.Content" xml:space="preserve"><value>暂缓</value></data>
   <data name="MemoryReject.Content" xml:space="preserve"><value>拒绝</value></data>

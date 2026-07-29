@@ -46,18 +46,51 @@
                             <DataTemplate>
                                 <Border Style="{StaticResource CardStyle}" Margin="0,4">
                                     <StackPanel Spacing="8">
+                                        <StackPanel Orientation="Horizontal"
+                                                    Spacing="8">
+                                            <TextBlock Text="{Binding Kind}"
+                                                       Foreground="{StaticResource AIMemoryGreenBrush}" />
+                                            <TextBlock Text="{Binding Status}"
+                                                       Opacity="0.6" />
+                                            <TextBlock Text="{Binding ConfidenceLabel}"
+                                                       Opacity="0.55" />
+                                        </StackPanel>
                                         <TextBlock Text="{Binding Summary}" FontWeight="SemiBold" />
                                         <TextBlock Text="{Binding Value}" TextWrapping="Wrap" IsTextSelectionEnabled="True" />
                                         <TextBlock Text="{Binding WhyItMatters}" Opacity="0.6" TextWrapping="Wrap" />
+                                        <StackPanel Visibility="{Binding EvidenceVisibility}"
+                                                    Spacing="4">
+                                            <TextBlock x:Uid="MemoryCandidateEvidence"
+                                                       Text="证据"
+                                                       FontWeight="SemiBold" />
+                                            <ItemsControl ItemsSource="{Binding EvidenceRefs}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Text="{Binding}"
+                                                                   TextWrapping="Wrap"
+                                                                   Opacity="0.65"
+                                                                   Margin="8,0,0,0" />
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding MergeSuggestionLabel}"
+                                                   Visibility="{Binding MergeVisibility}"
+                                                   TextWrapping="Wrap"
+                                                   Opacity="0.7" />
+                                        <TextBlock Text="{Binding ConflictSuggestionLabel}"
+                                                   Visibility="{Binding ConflictVisibility}"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
                                             <Button x:Uid="MemoryApprove" Content="批准/编辑"
-                                                    Tag="{Binding}"
+                                                    Tag="{Binding ValueRecord}"
                                                     Click="ApproveCandidate_Click" />
                                             <Button x:Uid="MemorySnooze" Content="暂缓"
-                                                    Tag="{Binding}"
+                                                    Tag="{Binding ValueRecord}"
                                                     Click="SnoozeCandidate_Click" />
                                             <Button x:Uid="MemoryReject" Content="拒绝"
-                                                    Tag="{Binding}"
+                                                    Tag="{Binding ValueRecord}"
                                                     Click="RejectCandidate_Click" />
                                         </StackPanel>
                                     </StackPanel>

@@ -58,7 +58,9 @@ public sealed partial class MemoryPage : Page
             .Where(value => selectedRepoId is null
                 || value.RepoId == selectedRepoId)
             .ToArray();
-        CandidateList.ItemsSource = _pendingCandidates;
+        CandidateList.ItemsSource = _pendingCandidates
+            .Select(value => new CandidateRow(value))
+            .ToArray();
         RejectAllCandidatesButton.IsEnabled =
             _pendingCandidates.Count > 0;
         ApprovedList.ItemsSource = (await approvedTask)
@@ -675,3 +677,40 @@ public sealed record HandoffRow(
 public sealed record RepositoryOption(
     string? Id,
     string Label);
+
+public sealed class CandidateRow
+{
+    public CandidateRow(MemoryCandidateRecord value)
+    {
+        ValueRecord = value;
+    }
+
+    public MemoryCandidateRecord ValueRecord { get; }
+    public string Kind => ValueRecord.Kind;
+    public string Status => ValueRecord.Status;
+    public string Summary => ValueRecord.Summary;
+    public string Value => ValueRecord.Value;
+    public string WhyItMatters => ValueRecord.WhyItMatters;
+    public IReadOnlyList<string> EvidenceRefs => ValueRecord.EvidenceRefs;
+    public string ConfidenceLabel => LocalizationService.Format(
+        "CandidateConfidence",
+        ValueRecord.Confidence);
+    public string MergeSuggestionLabel => LocalizationService.Format(
+        "CandidateMergeSuggestion",
+        ValueRecord.MergeSuggestion ?? "");
+    public string ConflictSuggestionLabel => LocalizationService.Format(
+        "CandidateConflictSuggestion",
+        ValueRecord.ConflictSuggestion ?? "");
+    public Visibility EvidenceVisibility =>
+        EvidenceRefs.Count == 0
+            ? Visibility.Collapsed
+            : Visibility.Visible;
+    public Visibility MergeVisibility =>
+        string.IsNullOrWhiteSpace(ValueRecord.MergeSuggestion)
+            ? Visibility.Collapsed
+            : Visibility.Visible;
+    public Visibility ConflictVisibility =>
+        string.IsNullOrWhiteSpace(ValueRecord.ConflictSuggestion)
+            ? Visibility.Collapsed
+            : Visibility.Visible;
+}
