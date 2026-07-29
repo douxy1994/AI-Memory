@@ -23,6 +23,16 @@ public static class DataPaths
             "ChatMem", "chatmem.db"),
     ];
 
+    public static IReadOnlyList<string> ChatMemSettingsCandidates =>
+    [
+        Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "ChatMem", "settings.json"),
+        Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "ChatMem", "settings.json"),
+    ];
+
     public static void EnsureDirectories()
     {
         Directory.CreateDirectory(SupportDirectory);

@@ -66,6 +66,10 @@
   <data name="ChatMemImportInProgress" xml:space="preserve"><value>Importing and validating ChatMem data…</value></data>
   <data name="ChatMemImportCompleted" xml:space="preserve"><value>ChatMem data imported.</value></data>
   <data name="ChatMemImportCompletedWithBackup" xml:space="preserve"><value>ChatMem data imported. Original data backup: {0}</value></data>
+  <data name="ChatMemWebDavImported" xml:space="preserve"><value>Imported the WebDAV profile and credential from ChatMem.</value></data>
+  <data name="ChatMemWebDavImportedWithoutUsername" xml:space="preserve"><value>Imported the ChatMem WebDAV address, but the original profile has no username.</value></data>
+  <data name="ChatMemWebDavImportedWithoutPassword" xml:space="preserve"><value>Imported the ChatMem WebDAV address, but no password was found in its credential store or settings. Add it in Settings.</value></data>
+  <data name="ChatMemWebDavImportFailed" xml:space="preserve"><value>Could not import the ChatMem WebDAV profile: {0}</value></data>
   <data name="ImportFailed" xml:space="preserve"><value>Import failed: {0}</value></data>
   <data name="NativeHistoryImportCompleted" xml:space="preserve"><value>Local history import complete: {0}.</value></data>
   <data name="NativeHistoryImportCompletedWithWarnings" xml:space="preserve"><value>Local history import complete: {0}; {1} warnings.</value></data>

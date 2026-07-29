@@ -1,6 +1,8 @@
 using AIMemory.Core.Persistence;
 using AIMemory.Core.Services;
+using AIMemory.Windows.Services;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.Windows.AppLifecycle;
 using Microsoft.Windows.Globalization;
@@ -28,14 +30,77 @@ public sealed partial class App : Application
         DataPaths.EnsureDirectories();
         var database = new AIMemoryDatabase();
         await database.InitializeAsync();
-        var settings = await new SettingsStore().LoadAsync();
+        var settingsStore = new SettingsStore();
+        var settings = await settingsStore.LoadAsync();
+        ChatMemWebDavImportResult? chatMemWebDavImport = null;
+        string? chatMemWebDavImportError = null;
+        try
+        {
+            var credentials = new CredentialService();
+            chatMemWebDavImport = await new ChatMemWebDavImportService(
+                    settingsStore)
+                .ImportAsync(
+                    username => credentials.Load(username)?.Password,
+                    credentials.LoadLegacyChatMemPassword,
+                    credentials.Save);
+            if (chatMemWebDavImport.Changed)
+            {
+                settings = await settingsStore.LoadAsync();
+            }
+        }
+        catch (Exception exception)
+        {
+            chatMemWebDavImportError = exception.Message;
+            System.Diagnostics.Debug.WriteLine(
+                $"ChatMem WebDAV import failed: {exception}");
+        }
         ApplyApplicationLanguage(settings.Language);
         ApplyApplicationFont(settings.FontFamily);
         _window = new MainWindow(database);
         _window.ApplyFontFamily(settings.FontFamily);
         _window.Activate();
         _window.ConfigureAutomaticBackup(settings);
+        ShowChatMemWebDavImportFeedback(
+            chatMemWebDavImport,
+            chatMemWebDavImportError);
         _ = CheckForUpdatesAtLaunchAsync();
+    }
+
+    private void ShowChatMemWebDavImportFeedback(
+        ChatMemWebDavImportResult? result,
+        string? error)
+    {
+        if (_window is null) return;
+        if (!string.IsNullOrWhiteSpace(error))
+        {
+            _window.ShowFeedback(
+                LocalizationService.Format(
+                    "ChatMemWebDavImportFailed",
+                    error),
+                InfoBarSeverity.Error);
+            return;
+        }
+        if (result is null) return;
+        if (result.MissingUsername)
+        {
+            _window.ShowFeedback(
+                LocalizationService.Get(
+                    "ChatMemWebDavImportedWithoutUsername"),
+                InfoBarSeverity.Warning);
+        }
+        else if (result.MissingCredential)
+        {
+            _window.ShowFeedback(
+                LocalizationService.Get(
+                    "ChatMemWebDavImportedWithoutPassword"),
+                InfoBarSeverity.Warning);
+        }
+        else if (result.Changed)
+        {
+            _window.ShowFeedback(
+                LocalizationService.Get("ChatMemWebDavImported"),
+                InfoBarSeverity.Success);
+        }
     }
 
     public static void ApplyApplicationFont(string preference)

@@ -66,6 +66,10 @@
   <data name="ChatMemImportInProgress" xml:space="preserve"><value>正在从 ChatMem 导入并校验数据…</value></data>
   <data name="ChatMemImportCompleted" xml:space="preserve"><value>ChatMem 数据已导入。</value></data>
   <data name="ChatMemImportCompletedWithBackup" xml:space="preserve"><value>ChatMem 数据已导入，原数据备份：{0}</value></data>
+  <data name="ChatMemWebDavImported" xml:space="preserve"><value>已从 ChatMem 导入 WebDAV 配置与凭据。</value></data>
+  <data name="ChatMemWebDavImportedWithoutUsername" xml:space="preserve"><value>已导入 ChatMem 的 WebDAV 地址，但原配置没有用户名。</value></data>
+  <data name="ChatMemWebDavImportedWithoutPassword" xml:space="preserve"><value>已导入 ChatMem 的 WebDAV 地址；原凭据库与设置中未找到密码，请在设置中补充。</value></data>
+  <data name="ChatMemWebDavImportFailed" xml:space="preserve"><value>导入 ChatMem WebDAV 配置失败：{0}</value></data>
   <data name="ImportFailed" xml:space="preserve"><value>导入失败：{0}</value></data>
   <data name="NativeHistoryImportCompleted" xml:space="preserve"><value>本机历史导入完成：{0}。</value></data>
   <data name="NativeHistoryImportCompletedWithWarnings" xml:space="preserve"><value>本机历史导入完成：{0}；{1} 项警告。</value></data>

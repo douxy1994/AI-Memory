@@ -34,6 +34,10 @@ AI Memory 的 Windows 11 原生版本，使用 C#、WinUI 3 与 Windows App SDK 
   用 Windows App SDK 原生文件选择器手动选库的 ChatMem 安全导入；导入使用
   只读 SQLite 在线快照保留已提交 WAL 数据，先备份现有数据库，再迁移、校验
   临时副本并替换；
+- 首次启动会以只读、幂等方式迁移 ChatMem 的 WebDAV 地址与凭据：不会覆盖
+  AI Memory 中不同的现有端点，优先读取 Windows Credential Manager 中
+  ChatMem 的原凭据，并兼容旧设置文件中的密码回退，密码只写入 AI Memory
+  自己的 Credential Locker；
 - WebDAV 与本地文件夹增量同步；本地目录使用 Windows App SDK 原生
   `FolderPicker` 选择，并可在同步前检查云盘锁文件及短时变动；
 - 无变化跳过、未变化文件使用 NTFS 硬链接复用的增量恢复点，支持定时备份、
