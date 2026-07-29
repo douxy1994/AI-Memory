@@ -82,6 +82,32 @@ dotnet build .\Windows\src\AIMemory.Windows\AIMemory.Windows.csproj `
   -p:Platform=x64
 ```
 
+## Windows 11 桌面生命周期验收
+
+该测试必须在已登录的 Windows 11 桌面会话运行。它会验证首次启动只有一个
+进程、关闭主窗口后进程继续驻留、再次启动不会创建第二个持久进程，并能恢复
+原窗口。测试只清理自己启动的进程；检测到已有 AI Memory 时会直接停止。
+
+验证构建输出：
+
+```powershell
+$app = Get-ChildItem `
+  .\Windows\src\AIMemory.Windows\bin\Release `
+  -Recurse -Filter AIMemory.Windows.exe |
+  Select-Object -First 1
+pwsh .\Windows\scripts\smoke-desktop.ps1 `
+  -ExecutablePath $app.FullName
+```
+
+验证已安装的 MSIX：
+
+```powershell
+$appId = (Get-StartApps | Where-Object Name -eq "AI Memory").AppID
+pwsh .\Windows\scripts\smoke-desktop.ps1 `
+  -AppUserModelId $appId `
+  -ProcessName "AIMemory.Windows"
+```
+
 ## 项目
 
 | 项目 | 职责 |

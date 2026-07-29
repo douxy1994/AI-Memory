@@ -8,6 +8,7 @@ test -f "${windows_dir}/AIMemory.Windows.slnx"
 test -f "${windows_dir}/src/AIMemory.Windows/Package.appxmanifest"
 test -f "${windows_dir}/src/AIMemory.Core/Persistence/SchemaV1.sql"
 test -f "${windows_dir}/parity.json"
+test -f "${windows_dir}/scripts/smoke-desktop.ps1"
 
 xmllint --noout "${windows_dir}/AIMemory.Windows.slnx"
 find "${windows_dir}/src/AIMemory.Windows" \
@@ -30,6 +31,8 @@ rg -q '_appWindow\.Closing' \
   "${windows_dir}/src/AIMemory.Windows/MainWindow.xaml.cs"
 rg -q 'sender\.Hide\(\)' \
   "${windows_dir}/src/AIMemory.Windows/MainWindow.xaml.cs"
+rg -q 'CloseMainWindow' "${windows_dir}/scripts/smoke-desktop.ps1"
+rg -q 'IsWindowVisible' "${windows_dir}/scripts/smoke-desktop.ps1"
 rg -q 'windows.startupTask' "${windows_dir}/src/AIMemory.Windows/Package.appxmanifest"
 rg -q 'Enabled="false"' "${windows_dir}/src/AIMemory.Windows/Package.appxmanifest"
 rg -q 'OrderByDescending\(value => value.detected\)' \
