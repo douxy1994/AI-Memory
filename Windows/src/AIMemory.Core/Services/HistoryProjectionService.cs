@@ -157,4 +157,37 @@ public sealed class HistoryProjectionService(AIMemoryDatabase database)
         runId.StartsWith("run:", StringComparison.OrdinalIgnoreCase)
             ? runId[4..]
             : runId;
+
+    public static IReadOnlyList<string> ConversationIdCandidates(
+        string reference,
+        string? sourceAgent = null)
+    {
+        var values = new List<string>();
+        Add(reference);
+        var separator = reference.IndexOf(':');
+        if (separator > 0 && separator < reference.Length - 1)
+        {
+            var prefix = reference[..separator];
+            var isSourcePrefix = !string.IsNullOrWhiteSpace(sourceAgent)
+                && prefix.Equals(
+                    sourceAgent.Trim(),
+                    StringComparison.OrdinalIgnoreCase);
+            var isKnownAgent = AgentCatalog.All.Any(value =>
+                value.Id.Equals(prefix, StringComparison.OrdinalIgnoreCase));
+            if (isSourcePrefix || isKnownAgent)
+            {
+                Add(reference[(separator + 1)..]);
+            }
+        }
+        return values;
+
+        void Add(string value)
+        {
+            if (!string.IsNullOrWhiteSpace(value)
+                && !values.Contains(value, StringComparer.Ordinal))
+            {
+                values.Add(value);
+            }
+        }
+    }
 }

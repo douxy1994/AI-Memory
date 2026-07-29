@@ -788,6 +788,30 @@ public sealed class CoreTests : IDisposable
         Assert.Equal("c1", episode.SourceConversationId);
     }
 
+    [Theory]
+    [InlineData("codex:thread-1", "codex", "codex:thread-1", "thread-1")]
+    [InlineData("thread-1", "codex", "thread-1", null)]
+    [InlineData("custom:thread-1", null, "custom:thread-1", null)]
+    public void HistoryConversationReferencesResolveAutomaticPrefixes(
+        string reference,
+        string? sourceAgent,
+        string first,
+        string? second)
+    {
+        var candidates = HistoryProjectionService.ConversationIdCandidates(
+            reference,
+            sourceAgent);
+        Assert.Equal(first, candidates[0]);
+        if (second is null)
+        {
+            Assert.Single(candidates);
+        }
+        else
+        {
+            Assert.Equal([first, second], candidates);
+        }
+    }
+
     [Fact]
     public async Task RepositoryGovernancePersistsAliasesCandidatesAndMergeProposals()
     {
