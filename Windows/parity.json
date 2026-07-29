@@ -17,7 +17,7 @@
     { "id": "agent-catalog", "status": "implemented", "evidence": "45 products, detected-first and missing-disabled" },
     { "id": "credential-storage", "status": "implemented", "evidence": "Windows PasswordVault" },
     { "id": "webdav-verification", "status": "implemented", "evidence": "PROPFIND verification with visible result" },
-    { "id": "backup", "status": "implemented", "evidence": "SQLite online backup and settings copy" },
+    { "id": "backup", "status": "implemented", "evidence": "SQLite online backup, settings sidecar, validated restore, pre-restore safety backup and automatic rollback" },
     { "id": "chatmem-database-import", "status": "implemented", "evidence": "read-only validation, pre-import backup, atomic replacement" },
     { "id": "incremental-webdav-sync", "status": "implemented", "evidence": "schema v2 manifest hash/timestamp merge with upload, download and skip counts" },
     { "id": "local-folder-incremental-sync", "status": "implemented", "evidence": "atomic per-conversation files, schema v2 manifest and hash/timestamp merge" },

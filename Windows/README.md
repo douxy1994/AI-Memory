@@ -25,7 +25,7 @@ AI Memory 的 Windows 11 原生版本，使用 C#、WinUI 3 与 Windows App SDK 
 - 完整对话详情、收藏备注/标签/置顶/继续卡片以及可恢复回收站；
 - SQLite 数据库、版本化设置和 ChatMem 安全导入；
 - WebDAV 与本地文件夹增量同步；
-- 备份、恢复、更新检查与诊断；
+- 可选择恢复点的备份与安全恢复、更新检查与诊断；
 - Windows Credential Locker 保存 WebDAV 密码；
 - 登录启动开关；
 - 45 种主流 Agent/CLI 安装检测，已安装项优先，未安装项默认关闭；

@@ -237,6 +237,9 @@
                                     <AppBarButton Icon="SaveLocal"
                                                   Label="创建恢复点"
                                                   Click="CreateBackup_Click" />
+                                    <AppBarButton Icon="Refresh"
+                                                  Label="从恢复点恢复"
+                                                  Click="RestoreBackup_Click" />
                                     <AppBarButton Icon="Folder"
                                                   Label="打开备份目录"
                                                   Click="OpenBackupDirectory_Click" />

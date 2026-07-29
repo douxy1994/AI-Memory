@@ -41,6 +41,46 @@ public sealed class CoreTests : IDisposable
     }
 
     [Fact]
+    public async Task RecoveryPointRestoreValidatesBacksUpAndReplacesDatabase()
+    {
+        var databasePath = Path.Combine(_root, "restore.db");
+        var backupDirectory = Path.Combine(_root, "backups");
+        var settingsPath = Path.Combine(_root, "settings.json");
+        var database = new AIMemoryDatabase(databasePath);
+        await database.InitializeAsync();
+        await File.WriteAllTextAsync(settingsPath, """{"marker":"old"}""");
+        await InsertRestoreConversationAsync(
+            database, "before", "Before restore");
+
+        var service = new BackupService(
+            database, backupDirectory, settingsPath);
+        var recoveryPoint = await service.CreateRecoveryPointAsync();
+        await File.WriteAllTextAsync(settingsPath, """{"marker":"new"}""");
+        await InsertRestoreConversationAsync(
+            database, "after", "After restore");
+
+        var safetyBackup = await service.RestoreRecoveryPointAsync(recoveryPoint);
+        var conversations = await new ConversationRepository(database).ListAsync();
+        Assert.Single(conversations);
+        Assert.Equal("before", conversations[0].Id);
+        Assert.True(File.Exists(safetyBackup));
+        Assert.NotEqual(recoveryPoint, safetyBackup);
+        var safetyDatabase = new AIMemoryDatabase(safetyBackup);
+        Assert.Equal(
+            2,
+            (await new ConversationRepository(safetyDatabase).ListAsync()).Count);
+        Assert.Contains(
+            "\"marker\":\"old\"",
+            await File.ReadAllTextAsync(settingsPath));
+
+        var invalid = Path.Combine(backupDirectory, "aimemory-invalid.db");
+        await File.WriteAllTextAsync(invalid, "not sqlite");
+        await Assert.ThrowsAnyAsync<Exception>(
+            () => service.RestoreRecoveryPointAsync(invalid));
+        Assert.Single(await new ConversationRepository(database).ListAsync());
+    }
+
+    [Fact]
     public async Task ConversationListIncludesProjectPathForWorkbenchGrouping()
     {
         var database = new AIMemoryDatabase(Path.Combine(_root, "projects.db"));
@@ -840,6 +880,24 @@ public sealed class CoreTests : IDisposable
         Assert.Equal(1, report.DetectedAgents);
         Assert.Equal(45, report.CatalogAgents);
         Assert.Contains(databasePath, report.ToDisplayText());
+    }
+
+    private static async Task InsertRestoreConversationAsync(
+        AIMemoryDatabase database,
+        string id,
+        string title)
+    {
+        await using var connection = database.OpenConnection();
+        var command = connection.CreateCommand();
+        command.CommandText = """
+            INSERT INTO conversations VALUES(
+              $id,'repo','codex','source',$title,$now,$now,NULL);
+            """;
+        command.Parameters.AddWithValue("$id", id);
+        command.Parameters.AddWithValue("$title", title);
+        command.Parameters.AddWithValue(
+            "$now", DateTimeOffset.UtcNow.ToString("O"));
+        await command.ExecuteNonQueryAsync();
     }
 
     public void Dispose()

@@ -228,6 +228,84 @@ public sealed partial class SettingsPage : Page
         }
     }
 
+    private async void RestoreBackup_Click(object sender, RoutedEventArgs args)
+    {
+        if (_window is null) return;
+        var service = new BackupService(_window.Database);
+        var recoveryPoints = service.ListRecoveryPoints();
+        if (recoveryPoints.Count == 0)
+        {
+            Show("没有可用的恢复点。", InfoBarSeverity.Warning);
+            return;
+        }
+
+        var picker = new ComboBox
+        {
+            ItemsSource = recoveryPoints,
+            SelectedIndex = 0,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+        };
+        var content = new StackPanel { Spacing = 12 };
+        content.Children.Add(new TextBlock
+        {
+            Text = "恢复前会自动备份当前数据库。请选择要恢复的时间点：",
+            TextWrapping = TextWrapping.Wrap,
+        });
+        content.Children.Add(picker);
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = "从恢复点恢复",
+            Content = content,
+            PrimaryButtonText = "恢复",
+            CloseButtonText = "取消",
+            DefaultButton = ContentDialogButton.Close,
+        };
+        if (await dialog.ShowAsync() != ContentDialogResult.Primary
+            || picker.SelectedItem is not string selected)
+        {
+            return;
+        }
+
+        try
+        {
+            SyncProgress.Visibility = Visibility.Visible;
+            var safetyBackup = await service.RestoreRecoveryPointAsync(selected);
+            await ReloadRestoredSettingsAsync();
+            Show(
+                $"恢复完成；恢复前的数据已备份到：{safetyBackup}",
+                InfoBarSeverity.Success);
+        }
+        catch (Exception exception)
+        {
+            Show($"恢复失败：{exception.Message}", InfoBarSeverity.Error);
+        }
+        finally
+        {
+            SyncProgress.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private async Task ReloadRestoredSettingsAsync()
+    {
+        if (_window is null) return;
+        _settings = await _window.Settings.LoadAsync();
+        SchemeBox.SelectedIndex =
+            _settings.Sync.WebdavScheme == "http" ? 1 : 0;
+        HostBox.Text = _settings.Sync.WebdavHost;
+        ServerPathBox.Text = _settings.Sync.WebdavPath;
+        RemotePathBox.Text = _settings.Sync.RemotePath;
+        UsernameBox.Text = _settings.Sync.Username;
+        SyncFolderBox.Text = _settings.Sync.SyncFolder;
+        AutoUpdateToggle.IsOn = _settings.AutoCheckUpdates;
+        UpdateFeedBox.Text = _settings.UpdateFeedUrl;
+        if (_credentials.Load() is { } stored)
+        {
+            UsernameBox.Text = stored.Username;
+            PasswordBox.Password = stored.Password;
+        }
+    }
+
     private async void SaveLocalFolder_Click(object sender, RoutedEventArgs args)
     {
         if (_window is null) return;
