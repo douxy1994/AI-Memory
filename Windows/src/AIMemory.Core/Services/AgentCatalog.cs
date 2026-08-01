@@ -71,7 +71,7 @@ public sealed class AgentCatalog
         new("google-agents-cli", "Google Agents CLI", ["agents-cli"], [".config\\google-agents-cli", "AppData\\Local\\google-agents-cli"], false),
         new("rovo-dev", "Atlassian Rovo Dev", ["acli", "rovodev"], [".rovodev"], false),
         new("gitlab-duo", "GitLab Duo CLI", ["duo"], [".gitlab\\storage.json"], false),
-        new("grok-build", "xAI Grok Build", ["grok"], [".grok"], false),
+        new("grok-build", "xAI Grok Build / Grok CLI", ["grok", "grok-cli"], [".grok"], false),
         new("jules", "Google Jules Tools", ["jules"], [], false),
         new("alquimia", "Alquimia AI", ["alquimia"], [".alquimia"], false),
         new("auggie", "Auggie CLI", ["auggie"], [".augment"], false),

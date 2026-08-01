@@ -233,7 +233,7 @@ final class NativeAgentIntegrationStoreTests: XCTestCase {
             at: bin,
             withIntermediateDirectories: true
         )
-        for executable in ["hf", "atk", "nanoclaw", "gitclaw", "crab-code", "lettabot", "omo"] {
+        for executable in ["hf", "atk", "grok-cli", "nanoclaw", "gitclaw", "crab-code", "lettabot", "omo"] {
             let path = bin.appendingPathComponent(executable)
             try Data().write(to: path)
             try FileManager.default.setAttributes(
@@ -250,7 +250,7 @@ final class NativeAgentIntegrationStoreTests: XCTestCase {
         let statuses = await service.detect()
         XCTAssertEqual(
             Array(statuses.prefix(2).map(\.agent)),
-            ["huggingface-cli", "m365-agents-toolkit"]
+            ["grok-build", "huggingface-cli"]
         )
         for id in ["huggingface-cli", "m365-agents-toolkit"] {
             let status = try XCTUnwrap(statuses.first { $0.agent == id })
@@ -259,7 +259,7 @@ final class NativeAgentIntegrationStoreTests: XCTestCase {
             XCTAssertFalse(status.canInstallIntegration)
             XCTAssertFalse(status.mcpInstalled)
         }
-        for id in ["nanoclaw", "gitclaw", "crab-code", "lettabot", "oh-my-openagent"] {
+        for id in ["grok-build", "nanoclaw", "gitclaw", "crab-code", "lettabot", "oh-my-openagent"] {
             let status = try XCTUnwrap(statuses.first { $0.agent == id })
             XCTAssertTrue(status.isAgentDetected)
             XCTAssertEqual(status.status, "detected")

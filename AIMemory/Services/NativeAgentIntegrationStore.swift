@@ -1578,7 +1578,7 @@ private enum IntegrationAgent: String, CaseIterable {
         case .googleAgentsCLI: "Google Agents CLI"
         case .rovoDev: "Atlassian Rovo Dev"
         case .gitlabDuo: "GitLab Duo CLI"
-        case .grokBuild: "xAI Grok Build"
+        case .grokBuild: "xAI Grok Build / Grok CLI"
         case .jules: "Google Jules Tools"
         case .alquimia: "Alquimia AI"
         case .auggie: "Auggie CLI"
@@ -1718,7 +1718,7 @@ private enum IntegrationAgent: String, CaseIterable {
         case .googleAgentsCLI: ["agents-cli"]
         case .rovoDev: ["acli", "rovodev"]
         case .gitlabDuo: ["duo"]
-        case .grokBuild: ["grok"]
+        case .grokBuild: ["grok", "grok-cli"]
         case .jules: ["jules"]
         case .alquimia: ["alquimia"]
         case .auggie: ["auggie"]
