@@ -4,6 +4,7 @@ DerivedData/
 *.profraw
 xcuserdata/
 tmp/
+release/
 **/bin/
 **/obj/
 *.user

@@ -28,6 +28,6 @@
 | 简体中文 / English 界面 | 已实现 | 已实现：MRT Core 原生资源，可跟随系统或独立选择 |
 | GitHub 更新检查 | 已实现 | 已实现核心 |
 | 升级就绪与运行诊断 | 已实现 | 已实现：设置、WebDAV、Credential Locker、数据库结构及完整性检查 |
-| 签名公开安装包 | 暂未发布 | 暂未发布 |
+| 签名公开安装包 | 已发布：v0.1.0 universal DMG、本地固定签名与 SHA-256；尚未 Apple Developer ID 公证 | 暂未发布 |
 
 Windows 标记为 Preview 的原因是 WinUI 桌面端虽已通过 Windows 11 x64/ARM64 CI 构建，但仍需在真实桌面会话完成安装和交互验证。

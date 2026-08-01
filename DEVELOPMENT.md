@@ -6,14 +6,14 @@ AI Memory 是一个双平台原生工程。macOS 与 Windows 共享产品行为�
 
 | 平台 | UI 与系统集成 | 数据与网络 | 包装 |
 | --- | --- | --- | --- |
-| macOS | Swift 6、SwiftUI、AppKit、ServiceManagement | SQLite3、Foundation、URLSession、Keychain | `.app`，后续提供签名 DMG |
+| macOS | Swift 6、SwiftUI、AppKit、ServiceManagement | SQLite3、Foundation、URLSession、Keychain | `.app` 与本地签名 universal DMG |
 | Windows 11 | C#、WinUI 3、Windows App SDK | Microsoft.Data.Sqlite、HttpClient、PasswordVault | MSIX |
 
 ## macOS
 
 ### 要求
 
-- macOS 15 或更高版本；
+- macOS 14 或更高版本；
 - Xcode 16 或更高版本；
 - 可选：XcodeGen，用于修改 `project.yml` 后重新生成工程。
 
@@ -40,6 +40,9 @@ xcodebuild \
   -destination 'platform=macOS' \
   -derivedDataPath .build/DerivedData \
   build
+
+# 打包、固定本地签名、DMG 校验和 SHA-256
+./script/package_macos_release.sh
 ```
 
 ### 目录职责
@@ -90,12 +93,13 @@ pwsh ./Windows/scripts/verify.ps1
 
 ## 发布
 
-当前仓库暂不发布安装包。后续发布流程应至少包含：
+macOS `v0.1.0` 已发布 universal DMG 与 SHA-256 校验文件。它使用项目固定的本地代码签名身份，未使用 Apple Developer ID 公证；发布说明必须如实标明首次打开的系统确认步骤。
 
-1. macOS Developer ID 签名、公证与 DMG；
-2. Windows MSIX 签名；
-3. x64/ARM64 构建验证；
-4. GitHub Release 资产名称包含 `AIMemory`、版本和架构；
-5. Release notes 清楚说明数据库迁移和兼容边界；
-6. 应用内更新源使用：
+后续发布流程至少包含：
+
+1. 运行 `./script/package_macos_release.sh`，验证签名、双架构、敏感文件排除、DMG 与 SHA-256；
+2. Windows MSIX 签名与真实 Windows 11 x64/ARM64 安装验证；
+3. GitHub Release 资产名称包含 `AIMemory`、版本和架构；
+4. Release notes 清楚说明数据库迁移和兼容边界；
+5. 应用内更新源使用：
    `https://api.github.com/repos/douxy1994/AI-Memory/releases/latest`。
