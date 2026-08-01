@@ -55,7 +55,7 @@ jobs:
         shell: pwsh
         run: |
           $helper = Get-ChildItem `
-            Windows/src/AIMemory.Windows/bin/Release `
+            Windows/src/AIMemory.Windows/bin `
             -Recurse -Filter aimemory-mcp.exe |
             Select-Object -First 1
           if (-not $helper) {
