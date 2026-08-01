@@ -108,9 +108,12 @@ public sealed class AgentIntegrationManager
         if (id is "codex" or "hermes")
         {
             return text.Contains(ConfigStart, StringComparison.Ordinal)
-                && text.Contains(
-                    _helper,
-                    StringComparison.OrdinalIgnoreCase);
+                && (text.Contains(
+                        _helper,
+                        StringComparison.OrdinalIgnoreCase)
+                    || text.Contains(
+                        _helper.Replace("\\", "\\\\"),
+                        StringComparison.OrdinalIgnoreCase));
         }
         try
         {

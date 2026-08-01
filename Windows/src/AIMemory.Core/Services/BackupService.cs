@@ -44,14 +44,20 @@ public sealed class BackupService(
             _backupDirectory,
             $"aimemory-{stamp}.db");
 
-        await using var source = database.OpenConnection();
-        await using var target = new Microsoft.Data.Sqlite.SqliteConnection(
+        await using (var source = database.OpenConnection())
+        await using (var target = new Microsoft.Data.Sqlite.SqliteConnection(
             new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder
             {
                 DataSource = destination,
-            }.ToString());
-        await target.OpenAsync(cancellationToken);
-        source.BackupDatabase(target);
+                Pooling = false,
+            }.ToString()))
+        {
+            await target.OpenAsync(cancellationToken);
+            source.BackupDatabase(target);
+        }
+        // The source connection may have been returned to the shared SQLite
+        // pool. Release it before replacing or deleting this recovery point.
+        SqliteConnection.ClearAllPools();
 
         var settingsCopy = Path.Combine(
             _backupDirectory,
@@ -92,8 +98,8 @@ public sealed class BackupService(
                 && !databaseChanged
                 && !settingsChanged)
             {
-                File.Delete(destination);
-                File.Delete(settingsCopy);
+                DeleteFileIfExists(destination);
+                DeleteFileIfExists(settingsCopy);
                 return new BackupResult(
                     previous, false, false, false);
             }
@@ -135,9 +141,18 @@ public sealed class BackupService(
         }
         catch
         {
-            File.Delete(destination);
-            File.Delete(settingsCopy);
-            File.Delete(MatchingManifestPath(destination));
+            try
+            {
+                SqliteConnection.ClearAllPools();
+                DeleteFileIfExists(destination);
+                DeleteFileIfExists(settingsCopy);
+                DeleteFileIfExists(MatchingManifestPath(destination));
+            }
+            catch (IOException)
+            {
+                // Preserve the original backup error. A uniquely named
+                // incomplete recovery point can be cleaned on the next run.
+            }
             throw;
         }
     }
@@ -236,8 +251,8 @@ public sealed class BackupService(
     private void ReplaceDatabaseFile(string replacement)
     {
         SqliteConnection.ClearAllPools();
-        File.Delete(database.Path + "-wal");
-        File.Delete(database.Path + "-shm");
+        DeleteFileIfExists(database.Path + "-wal");
+        DeleteFileIfExists(database.Path + "-shm");
         File.Move(replacement, database.Path, true);
     }
 
@@ -277,7 +292,7 @@ public sealed class BackupService(
         string source,
         string destination)
     {
-        File.Delete(destination);
+        DeleteFileIfExists(destination);
         if (OperatingSystem.IsWindows()
             && CreateHardLink(destination, source, IntPtr.Zero))
         {
@@ -290,10 +305,31 @@ public sealed class BackupService(
     {
         foreach (var path in ListRecoveryPoints().Skip(keep))
         {
-            File.Delete(path);
-            File.Delete(MatchingSettingsPath(path));
-            File.Delete(MatchingManifestPath(path));
+            DeleteFileIfExists(path);
+            DeleteFileIfExists(MatchingSettingsPath(path));
+            DeleteFileIfExists(MatchingManifestPath(path));
         }
+    }
+
+    private static void DeleteFileIfExists(string path)
+    {
+        if (!File.Exists(path)) return;
+        IOException? lastError = null;
+        for (var attempt = 0; attempt < 4; attempt++)
+        {
+            try
+            {
+                File.Delete(path);
+                return;
+            }
+            catch (IOException exception) when (attempt < 3)
+            {
+                lastError = exception;
+                SqliteConnection.ClearAllPools();
+                Thread.Sleep(TimeSpan.FromMilliseconds(25 * (attempt + 1)));
+            }
+        }
+        throw lastError ?? new IOException($"无法删除文件：{path}");
     }
 
     [DllImport(
@@ -315,6 +351,7 @@ public sealed class BackupService(
             {
                 DataSource = path,
                 Mode = SqliteOpenMode.ReadOnly,
+                Pooling = false,
             }.ToString());
         await connection.OpenAsync(cancellationToken);
 

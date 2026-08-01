@@ -79,6 +79,10 @@ public sealed class ChatMemImportService(AIMemoryDatabase destination)
 
                 var migrated = new AIMemoryDatabase(staging);
                 await migrated.InitializeAsync(cancellationToken);
+                // InitializeAsync uses the shared database connection factory.
+                // Clear its released pooled handle before reopening/moving the
+                // staging file on Windows.
+                SqliteConnection.ClearAllPools();
                 await ValidateAsync(
                     staging,
                     "integrity_check",
@@ -120,7 +124,18 @@ public sealed class ChatMemImportService(AIMemoryDatabase destination)
             }
             catch (Exception exception)
             {
-                DeleteDatabaseFiles(staging);
+                // Staging cleanup must not replace the validation/import error
+                // with a transient Windows file-lock error.
+                try
+                {
+                    SqliteConnection.ClearAllPools();
+                    DeleteDatabaseFiles(staging);
+                }
+                catch (IOException)
+                {
+                    // The unique staging path is harmless; preserve the
+                    // actionable import failure for the caller.
+                }
                 throw new InvalidDataException(
                     backup is null
                         ? $"ChatMem 数据导入失败：{exception.Message}"
