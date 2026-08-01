@@ -19,6 +19,8 @@ const workflowRequirements = [
   ["ARM64 platform", "-p:Platform=ARM64"],
   ["MCP helper smoke", "Smoke test packaged MCP helper"],
   ["MCP helper payload", "aimemory-mcp.exe"],
+  ["WinUI code-behind contract", "Verify WinUI XAML and code-behind contracts"],
+  ["code-behind verifier", "Windows/scripts/verify-codebehind.mjs"],
   ["unsigned MSIX", "GenerateAppxPackageOnBuild=true"],
   ["unsigned package mode", "AppxPackageSigningEnabled=false"],
   ["generated package manifest", "AppxManifest.xml"],

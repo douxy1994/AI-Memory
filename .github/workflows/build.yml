@@ -63,6 +63,8 @@ jobs:
         run: node Windows/scripts/verify-agent-catalog.mjs
       - name: Verify macOS and Windows MCP contracts
         run: node Windows/scripts/verify-mcp-contract.mjs
+      - name: Verify WinUI XAML and code-behind contracts
+        run: node Windows/scripts/verify-codebehind.mjs
       - name: Test Windows core
         run: dotnet test Windows/tests/AIMemory.Core.Tests/AIMemory.Core.Tests.csproj --configuration Release
       - name: Build WinUI 3 x64

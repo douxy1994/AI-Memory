@@ -13,6 +13,7 @@ try {
     node .\scripts\verify-parity.mjs
     node .\scripts\verify-copyright.mjs
     node .\scripts\verify-mcp-contract.mjs
+    node .\scripts\verify-codebehind.mjs
     dotnet restore .\AIMemory.Windows.slnx
     dotnet test .\tests\AIMemory.Core.Tests\AIMemory.Core.Tests.csproj `
         --configuration Release --no-restore

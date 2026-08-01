@@ -7,9 +7,10 @@ import os from "node:os";
 import path from "node:path";
 import process from "node:process";
 import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 
 const windowsRoot = path.resolve(
-  path.dirname(new URL(import.meta.url).pathname),
+  path.dirname(fileURLToPath(import.meta.url)),
   "..",
 );
 const appRoot = path.join(windowsRoot, "src", "AIMemory.Windows");
@@ -84,10 +85,57 @@ fs.writeFileSync(
 );
 
 const classFields = new Map();
+const contractFailures = [];
+const eventAttributes = [
+  "Click",
+  "Loaded",
+  "Unloaded",
+  "SelectionChanged",
+  "TextChanged",
+  "QueryTextChanged",
+  "Invoked",
+  "Checked",
+  "Unchecked",
+  "Toggled",
+  "PointerPressed",
+  "KeyDown",
+  "Opening",
+  "Closing",
+  "SizeChanged",
+  "Navigated",
+  "NavigationFailed",
+  "Drop",
+  "DragOver",
+  "ContentDialogOpening",
+];
 for (const file of filesUnder(appRoot, ".xaml")) {
   const source = fs.readFileSync(file, "utf8");
   const className = source.match(/x:Class="([^"]+)"/)?.[1];
   if (!className) continue;
+  const codeBehind = `${file}.cs`;
+  if (!fs.existsSync(codeBehind)) {
+    contractFailures.push(
+      `${path.relative(windowsRoot, file)}: missing code-behind ${path.basename(codeBehind)}`,
+    );
+  } else {
+    const code = fs.readFileSync(codeBehind, "utf8");
+    const shortClassName = className.slice(className.lastIndexOf(".") + 1);
+    if (!new RegExp(`\\b(?:partial\\s+)?class\\s+${shortClassName}\\b`).test(code)) {
+      contractFailures.push(
+        `${path.relative(windowsRoot, file)}: code-behind does not declare ${className}`,
+      );
+    }
+    const attributes = eventAttributes.join("|");
+    for (const match of source.matchAll(
+      new RegExp(`\\b(?:${attributes})="([A-Za-z_]\\w*)"`, "g"),
+    )) {
+      if (!new RegExp(`\\b${match[1]}\\s*\\(`).test(code)) {
+        contractFailures.push(
+          `${path.relative(windowsRoot, file)}: event handler ${match[1]} is not declared in ${path.basename(codeBehind)}`,
+        );
+      }
+    }
+  }
   const fields = [];
   for (const match of source.matchAll(
     /<([A-Za-z_][\w.:]*)\b[^>]*\bx:Name="([A-Za-z_]\w*)"[^>]*>/g,
@@ -99,6 +147,11 @@ for (const file of filesUnder(appRoot, ".xaml")) {
     });
   }
   classFields.set(className, fields);
+}
+
+if (contractFailures.length > 0) {
+  for (const failure of contractFailures) console.error(failure);
+  process.exit(1);
 }
 
 const generated = [
