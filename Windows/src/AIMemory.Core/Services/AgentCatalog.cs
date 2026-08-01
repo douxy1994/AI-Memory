@@ -114,7 +114,7 @@ public sealed class AgentCatalog
         new("openai-cli", "OpenAI CLI", ["openai"], [], false),
         new("huggingface-cli", "Hugging Face CLI", ["hf"], [".cache\\huggingface", "AppData\\Local\\huggingface"], false),
         new("m365-agents-toolkit", "Microsoft 365 Agents Toolkit", ["atk"], [".m365agents", "AppData\\Local\\Microsoft\\M365AgentsToolkit"], false),
-        new("github-agentic-workflows", "GitHub Agentic Workflows", ["gh-aw"], [".config\\gh\\extensions\\gh-aw", "AppData\\Local\\gh\\extensions\\gh-aw"], false),
+        new("github-agentic-workflows", "GitHub Agentic Workflows", ["gh-aw"], [".config\\gh\\extensions\\gh-aw", "AppData\\Local\\gh\\extensions\\gh-aw", "AppData\\Roaming\\GitHub CLI\\extensions\\gh-aw", "AppData\\Local\\GitHub CLI\\extensions\\gh-aw"], false),
         new("neovate", "Neovate Code", ["neovate"], [".neovate"], false),
         new("vtcode", "VT Code", ["vtcode"], [".vtcode"], false),
         new("dexto", "Dexto", ["dexto"], [".dexto"], false),

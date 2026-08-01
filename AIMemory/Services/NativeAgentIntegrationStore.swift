@@ -970,7 +970,7 @@ private struct DetectionOnlyAgent: Sendable {
             id: "github-agentic-workflows",
             label: "GitHub Agentic Workflows",
             executables: ["gh-aw"],
-            relativePaths: [".config/gh/extensions/gh-aw", "Library/Application Support/gh/extensions/gh-aw"]
+            relativePaths: [".config/gh/extensions/gh-aw", ".local/share/gh/extensions/gh-aw", "Library/Application Support/gh/extensions/gh-aw"]
         ),
         .init(
             id: "neovate",
