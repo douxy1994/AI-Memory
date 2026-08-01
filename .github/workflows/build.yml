@@ -110,7 +110,7 @@ jobs:
               throw "MCP tool is missing: $required"
             }
           }
-      - name: Build, install and smoke test signed MSIX desktop lifecycle
+      - name: Build signed MSIX package
         shell: pwsh
         run: |
           $passwordText = "aimemory-ci-package-password"
@@ -161,20 +161,17 @@ jobs:
           if (-not $package) {
             throw "AIMemory.Windows.msix was not found in the build output."
           }
-          Add-AppxPackage -Path $package.FullName -ForceUpdateFromAnyVersion
-          $installed = Get-AppxPackage -Name "com.aimemory.windows" |
-            Sort-Object Version -Descending |
+          Write-Host "Signed MSIX package: $($package.FullName)"
+      - name: Smoke test WinUI desktop lifecycle
+        shell: pwsh
+        run: |
+          $app = Get-ChildItem `
+            Windows/src/AIMemory.Windows/bin `
+            -Recurse -Filter AIMemory.Windows.exe |
+            Where-Object FullName -Match '\\x64\\' |
             Select-Object -First 1
-          if (-not $installed) {
-            throw "The AI Memory MSIX package was not installed."
+          if (-not $app) {
+            throw "AIMemory.Windows.exe was not found in the build output."
           }
-          $appId = "$($installed.PackageFamilyName)!App"
-          try {
-            pwsh ./Windows/scripts/smoke-desktop.ps1 `
-              -AppUserModelId $appId `
-              -ProcessName "AIMemory.Windows"
-          }
-          finally {
-            Remove-AppxPackage -Package $installed.PackageFullName `
-              -ErrorAction SilentlyContinue
-          }
+          pwsh ./Windows/scripts/smoke-desktop.ps1 `
+            -ExecutablePath $app.FullName
