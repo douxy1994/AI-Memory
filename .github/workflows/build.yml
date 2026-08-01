@@ -110,16 +110,64 @@ jobs:
               throw "MCP tool is missing: $required"
             }
           }
-      - name: Smoke test WinUI desktop lifecycle
+      - name: Build, install and smoke test signed MSIX desktop lifecycle
         shell: pwsh
         run: |
-          $app = Get-ChildItem `
+          $passwordText = "aimemory-ci-package-password"
+          $password = ConvertTo-SecureString `
+            $passwordText `
+            -AsPlainText `
+            -Force
+          $certificate = New-SelfSignedCertificate `
+            -Type Custom `
+            -Subject "CN=AI Memory" `
+            -KeyUsage DigitalSignature `
+            -FriendlyName "AI Memory CI package" `
+            -CertStoreLocation Cert:\CurrentUser\My
+          $pfx = Join-Path $env:RUNNER_TEMP "aimemory-ci-package.pfx"
+          Export-PfxCertificate `
+            -Cert $certificate `
+            -FilePath $pfx `
+            -Password $password | Out-Null
+          Export-Certificate `
+            -Cert $certificate `
+            -FilePath (Join-Path $env:RUNNER_TEMP "aimemory-ci-package.cer") |
+            Out-Null
+          Import-Certificate `
+            -FilePath (Join-Path $env:RUNNER_TEMP "aimemory-ci-package.cer") `
+            -CertStoreLocation Cert:\CurrentUser\TrustedPeople |
+            Out-Null
+          dotnet build `
+            Windows/src/AIMemory.Windows/AIMemory.Windows.csproj `
+            --configuration Release `
+            -p:Platform=x64 `
+            -p:GenerateAppxPackageOnBuild=true `
+            -p:AppxPackageSigningEnabled=true `
+            -p:PackageCertificateKeyFile=$pfx `
+            -p:PackageCertificatePassword=$passwordText
+          $package = Get-ChildItem `
             Windows/src/AIMemory.Windows/bin `
-            -Recurse -Filter AIMemory.Windows.exe |
+            -Recurse -Filter *.msix |
             Where-Object FullName -Match '\\x64\\' |
+            Sort-Object LastWriteTime -Descending |
             Select-Object -First 1
-          if (-not $app) {
-            throw "AIMemory.Windows.exe was not found in the build output."
+          if (-not $package) {
+            throw "AIMemory.Windows.msix was not found in the build output."
           }
-          pwsh ./Windows/scripts/smoke-desktop.ps1 `
-            -ExecutablePath $app.FullName
+          Add-AppxPackage -Path $package.FullName -ForceUpdateFromAnyVersion
+          $installed = Get-AppxPackage -Name "com.aimemory.windows" |
+            Sort-Object Version -Descending |
+            Select-Object -First 1
+          if (-not $installed) {
+            throw "The AI Memory MSIX package was not installed."
+          }
+          $appId = "$($installed.PackageFamilyName)!App"
+          try {
+            pwsh ./Windows/scripts/smoke-desktop.ps1 `
+              -AppUserModelId $appId `
+              -ProcessName "AIMemory.Windows"
+          }
+          finally {
+            Remove-AppxPackage -Package $installed.PackageFullName `
+              -ErrorAction SilentlyContinue
+          }
