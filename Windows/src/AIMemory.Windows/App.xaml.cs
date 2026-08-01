@@ -13,6 +13,7 @@ public sealed partial class App : Application
 {
     private readonly AppInstance _instance;
     private MainWindow? _window;
+    private bool _activationPending;
 
     public App(AppInstance instance)
     {
@@ -37,6 +38,11 @@ public sealed partial class App : Application
         _window = new MainWindow(database);
         _window.ApplyFontFamily(settings.FontFamily);
         _window.Activate();
+        if (_activationPending)
+        {
+            _activationPending = false;
+            _window.BringToFront();
+        }
         _window.ConfigureAutomaticBackup(settings);
         // Do compatibility migration after the first window is visible.  A
         // stale ChatMem profile or credential provider must not delay the
@@ -156,9 +162,18 @@ public sealed partial class App : Application
 
     private void OnActivated(object? sender, AppActivationArguments args)
     {
-        _window?.DispatcherQueue.TryEnqueue(() =>
+        if (_window is null)
         {
-            _window.BringToFront();
+            // A second launch can arrive while the first launch is still
+            // opening the database.  Remember it so the eventual window is
+            // focused instead of losing the activation request.
+            _activationPending = true;
+            return;
+        }
+        var window = _window;
+        window.DispatcherQueue.TryEnqueue(() =>
+        {
+            window.BringToFront();
         });
     }
 }
