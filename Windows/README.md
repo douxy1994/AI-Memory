@@ -108,15 +108,27 @@ dotnet build .\Windows\src\AIMemory.Windows\AIMemory.Windows.csproj `
 进程、关闭主窗口后进程继续驻留、再次启动不会创建第二个持久进程，并能恢复
 原窗口。测试只清理自己启动的进程；检测到已有 AI Memory 时会直接停止。
 
-验证构建输出：
+验证构建输出（先注册 manifest，避免无包身份的原始 exe 只启动进程而不创建窗口）：
 
 ```powershell
-$app = Get-ChildItem `
-  .\Windows\src\AIMemory.Windows\bin\Release `
-  -Recurse -Filter AIMemory.Windows.exe |
+$manifest = Get-ChildItem `
+  .\Windows\src\AIMemory.Windows\bin `
+  -Recurse -Filter AppxManifest.xml |
+  Where-Object FullName -Match '\\x64\\' |
+  Where-Object FullName -NotMatch '\\obj\\' |
+  Sort-Object LastWriteTime -Descending |
   Select-Object -First 1
-pwsh .\Windows\scripts\smoke-desktop.ps1 `
-  -ExecutablePath $app.FullName
+Add-AppxPackage -Path $manifest.FullName -Register -DisableDevelopmentMode
+$package = Get-AppxPackage -Name "com.aimemory.windows"
+try {
+  pwsh .\Windows\scripts\smoke-desktop.ps1 `
+    -AppUserModelId "$($package.PackageFamilyName)!App" `
+    -ProcessName "AIMemory.Windows"
+}
+finally {
+  Get-AppxPackage -Name "com.aimemory.windows" |
+    Remove-AppxPackage -ErrorAction SilentlyContinue
+}
 ```
 
 验证已安装的 MSIX：

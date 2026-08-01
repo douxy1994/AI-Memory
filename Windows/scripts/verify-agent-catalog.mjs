@@ -23,6 +23,7 @@ const readmePaths = [
   [path.join(root, "Windows", "README.md"), "种主流 Agent"],
   [path.join(root, "docs", "FEATURE_MATRIX.md"), "种 Agent/CLI"],
 ];
+const windowsReadmePath = path.join(root, "Windows", "README.md");
 
 const swift = fs.readFileSync(swiftPath, "utf8");
 const csharp = fs.readFileSync(csharpPath, "utf8");
@@ -116,6 +117,18 @@ for (const [file, marker] of readmePaths) {
 const parity = fs.readFileSync(path.join(root, "Windows", "parity.json"), "utf8");
 if (!parity.includes(`\"${catalogCount} products`)) {
   throw new Error("Catalog count is stale in Windows/parity.json.");
+}
+const windowsReadme = fs.readFileSync(windowsReadmePath, "utf8");
+for (const required of [
+  "Add-AppxPackage -Path $manifest.FullName -Register -DisableDevelopmentMode",
+  "-AppUserModelId \"$($package.PackageFamilyName)!App\"",
+]) {
+  if (!windowsReadme.includes(required)) {
+    throw new Error(`Windows desktop smoke documentation is missing: ${required}`);
+  }
+}
+if (windowsReadme.includes("-ExecutablePath $app.FullName")) {
+  throw new Error("Windows README still documents raw executable smoke.");
 }
 
 console.log(
