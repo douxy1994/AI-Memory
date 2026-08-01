@@ -139,6 +139,10 @@ jobs:
             -FilePath (Join-Path $env:RUNNER_TEMP "aimemory-ci-package.cer") `
             -CertStoreLocation Cert:\CurrentUser\TrustedPeople |
             Out-Null
+          Import-Certificate `
+            -FilePath (Join-Path $env:RUNNER_TEMP "aimemory-ci-package.cer") `
+            -CertStoreLocation Cert:\CurrentUser\Root |
+            Out-Null
           dotnet build `
             Windows/src/AIMemory.Windows/AIMemory.Windows.csproj `
             --configuration Release `
