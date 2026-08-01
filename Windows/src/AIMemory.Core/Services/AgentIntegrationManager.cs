@@ -17,19 +17,22 @@ public sealed class AgentIntegrationManager
     private readonly string _home;
     private readonly string _helper;
     private readonly IReadOnlyList<string>? _pathDirectories;
+    private readonly IReadOnlyList<string>? _installationRoots;
 
     public AgentIntegrationManager(
         string home,
         string helper,
-        IEnumerable<string>? pathDirectories = null)
+        IEnumerable<string>? pathDirectories = null,
+        IEnumerable<string>? installationRoots = null)
     {
         _home = home;
         _helper = helper;
         _pathDirectories = pathDirectories?.ToArray();
+        _installationRoots = installationRoots?.ToArray();
     }
 
     public IReadOnlyList<AgentIntegrationStatus> Detect() =>
-        new AgentCatalog(_home, _pathDirectories).Detect()
+        new AgentCatalog(_home, _pathDirectories, _installationRoots).Detect()
             .Select(ApplyInstalledState)
             .OrderByDescending(value => value.IsDetected)
             .ThenByDescending(value => value.IsIntegrated)

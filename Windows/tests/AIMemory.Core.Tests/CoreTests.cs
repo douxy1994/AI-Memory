@@ -1439,7 +1439,11 @@ public sealed class CoreTests : IDisposable
         Directory.CreateDirectory(Path.GetDirectoryName(config)!);
         File.WriteAllText(config, """{"theme":"user-theme"}""");
         File.WriteAllText(rules, "# Existing user rules\n");
-        var manager = new AgentIntegrationManager(home, helper, [bin]);
+        var manager = new AgentIntegrationManager(
+            home,
+            helper,
+            [bin],
+            installationRoots: [home]);
 
         var detected = manager.Detect()
             .First(value => value.Id == "opencode");
@@ -1507,7 +1511,11 @@ public sealed class CoreTests : IDisposable
                 Path.Combine(bin, descriptor.Executables[0] + ".cmd"),
                 "");
         }
-        var manager = new AgentIntegrationManager(home, helper, [bin]);
+        var manager = new AgentIntegrationManager(
+            home,
+            helper,
+            [bin],
+            installationRoots: [home]);
         var supported = manager.Detect()
             .Where(value => value.IsIntegrationAvailable)
             .ToArray();
@@ -2589,7 +2597,10 @@ public sealed class CoreTests : IDisposable
         File.WriteAllText(Path.Combine(bin, "codex.exe"), "");
         var report = await new DiagnosticsService(
             database,
-            new AgentCatalog(_root, [bin])).CollectAsync("0.1.0");
+            new AgentCatalog(
+                _root,
+                [bin],
+                installationRoots: [_root])).CollectAsync("0.1.0");
         Assert.Equal(1, report.SchemaVersion);
         Assert.Equal(1, report.Conversations);
         Assert.Equal(1, report.Messages);
