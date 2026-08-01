@@ -61,6 +61,13 @@ public static class AIMemoryWindowProbe
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool IsWindowVisible(IntPtr window);
 
+    [DllImport("user32.dll")]
+    public static extern bool ShowWindow(IntPtr window, int command);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool SetForegroundWindow(IntPtr window);
+
     public static IntPtr FindVisibleWindow(int processId)
     {
         var result = IntPtr.Zero;
@@ -68,6 +75,22 @@ public static class AIMemoryWindowProbe
         {
             GetWindowThreadProcessId(window, out var owner);
             if (owner == processId && IsWindowVisible(window))
+            {
+                result = window;
+                return false;
+            }
+            return true;
+        }, IntPtr.Zero);
+        return result;
+    }
+
+    public static IntPtr FindAnyWindow(int processId)
+    {
+        var result = IntPtr.Zero;
+        EnumWindows((window, _) =>
+        {
+            GetWindowThreadProcessId(window, out var owner);
+            if (owner == processId)
             {
                 result = window;
                 return false;
@@ -128,6 +151,23 @@ function Get-MainWindowHandle {
     return [AIMemoryWindowProbe]::FindVisibleWindow($ProcessId)
 }
 
+function Get-StartupLogPath {
+    Join-Path `
+        ([Environment]::GetFolderPath("LocalApplicationData")) `
+        "AIMemory\startup.log"
+}
+
+function Write-StartupDiagnostics {
+    $startupLog = Get-StartupLogPath
+    if (Test-Path -LiteralPath $startupLog -PathType Leaf) {
+        Write-Host "AI Memory startup diagnostics ($startupLog):"
+        Get-Content -LiteralPath $startupLog
+    }
+    else {
+        Write-Host "AI Memory startup diagnostics were not written: $startupLog"
+    }
+}
+
 $preexisting = Get-AIMemoryProcesses
 if ($preexisting.Count -ne 0) {
     throw ((
@@ -148,13 +188,20 @@ try {
     $mainWindow = [IntPtr]::Zero
     Wait-Until {
         $script:mainWindow = Get-MainWindowHandle $testProcessId
+        if ($script:mainWindow -eq [IntPtr]::Zero) {
+            # A just-created WinUI HWND can be hidden for one dispatcher turn.
+            # Restore it before declaring startup unhealthy.
+            $script:mainWindow = [AIMemoryWindowProbe]::FindAnyWindow($testProcessId)
+            if ($script:mainWindow -ne [IntPtr]::Zero) {
+                [AIMemoryWindowProbe]::ShowWindow($script:mainWindow, 9) | Out-Null
+                [AIMemoryWindowProbe]::SetForegroundWindow($script:mainWindow) | Out-Null
+            }
+        }
         $script:mainWindow -ne [IntPtr]::Zero -and
             [AIMemoryWindowProbe]::IsWindowVisible($script:mainWindow)
     } "AI Memory started, but its main window did not become visible."
 
-    $startupLog = Join-Path `
-        ([Environment]::GetFolderPath("LocalApplicationData")) `
-        "AIMemory\startup.log"
+    $startupLog = Get-StartupLogPath
     Wait-Until {
         (Test-Path -LiteralPath $startupLog -PathType Leaf) -and
             (Select-String -LiteralPath $startupLog -Pattern " launch.complete$" -Quiet)
@@ -193,6 +240,10 @@ try {
         RelaunchRestoresWindow = $true
         NotificationAreaRequired = $true
     } | ConvertTo-Json
+}
+catch {
+    Write-StartupDiagnostics
+    throw
 }
 finally {
     if ($testProcessId) {

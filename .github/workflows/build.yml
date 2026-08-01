@@ -146,10 +146,19 @@ jobs:
           }
           pwsh ./Windows/scripts/smoke-desktop.ps1 `
             -ExecutablePath $app.FullName
+      - name: Collect Windows startup diagnostics
+        if: always()
+        shell: pwsh
+        run: |
+          $source = Join-Path $env:LOCALAPPDATA "AIMemory\startup.log"
+          $destination = Join-Path $env:RUNNER_TEMP "AIMemory-startup.log"
+          if (Test-Path -LiteralPath $source -PathType Leaf) {
+            Copy-Item -LiteralPath $source -Destination $destination -Force
+          }
       - name: Upload Windows startup diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: windows-startup-diagnostics
           if-no-files-found: ignore
-          path: ${{ env.LOCALAPPDATA }}\AIMemory\startup.log
+          path: ${{ runner.temp }}/AIMemory-startup.log
