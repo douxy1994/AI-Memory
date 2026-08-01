@@ -180,7 +180,10 @@ public static class Program
                 "list_entity_graph" => await knowledge.ListEntityGraphAsync(
                     Required(arguments, "repo_root"),
                     OptionalInt(arguments, "limit", 25)),
-                "detect_agent_integrations" => new AgentCatalog().Detect(),
+                "detect_agent_integrations" => new
+                {
+                    integrations = new AgentCatalog().Detect(),
+                },
                 _ => throw new InvalidOperationException($"Unknown tool: {name}"),
             };
             var text = JsonSerializer.Serialize(result, ToolPayloadJsonOptions);

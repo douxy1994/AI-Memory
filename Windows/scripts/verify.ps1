@@ -6,6 +6,7 @@ try {
     node .\scripts\verify-localization.mjs
     node .\scripts\verify-package-manifest.mjs
     node .\scripts\verify-copyright.mjs
+    node .\scripts\verify-mcp-contract.mjs
     dotnet restore .\AIMemory.Windows.slnx
     dotnet test .\tests\AIMemory.Core.Tests\AIMemory.Core.Tests.csproj `
         --configuration Release --no-restore

@@ -2,11 +2,13 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-const sourcePath = resolve(
-  process.cwd(),
-  "Windows/src/AIMemory.Mcp/Program.cs",
-);
+const repoRoot = resolve(import.meta.dirname, "../..");
+const sourcePath = resolve(repoRoot, "Windows/src/AIMemory.Mcp/Program.cs");
 const source = readFileSync(sourcePath, "utf8");
+const swiftSource = readFileSync(
+  resolve(repoRoot, "AIMemoryMCP/MCPMain.swift"),
+  "utf8",
+);
 
 function assert(condition, message) {
   if (!condition) {
@@ -58,4 +60,31 @@ assert(
   "MCP schemas must reject undeclared properties",
 );
 
-console.log("MCP contract verifier: get_project_context and read_history_conversation aligned.");
+const windowsToolNames = [
+  ...source
+    .slice(source.indexOf("private static readonly object[] ToolDefinitions"))
+    .matchAll(/\n\s*Tool\(\n\s*"([^"]+)"/g),
+].map((match) => match[1]);
+const swiftToolNames = [
+  ...swiftSource.matchAll(/Self\.tool\("([^"]+)"/g),
+].map((match) => match[1]);
+assert(
+  JSON.stringify(windowsToolNames) === JSON.stringify(swiftToolNames),
+  `macOS and Windows MCP tool order differs: ${swiftToolNames.join(",")} vs ${windowsToolNames.join(",")}`,
+);
+assert(
+  /case "detect_agent_integrations"[\s\S]*await integrations\.detect\(\)/.test(
+    swiftSource,
+  ),
+  "macOS MCP must expose detect_agent_integrations through the native catalog",
+);
+assert(
+  /"detect_agent_integrations"\s*=>\s*new\s*\{[\s\S]*integrations\s*=\s*new AgentCatalog\(\)\.Detect\(\)/.test(
+    source,
+  ),
+  "Windows MCP must return the same integrations object shape",
+);
+
+console.log(
+  `MCP contract verifier: ${swiftToolNames.length} macOS/Windows tools aligned; context, history, and agent integration contracts verified.`,
+);

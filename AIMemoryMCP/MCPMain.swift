@@ -26,6 +26,7 @@ struct AIMemoryMCPMain {
 
 private actor NativeMCPServer {
     private let store = NativeConversationStore()
+    private let integrations = NativeAgentIntegrationStore()
     private let history = NativeHistoryImporter()
     private let encoder: JSONEncoder = {
         let encoder = JSONEncoder()
@@ -57,11 +58,11 @@ private actor NativeMCPServer {
              required: ["repo_root", "candidate_id", "target_memory_id",
                         "proposed_title", "proposed_value"],
              optional: ["proposed_usage_hint", "risk_note", "proposed_by"]),
+        Self.tool("list_memory_candidates", "List repository memory candidates",
+             required: ["repo_root"], optional: ["status"]),
         Self.tool("create_checkpoint", "Create a durable repository checkpoint",
              required: ["repo_root", "conversation_id", "source_agent", "summary"],
              optional: ["resume_command", "metadata_json"]),
-        Self.tool("list_memory_candidates", "List repository memory candidates",
-             required: ["repo_root"], optional: ["status"]),
         Self.tool("build_handoff_packet", "Build and save an agent handoff packet",
              required: ["repo_root", "from_agent", "to_agent"],
              optional: ["goal_hint", "target_profile"]),
@@ -81,6 +82,7 @@ private actor NativeMCPServer {
              required: ["repo_root"], optional: ["status"]),
         Self.tool("list_entity_graph", "List repository entity graph nodes and links",
              required: ["repo_root"], optional: ["limit"]),
+        Self.tool("detect_agent_integrations", "Detect installed AI agents and CLIs without enabling missing products"),
     ] }
 
     func handle(line: String) async -> Data? {
@@ -325,6 +327,8 @@ private actor NativeMCPServer {
                     limit: boundedLimit(arguments["limit"], fallback: 25)
                 )
             ))
+        case "detect_agent_integrations":
+            return ["integrations": try object(await integrations.detect())]
         default:
             throw MCPError.invalid("Unknown tool: \(name)")
         }
