@@ -35,7 +35,7 @@
       <Extensions>
         <desktop:Extension
           Category="windows.startupTask"
-          Executable="$targetnametoken$.exe"
+          Executable="AIMemory.Windows.exe"
           EntryPoint="Windows.FullTrustApplication">
           <desktop:StartupTask
             TaskId="AIMemoryStartup"
