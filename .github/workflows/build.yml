@@ -46,6 +46,8 @@ jobs:
     runs-on: windows-2025
     steps:
       - uses: actions/checkout@v4
+      - name: Verify Windows build and desktop smoke contract
+        run: node Windows/scripts/verify-windows-workflow.mjs
       - name: Verify project copyright notice
         run: node Windows/scripts/verify-copyright.mjs
       - uses: actions/setup-dotnet@v4
