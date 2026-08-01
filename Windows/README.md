@@ -75,9 +75,10 @@ AI Memory 的 Windows 11 原生版本，使用 C#、WinUI 3 与 Windows App SDK 
 
 八类本地历史均通过共享核心层测试；Windows 桌面端的完整安装与交互状态见
 [功能矩阵](../docs/FEATURE_MATRIX.md)。
-CI 已验证 x64 与 ARM64 WinUI 3 目标，并对 WinUI 输出目录中的 MCP helper
-执行了真实协议冒烟测试。桌面端仍保持 Preview，直到完成真实 Windows 11
-安装、启动、窗口和交互验收。
+本机已验证 win-x64 与 win-arm64 MCP helper 发布产物，Windows CI 工作流也已加入
+x64/ARM64 WinUI 构建、helper 协议冒烟和注册 manifest 的桌面生命周期步骤；当前
+提交尚待新的 Windows Runner 执行这些步骤。桌面端仍保持 Preview，直到完成真实
+Windows 11 安装、启动、窗口和交互验收。
 
 ## 构建
 
