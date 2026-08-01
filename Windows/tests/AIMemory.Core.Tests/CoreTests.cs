@@ -1284,7 +1284,8 @@ public sealed class CoreTests : IDisposable
             "codex-infinity", "san-agent", "waveloom", "picocode", "qqcode",
             "keen-code", "smelt", "grinta", "zap-agent", "binharic", "darce",
             "claii", "nanoclaw", "clawith", "claw0", "gitclaw", "lionclaw",
-            "fetchcoder",
+            "fetchcoder", "crab-code", "openagent", "dvalincode", "lettabot",
+            "oh-my-openagent",
         ], AgentCatalog.All.Select(value => value.Id).ToArray());
         var firstMissing = statuses
             .Select((status, index) => (status, index))
@@ -1299,7 +1300,7 @@ public sealed class CoreTests : IDisposable
             Assert.False(value.IsIntegrated);
             Assert.Equal(AgentIntegrationState.Missing, value.State);
         });
-        Assert.Equal(160, statuses.Count);
+        Assert.Equal(165, statuses.Count);
 
         var missingWithStaleConfiguration =
             AgentIntegrationStateService.ApplyConfigurationState(
@@ -2574,7 +2575,7 @@ public sealed class CoreTests : IDisposable
         Assert.Equal(1, report.Conversations);
         Assert.Equal(1, report.Messages);
         Assert.Equal(1, report.DetectedAgents);
-        Assert.Equal(160, report.CatalogAgents);
+        Assert.Equal(165, report.CatalogAgents);
         Assert.Contains(databasePath, report.ToDisplayText());
     }
 

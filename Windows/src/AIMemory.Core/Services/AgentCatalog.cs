@@ -190,6 +190,11 @@ public sealed class AgentCatalog
         new("gitclaw", "GitClaw", ["gitclaw"], [".gitclaw"], false),
         new("lionclaw", "LionClaw", ["lionclaw"], [".lionclaw"], false),
         new("fetchcoder", "FetchCoder", ["fetchcoder"], [".fetchcoder"], false),
+        new("crab-code", "Crab Code", ["crab", "crab-code"], [".crab"], false),
+        new("openagent", "OpenAgent", ["openagent"], [".openagent"], false),
+        new("dvalincode", "DvalinCode", ["dvalincode", "dvalin"], [".dvalincode"], false),
+        new("lettabot", "LettaBot", ["lettabot", "lettabot-message"], [".lettabot"], false),
+        new("oh-my-openagent", "oh-my-openagent", ["omo", "oh-my-openagent", "lazycodex-ai"], [".omo", ".codex\\plugins\\cache\\sisyphuslabs\\omo"], false),
     ];
 
     public IReadOnlyList<AgentIntegrationStatus> Detect()

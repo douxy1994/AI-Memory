@@ -1454,6 +1454,36 @@ private struct DetectionOnlyAgent: Sendable {
             executables: ["fetchcoder"],
             relativePaths: [".fetchcoder"]
         ),
+        .init(
+            id: "crab-code",
+            label: "Crab Code",
+            executables: ["crab", "crab-code"],
+            relativePaths: [".crab"]
+        ),
+        .init(
+            id: "openagent",
+            label: "OpenAgent",
+            executables: ["openagent"],
+            relativePaths: [".openagent"]
+        ),
+        .init(
+            id: "dvalincode",
+            label: "DvalinCode",
+            executables: ["dvalincode", "dvalin"],
+            relativePaths: [".dvalincode"]
+        ),
+        .init(
+            id: "lettabot",
+            label: "LettaBot",
+            executables: ["lettabot", "lettabot-message"],
+            relativePaths: [".lettabot"]
+        ),
+        .init(
+            id: "oh-my-openagent",
+            label: "oh-my-openagent",
+            executables: ["omo", "oh-my-openagent", "lazycodex-ai"],
+            relativePaths: [".omo", ".codex/plugins/cache/sisyphuslabs/omo"]
+        ),
     ]
 }
 

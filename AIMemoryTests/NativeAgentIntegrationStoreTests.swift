@@ -138,7 +138,8 @@ final class NativeAgentIntegrationStoreTests: XCTestCase {
             "codex-infinity", "san-agent", "waveloom", "picocode", "qqcode",
             "keen-code", "smelt", "grinta", "zap-agent", "binharic", "darce",
             "claii", "nanoclaw", "clawith", "claw0", "gitclaw", "lionclaw",
-            "fetchcoder",
+            "fetchcoder", "crab-code", "openagent", "dvalincode", "lettabot",
+            "oh-my-openagent",
         ]
         XCTAssertEqual(Set(statuses.map(\.agent)), Set(expectedAgents))
         XCTAssertEqual(statuses.count, expectedAgents.count)
@@ -209,7 +210,7 @@ final class NativeAgentIntegrationStoreTests: XCTestCase {
             at: bin,
             withIntermediateDirectories: true
         )
-        for executable in ["hf", "atk", "nanoclaw", "gitclaw"] {
+        for executable in ["hf", "atk", "nanoclaw", "gitclaw", "crab-code", "lettabot", "omo"] {
             let path = bin.appendingPathComponent(executable)
             try Data().write(to: path)
             try FileManager.default.setAttributes(
@@ -235,7 +236,7 @@ final class NativeAgentIntegrationStoreTests: XCTestCase {
             XCTAssertFalse(status.canInstallIntegration)
             XCTAssertFalse(status.mcpInstalled)
         }
-        for id in ["nanoclaw", "gitclaw"] {
+        for id in ["nanoclaw", "gitclaw", "crab-code", "lettabot", "oh-my-openagent"] {
             let status = try XCTUnwrap(statuses.first { $0.agent == id })
             XCTAssertTrue(status.isAgentDetected)
             XCTAssertEqual(status.status, "detected")
