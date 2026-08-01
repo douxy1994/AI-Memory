@@ -64,5 +64,6 @@ for (const [label, value] of smokeRequirements) {
 
 console.log(
   "Windows workflow contract verified: x64/ARM64, unsigned MSIX, packaged MCP, " +
-    "AppsFolder registration, startup diagnostics, and single-instance desktop smoke.",
+    "AppsFolder registration, startup diagnostics, single-instance desktop smoke, " +
+    "and WinUI code-behind contract verification.",
 );
