@@ -32,38 +32,44 @@ public sealed partial class App : Application
         await database.InitializeAsync();
         var settingsStore = new SettingsStore();
         var settings = await settingsStore.LoadAsync();
-        ChatMemWebDavImportResult? chatMemWebDavImport = null;
-        string? chatMemWebDavImportError = null;
-        try
-        {
-            var credentials = new CredentialService();
-            chatMemWebDavImport = await new ChatMemWebDavImportService(
-                    settingsStore)
-                .ImportAsync(
-                    username => credentials.Load(username)?.Password,
-                    credentials.LoadLegacyChatMemPassword,
-                    credentials.Save);
-            if (chatMemWebDavImport.Changed)
-            {
-                settings = await settingsStore.LoadAsync();
-            }
-        }
-        catch (Exception exception)
-        {
-            chatMemWebDavImportError = exception.Message;
-            System.Diagnostics.Debug.WriteLine(
-                $"ChatMem WebDAV import failed: {exception}");
-        }
         ApplyApplicationLanguage(settings.Language);
         ApplyApplicationFont(settings.FontFamily);
         _window = new MainWindow(database);
         _window.ApplyFontFamily(settings.FontFamily);
         _window.Activate();
         _window.ConfigureAutomaticBackup(settings);
-        ShowChatMemWebDavImportFeedback(
-            chatMemWebDavImport,
-            chatMemWebDavImportError);
+        // Do compatibility migration after the first window is visible.  A
+        // stale ChatMem profile or credential provider must not delay the
+        // Windows shell, single-instance activation, or the workbench.
+        _ = ImportChatMemWebDavAfterLaunchAsync(settingsStore);
         _ = CheckForUpdatesAtLaunchAsync();
+    }
+
+    private async Task ImportChatMemWebDavAfterLaunchAsync(
+        SettingsStore settingsStore)
+    {
+        ChatMemWebDavImportResult? result = null;
+        string? error = null;
+        try
+        {
+            var credentials = new CredentialService();
+            result = await new ChatMemWebDavImportService(settingsStore)
+                .ImportAsync(
+                    username => credentials.Load(username)?.Password,
+                    credentials.LoadLegacyChatMemPassword,
+                    credentials.Save);
+        }
+        catch (Exception exception)
+        {
+            error = exception.Message;
+            System.Diagnostics.Debug.WriteLine(
+                $"ChatMem WebDAV import failed: {exception}");
+        }
+
+        var window = _window;
+        if (window is null) return;
+        window.DispatcherQueue.TryEnqueue(() =>
+            ShowChatMemWebDavImportFeedback(result, error));
     }
 
     private void ShowChatMemWebDavImportFeedback(
