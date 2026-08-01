@@ -17,6 +17,12 @@ const csharpPath = path.join(
   "Services",
   "AgentCatalog.cs",
 );
+const workflowPath = path.join(root, ".github", "workflows", "build.yml");
+const readmePaths = [
+  [path.join(root, "README.md"), "种 Agent"],
+  [path.join(root, "Windows", "README.md"), "种主流 Agent"],
+  [path.join(root, "docs", "FEATURE_MATRIX.md"), "种 Agent/CLI"],
+];
 
 const swift = fs.readFileSync(swiftPath, "utf8");
 const csharp = fs.readFileSync(csharpPath, "utf8");
@@ -83,4 +89,36 @@ if (macOnly.length || windowsOnly.length || swiftIds.length !== windowsIds.lengt
   );
 }
 
-console.log(`Agent catalog parity verified: ${swiftIds.length} IDs on macOS and Windows.`);
+const workflow = fs.readFileSync(workflowPath, "utf8");
+for (const required of [
+  "AppxManifest.xml",
+  "Add-AppxPackage -Path $manifest.FullName -Register -DisableDevelopmentMode",
+  "-AppUserModelId $appUserModelId",
+  "smoke-desktop.ps1",
+]) {
+  if (!workflow.includes(required)) {
+    throw new Error(`Windows desktop smoke contract is missing: ${required}`);
+  }
+}
+if (workflow.includes("-ExecutablePath $app.FullName")) {
+  throw new Error(
+    "Windows desktop smoke must launch the registered package, not a raw executable.",
+  );
+}
+
+const catalogCount = swiftIds.length;
+for (const [file, marker] of readmePaths) {
+  const text = fs.readFileSync(file, "utf8");
+  if (!text.includes(`${catalogCount} ${marker}`)) {
+    throw new Error(`Catalog count is stale in ${path.relative(root, file)}.`);
+  }
+}
+const parity = fs.readFileSync(path.join(root, "Windows", "parity.json"), "utf8");
+if (!parity.includes(`\"${catalogCount} products`)) {
+  throw new Error("Catalog count is stale in Windows/parity.json.");
+}
+
+console.log(
+  `Agent catalog parity verified: ${catalogCount} IDs on macOS and Windows; ` +
+    "docs and Windows package smoke contract are aligned.",
+);
