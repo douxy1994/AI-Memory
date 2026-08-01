@@ -2,7 +2,7 @@
 
 AI Memory 的 Windows 11 原生版本，使用 C#、WinUI 3 与 Windows App SDK 构建。它与 macOS 版本共享产品行为和数据语义，但不使用跨平台 UI，也不会覆盖 macOS 应用或 ChatMem。
 
-> 当前状态：**Preview**。核心层、主要页面及 x64/ARM64 构建均已通过 CI，仍需在真实 Windows 11 桌面会话完成安装与交互验收。
+> 当前状态：**Preview**。核心层、主要页面及本机 win-x64/win-arm64 helper 发布产物已验证；当前提交仍需 Windows Runner 完成 WinUI 打包与真实 Windows 11 桌面交互验收。
 
 ## 原生技术栈
 
