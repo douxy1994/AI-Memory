@@ -1292,6 +1292,168 @@ private struct DetectionOnlyAgent: Sendable {
             executables: ["herdr"],
             relativePaths: [".herdr"]
         ),
+        .init(
+            id: "smol-developer",
+            label: "Smol Developer",
+            executables: ["smol", "smol-developer"],
+            relativePaths: [".smol-developer"]
+        ),
+        .init(
+            id: "claude-engineer",
+            label: "Claude Engineer",
+            executables: ["claude-engineer"],
+            relativePaths: [".claude-engineer"]
+        ),
+        .init(
+            id: "free-code",
+            label: "Free Code",
+            executables: ["free-code"],
+            relativePaths: [".free-code"]
+        ),
+        .init(
+            id: "forgecode",
+            label: "ForgeCode",
+            executables: ["forgecode"],
+            relativePaths: [".forgecode"]
+        ),
+        .init(
+            id: "autocoderover",
+            label: "AutoCodeRover",
+            executables: ["autocoderover", "auto-code-rover"],
+            relativePaths: [".autocoderover"]
+        ),
+        .init(
+            id: "agentless",
+            label: "Agentless",
+            executables: ["agentless"],
+            relativePaths: [".agentless"]
+        ),
+        .init(
+            id: "codel",
+            label: "Codel",
+            executables: ["codel"],
+            relativePaths: [".codel"]
+        ),
+        .init(
+            id: "open-harness",
+            label: "openHarness",
+            executables: ["openharness", "open-harness"],
+            relativePaths: [".openharness"]
+        ),
+        .init(
+            id: "octomind",
+            label: "Octomind",
+            executables: ["octomind"],
+            relativePaths: [".octomind"]
+        ),
+        .init(
+            id: "codex-infinity",
+            label: "Codex Infinity",
+            executables: ["codex-infinity"],
+            relativePaths: [".codex-infinity"]
+        ),
+        .init(
+            id: "san-agent",
+            label: "San",
+            executables: ["san"],
+            relativePaths: [".san"]
+        ),
+        .init(
+            id: "waveloom",
+            label: "Waveloom",
+            executables: ["waveloom"],
+            relativePaths: [".waveloom"]
+        ),
+        .init(
+            id: "picocode",
+            label: "picocode",
+            executables: ["picocode"],
+            relativePaths: [".picocode"]
+        ),
+        .init(
+            id: "qqcode",
+            label: "QQCode",
+            executables: ["qqcode"],
+            relativePaths: [".qqcode"]
+        ),
+        .init(
+            id: "keen-code",
+            label: "Keen Code",
+            executables: ["keencode", "keen-code"],
+            relativePaths: [".keencode"]
+        ),
+        .init(
+            id: "smelt",
+            label: "Smelt",
+            executables: ["smelt"],
+            relativePaths: [".smelt"]
+        ),
+        .init(
+            id: "grinta",
+            label: "Grinta",
+            executables: ["grinta"],
+            relativePaths: [".grinta"]
+        ),
+        .init(
+            id: "zap-agent",
+            label: "Zap",
+            executables: ["zap"],
+            relativePaths: [".zap"]
+        ),
+        .init(
+            id: "binharic",
+            label: "Binharic",
+            executables: ["binharic"],
+            relativePaths: [".binharic"]
+        ),
+        .init(
+            id: "darce",
+            label: "Darce",
+            executables: ["darce"],
+            relativePaths: [".darce"]
+        ),
+        .init(
+            id: "claii",
+            label: "CLAII",
+            executables: ["claii"],
+            relativePaths: [".claii"]
+        ),
+        .init(
+            id: "nanoclaw",
+            label: "NanoClaw",
+            executables: ["nanoclaw"],
+            relativePaths: [".nanoclaw"]
+        ),
+        .init(
+            id: "clawith",
+            label: "Clawith",
+            executables: ["clawith"],
+            relativePaths: [".clawith"]
+        ),
+        .init(
+            id: "claw0",
+            label: "claw0",
+            executables: ["claw0"],
+            relativePaths: [".claw0"]
+        ),
+        .init(
+            id: "gitclaw",
+            label: "GitClaw",
+            executables: ["gitclaw"],
+            relativePaths: [".gitclaw"]
+        ),
+        .init(
+            id: "lionclaw",
+            label: "LionClaw",
+            executables: ["lionclaw"],
+            relativePaths: [".lionclaw"]
+        ),
+        .init(
+            id: "fetchcoder",
+            label: "FetchCoder",
+            executables: ["fetchcoder"],
+            relativePaths: [".fetchcoder"]
+        ),
     ]
 }
 

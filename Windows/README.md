@@ -50,7 +50,7 @@ AI Memory 的 Windows 11 原生版本，使用 C#、WinUI 3 与 Windows App SDK 
   设置入口恢复，不伪装成可由应用绕过的开关；
 - 升级就绪检查会逐项验证设置文件、WebDAV 配置、Credential Locker 密码、
   SQLite 结构版本与 `quick_check`，并明确区分通过、提醒和阻断问题；
-- 133 种主流 Agent、通用 AI CLI 与本地模型 CLI 安装检测（包括 Claw Code、Coro、Nori、CodeMachine、Open Codex、Groq Code CLI、Devon、g3、Mini-Kode、zot、VibePod、Every Code、Claw Code Agent、Gitagent、OpenDev、QodeX、ClawCodex、Tutti、acpx、cmux、muxd、muxel、Flowmux、MCPJam、Zenflow、Void、Ruflo / Claude Flow、Claurst、agentty 与 Herdr），兼容无扩展、
+- 160 种主流 Agent、通用 AI CLI 与本地模型 CLI 安装检测（包括 Claw Code、Coro、Nori、CodeMachine、Open Codex、Groq Code CLI、Devon、g3、Mini-Kode、zot、VibePod、Every Code、Claw Code Agent、Gitagent、OpenDev、QodeX、ClawCodex、Tutti、acpx、cmux、muxd、muxel、Flowmux、MCPJam、Zenflow、Void、Ruflo / Claude Flow、Claurst、agentty、Herdr、Smol Developer、Claude Engineer、Free Code、ForgeCode、AutoCodeRover、Agentless、Codel、openHarness、Octomind、Codex Infinity、San、Waveloom、picocode、QQCode、Keen Code、Smelt、Grinta、Zap、Binharic、Darce、CLAII、NanoClaw、Clawith、claw0、GitClaw、LionClaw 与 FetchCoder），兼容无扩展、
   `.exe` 与 `.cmd` 启动器；
   已安装项优先，未安装项即使存在旧配置也保持关闭；
 - 16 种具有稳定配置格式的 Agent 可安全启用或关闭 MCP；其中 11 种同时
