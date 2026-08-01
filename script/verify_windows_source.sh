@@ -54,6 +54,9 @@ rg -q 'OrderByDescending\(value => value.detected\)' \
   "${windows_dir}/src/AIMemory.Core/Services/AgentCatalog.cs"
 agent_count=$(rg -c 'new\("' \
   "${windows_dir}/src/AIMemory.Core/Services/AgentCatalog.cs")
-test "${agent_count}" -eq 100
+# Keep this shell smoke check aligned with the cross-platform catalog contract.
+# The Node verifier performs the exact ID-by-ID comparison; this guard catches
+# an accidentally stale or truncated Windows source catalog before a build.
+test "${agent_count}" -eq 165
 
 printf '%s\n' "Windows source structure verification passed."
