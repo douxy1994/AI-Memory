@@ -51,24 +51,15 @@ jobs:
         run: dotnet test Windows/tests/AIMemory.Core.Tests/AIMemory.Core.Tests.csproj --configuration Release
       - name: Build WinUI 3 x64
         run: dotnet build Windows/src/AIMemory.Windows/AIMemory.Windows.csproj --configuration Release -p:Platform=x64
-      - name: Smoke test WinUI desktop lifecycle
-        shell: pwsh
-        run: |
-          $app = Get-ChildItem `
-            Windows/src/AIMemory.Windows/bin `
-            -Recurse -Filter AIMemory.Windows.exe |
-            Select-Object -First 1
-          if (-not $app) {
-            throw "AIMemory.Windows.exe was not found in the build output."
-          }
-          pwsh ./Windows/scripts/smoke-desktop.ps1 `
-            -ExecutablePath $app.FullName
+      - name: Build WinUI 3 ARM64
+        run: dotnet build Windows/src/AIMemory.Windows/AIMemory.Windows.csproj --configuration Release -p:Platform=ARM64
       - name: Smoke test packaged MCP helper
         shell: pwsh
         run: |
           $helper = Get-ChildItem `
             Windows/src/AIMemory.Windows/bin `
             -Recurse -Filter aimemory-mcp.exe |
+            Where-Object FullName -Match '\\x64\\' |
             Select-Object -First 1
           if (-not $helper) {
             throw "Packaged aimemory-mcp.exe was not found."
@@ -119,5 +110,16 @@ jobs:
               throw "MCP tool is missing: $required"
             }
           }
-      - name: Build WinUI 3 ARM64
-        run: dotnet build Windows/src/AIMemory.Windows/AIMemory.Windows.csproj --configuration Release -p:Platform=ARM64
+      - name: Smoke test WinUI desktop lifecycle
+        shell: pwsh
+        run: |
+          $app = Get-ChildItem `
+            Windows/src/AIMemory.Windows/bin `
+            -Recurse -Filter AIMemory.Windows.exe |
+            Where-Object FullName -Match '\\x64\\' |
+            Select-Object -First 1
+          if (-not $app) {
+            throw "AIMemory.Windows.exe was not found in the build output."
+          }
+          pwsh ./Windows/scripts/smoke-desktop.ps1 `
+            -ExecutablePath $app.FullName
