@@ -1154,6 +1154,36 @@ private struct DetectionOnlyAgent: Sendable {
             executables: ["gitagent"],
             relativePaths: []
         ),
+        .init(
+            id: "opendev",
+            label: "OpenDev",
+            executables: ["opendev"],
+            relativePaths: [".opendev"]
+        ),
+        .init(
+            id: "qodex",
+            label: "QodeX",
+            executables: ["qodex"],
+            relativePaths: [".qodex"]
+        ),
+        .init(
+            id: "clawcodex",
+            label: "ClawCodex",
+            executables: ["clawcodex"],
+            relativePaths: [".clawcodex"]
+        ),
+        .init(
+            id: "tutti",
+            label: "Tutti Agent Ops",
+            executables: ["tt", "tutti"],
+            relativePaths: [".tutti"]
+        ),
+        .init(
+            id: "acpx",
+            label: "acpx (Agent Client Protocol)",
+            executables: ["acpx"],
+            relativePaths: [".acpx"]
+        ),
     ]
 }
 

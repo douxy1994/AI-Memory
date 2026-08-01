@@ -147,6 +147,11 @@ public sealed class AgentCatalog
         new("every-code", "Every Code", ["coder"], [".code"], false),
         new("claw-code-agent", "Claw Code Agent", ["claw-code-agent", "claw-code-gui"], [".claw-code-agent"], false),
         new("gitagent", "Gitagent", ["gitagent"], [], false),
+        new("opendev", "OpenDev", ["opendev"], [".opendev"], false),
+        new("qodex", "QodeX", ["qodex"], [".qodex"], false),
+        new("clawcodex", "ClawCodex", ["clawcodex"], [".clawcodex"], false),
+        new("tutti", "Tutti Agent Ops", ["tt", "tutti"], [".tutti"], false),
+        new("acpx", "acpx (Agent Client Protocol)", ["acpx"], [".acpx"], false),
     ];
 
     public IReadOnlyList<AgentIntegrationStatus> Detect()
