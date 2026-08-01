@@ -17,10 +17,12 @@ public sealed class AgentCatalog
 {
     private readonly string _home;
     private readonly IReadOnlyList<string>? _pathDirectoriesOverride;
+    private readonly IReadOnlyList<string>? _installationRootsOverride;
 
     public AgentCatalog(
         string? home = null,
-        IEnumerable<string>? pathDirectories = null)
+        IEnumerable<string>? pathDirectories = null,
+        IEnumerable<string>? installationRoots = null)
     {
         _home = home
             ?? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
@@ -28,6 +30,10 @@ public sealed class AgentCatalog
         // Otherwise read PATH when Detect runs so a newly installed CLI is visible
         // without restarting the application.
         _pathDirectoriesOverride = pathDirectories?.ToArray();
+        // Tests can provide a deterministic set of installation roots.  In
+        // production this is resolved on every Detect call so a newly
+        // installed desktop agent is visible without restarting the app.
+        _installationRootsOverride = installationRoots?.ToArray();
     }
 
     public static IReadOnlyList<AgentDescriptor> All { get; } =
@@ -204,11 +210,14 @@ public sealed class AgentCatalog
     public IReadOnlyList<AgentIntegrationStatus> Detect()
     {
         var pathDirectories = _pathDirectoriesOverride ?? ReadPathDirectories();
+        var installationRoots = _installationRootsOverride
+            ?? ReadInstallationRoots();
         return All.Select((agent, index) =>
             {
                 var detected = agent.RelativePaths.Any(relative =>
-                        File.Exists(Path.Combine(_home, NormalizeRelativePath(relative)))
-                        || Directory.Exists(Path.Combine(_home, NormalizeRelativePath(relative))))
+                        installationRoots.Any(root =>
+                            File.Exists(Path.Combine(root, NormalizeRelativePath(relative)))
+                            || Directory.Exists(Path.Combine(root, NormalizeRelativePath(relative)))))
                     || agent.Executables.Any(executable =>
                         pathDirectories.Any(directory =>
                             ExecutableExists(directory, executable)));
@@ -235,6 +244,22 @@ public sealed class AgentCatalog
         (Environment.GetEnvironmentVariable("PATH") ?? "")
             .Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries)
             .ToArray();
+
+    private IReadOnlyList<string> ReadInstallationRoots()
+    {
+        var roots = new[]
+        {
+            _home,
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
+            Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFiles),
+            Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFilesX86),
+        };
+        return roots
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+    }
 
     private static string NormalizeRelativePath(string relative) =>
         relative.Replace('\\', Path.DirectorySeparatorChar)

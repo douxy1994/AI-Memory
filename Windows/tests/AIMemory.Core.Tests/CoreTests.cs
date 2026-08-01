@@ -1252,7 +1252,10 @@ public sealed class CoreTests : IDisposable
         File.WriteAllText(Path.Combine(bin, "grok-cli.cmd"), "");
         File.WriteAllText(Path.Combine(bin, "nanoclaw.exe"), "");
         File.WriteAllText(Path.Combine(bin, "gitclaw.cmd"), "");
-        var statuses = new AgentCatalog(_root, [bin]).Detect();
+        var statuses = new AgentCatalog(
+            _root,
+            [bin],
+            installationRoots: [_root]).Detect();
         Assert.Equal(
         [
             "claude", "codex", "gemini", "antigravity", "opencode",
@@ -1336,7 +1339,9 @@ public sealed class CoreTests : IDisposable
         try
         {
             Environment.SetEnvironmentVariable("PATH", bin);
-            var catalog = new AgentCatalog(_root);
+            var catalog = new AgentCatalog(
+                _root,
+                installationRoots: [_root]);
             Assert.False(catalog.Detect().Single(value => value.Id == "opencode").IsDetected);
 
             File.WriteAllText(Path.Combine(bin, "opencode.cmd"), "");
@@ -1381,7 +1386,12 @@ public sealed class CoreTests : IDisposable
                 agent));
         }
 
-        var statuses = new AgentCatalog(_root, []).Detect();
+        var systemProgramFiles = Path.Combine(_root, "system-program-files");
+        Directory.CreateDirectory(Path.Combine(systemProgramFiles, "Kiro"));
+        var statuses = new AgentCatalog(
+            _root,
+            [],
+            installationRoots: [_root, systemProgramFiles]).Detect();
         var windsurf = statuses.Single(value => value.Id == "windsurf");
         var kiro = statuses.Single(value => value.Id == "kiro");
         var status = statuses.Single(value => value.Id == "void");
@@ -1400,6 +1410,10 @@ public sealed class CoreTests : IDisposable
         Assert.True(claurst.IsDetected);
         Assert.True(agentty.IsDetected);
         Assert.True(herdr.IsDetected);
+
+        var systemKiro = statuses.Single(value => value.Id == "kiro");
+        Assert.True(systemKiro.IsDetected);
+        Assert.Equal(AgentIntegrationState.Detected, systemKiro.State);
     }
 
     [Fact]
