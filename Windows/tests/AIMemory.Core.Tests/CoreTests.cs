@@ -1336,6 +1336,20 @@ public sealed class CoreTests : IDisposable
     [Fact]
     public void AgentCatalogDetectsInstalledDesktopAgentPath()
     {
+        var windsurfPath = Path.Combine(
+            _root,
+            "AppData",
+            "Local",
+            "Programs",
+            "Windsurf");
+        Directory.CreateDirectory(windsurfPath);
+        var kiroPath = Path.Combine(
+            _root,
+            "AppData",
+            "Local",
+            "Programs",
+            "Kiro");
+        Directory.CreateDirectory(kiroPath);
         var voidPath = Path.Combine(
             _root,
             "AppData",
@@ -1345,9 +1359,15 @@ public sealed class CoreTests : IDisposable
         Directory.CreateDirectory(voidPath);
 
         var statuses = new AgentCatalog(_root, []).Detect();
+        var windsurf = statuses.Single(value => value.Id == "windsurf");
+        var kiro = statuses.Single(value => value.Id == "kiro");
         var status = statuses.Single(value => value.Id == "void");
 
-        Assert.Equal("void", statuses[0].Id);
+        Assert.Equal("windsurf", statuses[0].Id);
+        Assert.True(windsurf.IsDetected);
+        Assert.Equal(AgentIntegrationState.Detected, windsurf.State);
+        Assert.True(kiro.IsDetected);
+        Assert.Equal(AgentIntegrationState.Detected, kiro.State);
         Assert.True(status.IsDetected);
         Assert.False(status.IsIntegrated);
         Assert.Equal(AgentIntegrationState.Detected, status.State);
