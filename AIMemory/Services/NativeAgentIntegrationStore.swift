@@ -1257,6 +1257,24 @@ private struct DetectionOnlyAgent: Sendable {
             executables: ["ruflo", "claude-flow"],
             relativePaths: [".claude-flow", ".ruflo"]
         ),
+        .init(
+            id: "claurst",
+            label: "Claurst",
+            executables: ["claurst"],
+            relativePaths: [".claurst"]
+        ),
+        .init(
+            id: "agentty",
+            label: "agentty",
+            executables: ["agentty"],
+            relativePaths: [".agentty"]
+        ),
+        .init(
+            id: "herdr",
+            label: "Herdr",
+            executables: ["herdr"],
+            relativePaths: [".herdr"]
+        ),
     ]
 }
 

@@ -160,6 +160,9 @@ public sealed class AgentCatalog
         new("zenflow", "Zencoder Zenflow", ["zenflow", "zencoder"], [".zenflow", "AppData\\Local\\zenflow"], false),
         new("void", "Void", ["void"], ["AppData\\Local\\Programs\\Void", "AppData\\Local\\Void", "AppData\\Roaming\\Void"], false),
         new("ruflo", "Ruflo / Claude Flow", ["ruflo", "claude-flow"], [".claude-flow", ".ruflo"], false),
+        new("claurst", "Claurst", ["claurst"], [".claurst", "AppData\\Local\\claurst"], false),
+        new("agentty", "agentty", ["agentty"], [".agentty", "AppData\\Local\\agentty"], false),
+        new("herdr", "Herdr", ["herdr"], [".herdr", "AppData\\Local\\herdr"], false),
     ];
 
     public IReadOnlyList<AgentIntegrationStatus> Detect()
