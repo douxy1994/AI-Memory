@@ -12,7 +12,7 @@ public sealed record AgentDescriptor(
 public sealed class AgentCatalog
 {
     private readonly string _home;
-    private readonly IReadOnlyList<string> _pathDirectories;
+    private readonly IReadOnlyList<string>? _pathDirectoriesOverride;
 
     public AgentCatalog(
         string? home = null,
@@ -20,10 +20,10 @@ public sealed class AgentCatalog
     {
         _home = home
             ?? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        _pathDirectories = (pathDirectories
-                ?? (Environment.GetEnvironmentVariable("PATH") ?? "")
-                    .Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
-            .ToArray();
+        // An explicit list keeps tests and callers with a controlled PATH deterministic.
+        // Otherwise read PATH when Detect runs so a newly installed CLI is visible
+        // without restarting the application.
+        _pathDirectoriesOverride = pathDirectories?.ToArray();
     }
 
     public static IReadOnlyList<AgentDescriptor> All { get; } =
@@ -132,13 +132,14 @@ public sealed class AgentCatalog
 
     public IReadOnlyList<AgentIntegrationStatus> Detect()
     {
+        var pathDirectories = _pathDirectoriesOverride ?? ReadPathDirectories();
         return All.Select((agent, index) =>
             {
                 var detected = agent.RelativePaths.Any(relative =>
                         File.Exists(Path.Combine(_home, relative))
                         || Directory.Exists(Path.Combine(_home, relative)))
                     || agent.Executables.Any(executable =>
-                        _pathDirectories.Any(directory =>
+                        pathDirectories.Any(directory =>
                             ExecutableExists(directory, executable)));
                 return (agent, index, detected);
             })
@@ -158,6 +159,11 @@ public sealed class AgentCatalog
                     : "本机未安装，默认不启用。"))
             .ToArray();
     }
+
+    private static IReadOnlyList<string> ReadPathDirectories() =>
+        (Environment.GetEnvironmentVariable("PATH") ?? "")
+            .Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries)
+            .ToArray();
 
     private static bool ExecutableExists(string directory, string executable)
     {

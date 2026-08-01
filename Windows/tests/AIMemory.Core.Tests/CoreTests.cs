@@ -1307,6 +1307,27 @@ public sealed class CoreTests : IDisposable
     }
 
     [Fact]
+    public void AgentCatalogRefreshesProcessPathWhenDetectionRuns()
+    {
+        var bin = Path.Combine(_root, "path-refresh-bin");
+        Directory.CreateDirectory(bin);
+        var previousPath = Environment.GetEnvironmentVariable("PATH");
+        try
+        {
+            Environment.SetEnvironmentVariable("PATH", bin);
+            var catalog = new AgentCatalog(_root);
+            Assert.False(catalog.Detect().Single(value => value.Id == "opencode").IsDetected);
+
+            File.WriteAllText(Path.Combine(bin, "opencode.cmd"), "");
+            Assert.True(catalog.Detect().Single(value => value.Id == "opencode").IsDetected);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("PATH", previousPath);
+        }
+    }
+
+    [Fact]
     public void AgentIntegrationInstallsRepairsAndRemovesOwnedConfiguration()
     {
         var home = Path.Combine(_root, "integration-home");
