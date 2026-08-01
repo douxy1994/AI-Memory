@@ -45,9 +45,37 @@ using System.Runtime.InteropServices;
 
 public static class AIMemoryWindowProbe
 {
+    private delegate bool EnumWindowsCallback(IntPtr window, IntPtr data);
+
+    [DllImport("user32.dll")]
+    private static extern bool EnumWindows(
+        EnumWindowsCallback callback,
+        IntPtr data);
+
+    [DllImport("user32.dll")]
+    private static extern uint GetWindowThreadProcessId(
+        IntPtr window,
+        out uint processId);
+
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool IsWindowVisible(IntPtr window);
+
+    public static IntPtr FindVisibleWindow(int processId)
+    {
+        var result = IntPtr.Zero;
+        EnumWindows((window, _) =>
+        {
+            GetWindowThreadProcessId(window, out var owner);
+            if (owner == processId && IsWindowVisible(window))
+            {
+                result = window;
+                return false;
+            }
+            return true;
+        }, IntPtr.Zero);
+        return result;
+    }
 }
 '@
 
@@ -93,7 +121,11 @@ function Get-MainWindowHandle {
         return [IntPtr]::Zero
     }
     $process.Refresh()
-    return $process.MainWindowHandle
+    if ($process.MainWindowHandle -ne [IntPtr]::Zero -and
+        [AIMemoryWindowProbe]::IsWindowVisible($process.MainWindowHandle)) {
+        return $process.MainWindowHandle
+    }
+    return [AIMemoryWindowProbe]::FindVisibleWindow($ProcessId)
 }
 
 $preexisting = Get-AIMemoryProcesses
