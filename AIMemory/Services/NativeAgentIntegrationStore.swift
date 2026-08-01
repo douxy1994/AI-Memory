@@ -15,17 +15,20 @@ actor NativeAgentIntegrationStore {
 
     private let home: URL
     private let helperURL: URL
+    private let pathDirectoriesOverride: [String]?
     private let fileManager = FileManager.default
 
     init(
         home: URL = FileManager.default.homeDirectoryForCurrentUser,
-        helperURL: URL? = nil
+        helperURL: URL? = nil,
+        pathDirectories: [String]? = nil
     ) {
         self.home = home
         self.helperURL = helperURL
             ?? Bundle.main.bundleURL.appendingPathComponent(
                 "Contents/Helpers/aimemory-mcp"
             )
+        self.pathDirectoriesOverride = pathDirectories
     }
 
     func detect() -> [AgentIntegrationStatus] {
@@ -719,11 +722,7 @@ actor NativeAgentIntegrationStore {
            }) {
             return true
         }
-        let searchDirectories = (
-            (ProcessInfo.processInfo.environment["PATH"] ?? "")
-                .split(separator: ":").map(String.init)
-            + ["/opt/homebrew/bin", "/usr/local/bin", "/usr/bin"]
-        )
+        let searchDirectories = executableSearchDirectories
         return agent.executables.contains { executable in
             searchDirectories.contains {
                 fileManager.isExecutableFile(
@@ -740,11 +739,7 @@ actor NativeAgentIntegrationStore {
         }) {
             return true
         }
-        let searchDirectories = (
-            (ProcessInfo.processInfo.environment["PATH"] ?? "")
-                .split(separator: ":").map(String.init)
-            + ["/opt/homebrew/bin", "/usr/local/bin", "/usr/bin"]
-        )
+        let searchDirectories = executableSearchDirectories
         return agent.executables.contains { executable in
             searchDirectories.contains {
                 fileManager.isExecutableFile(
@@ -766,6 +761,13 @@ actor NativeAgentIntegrationStore {
                 "Library/Application Support/Cursor/User/globalStorage"
             ),
         ]
+    }
+
+    private var executableSearchDirectories: [String] {
+        pathDirectoriesOverride
+            ?? ((ProcessInfo.processInfo.environment["PATH"] ?? "")
+                .split(separator: ":").map(String.init)
+                + ["/opt/homebrew/bin", "/usr/local/bin", "/usr/bin"])
     }
 
     // MARK: - Safe file updates

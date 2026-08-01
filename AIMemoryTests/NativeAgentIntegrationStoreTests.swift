@@ -165,6 +165,44 @@ final class NativeAgentIntegrationStoreTests: XCTestCase {
         XCTAssertFalse(commandCode.mcpInstalled)
     }
 
+    func testDetectionRefreshesInjectedPathAndKeepsUnavailableToolsOff() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("NativeAgentIntegrationPath-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let helper = try makeHelper(in: root)
+        let bin = root.appendingPathComponent("bin")
+        try FileManager.default.createDirectory(
+            at: bin,
+            withIntermediateDirectories: true
+        )
+        for executable in ["hf", "atk"] {
+            let path = bin.appendingPathComponent(executable)
+            try Data().write(to: path)
+            try FileManager.default.setAttributes(
+                [.posixPermissions: 0o755],
+                ofItemAtPath: path.path
+            )
+        }
+
+        let service = NativeAgentIntegrationStore(
+            home: root,
+            helperURL: helper,
+            pathDirectories: [bin.path]
+        )
+        let statuses = await service.detect()
+        XCTAssertEqual(
+            Array(statuses.prefix(2).map(\.agent)),
+            ["huggingface-cli", "m365-agents-toolkit"]
+        )
+        for id in ["huggingface-cli", "m365-agents-toolkit"] {
+            let status = try XCTUnwrap(statuses.first { $0.agent == id })
+            XCTAssertTrue(status.isAgentDetected)
+            XCTAssertEqual(status.status, "detected")
+            XCTAssertFalse(status.canInstallIntegration)
+            XCTAssertFalse(status.mcpInstalled)
+        }
+    }
+
     private func makeHelper(in root: URL) throws -> URL {
         try FileManager.default.createDirectory(
             at: root,
