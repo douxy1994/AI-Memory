@@ -1344,9 +1344,10 @@ public sealed class CoreTests : IDisposable
             "Void");
         Directory.CreateDirectory(voidPath);
 
-        var status = new AgentCatalog(_root, []).Detect()
-            .Single(value => value.Id == "void");
+        var statuses = new AgentCatalog(_root, []).Detect();
+        var status = statuses.Single(value => value.Id == "void");
 
+        Assert.Equal("void", statuses[0].Id);
         Assert.True(status.IsDetected);
         Assert.False(status.IsIntegrated);
         Assert.Equal(AgentIntegrationState.Detected, status.State);

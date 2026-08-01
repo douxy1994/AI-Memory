@@ -222,6 +222,7 @@ final class NativeAgentIntegrationStoreTests: XCTestCase {
         )
 
         let statuses = await service.detect()
+        XCTAssertEqual(statuses.first?.agent, "void")
         let status = try XCTUnwrap(
             statuses.first { $0.agent == "void" }
         )
