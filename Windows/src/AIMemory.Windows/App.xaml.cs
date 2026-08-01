@@ -65,10 +65,12 @@ public sealed partial class App : Application
             StartupDiagnostics.Write(
                 $"window.created hwnd=0x{_window.NativeHandle.ToInt64():X}");
             _window.Activate();
+            StartupDiagnostics.Write("window.activate.called");
             // AppWindow.Show(true) is an explicit restore/show operation.  It
             // matters for unpackaged WinUI launches where Activate can create
             // the HWND without making it visible until the dispatcher turns.
             _window.BringToFront();
+            StartupDiagnostics.Write("window.bring-to-front.completed");
             StartupDiagnostics.Write(
                 $"window.activated hwnd=0x{_window.NativeHandle.ToInt64():X}");
             await database.InitializeAsync();

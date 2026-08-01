@@ -8,8 +8,24 @@ import path from "node:path";
 const root = path.resolve(import.meta.dirname, "../..");
 const workflowPath = path.join(root, ".github", "workflows", "build.yml");
 const smokePath = path.join(root, "Windows", "scripts", "smoke-desktop.ps1");
+const appPath = path.join(
+  root,
+  "Windows",
+  "src",
+  "AIMemory.Windows",
+  "App.xaml.cs",
+);
+const mainWindowPath = path.join(
+  root,
+  "Windows",
+  "src",
+  "AIMemory.Windows",
+  "MainWindow.xaml.cs",
+);
 const workflow = fs.readFileSync(workflowPath, "utf8");
 const smoke = fs.readFileSync(smokePath, "utf8");
+const app = fs.readFileSync(appPath, "utf8");
+const mainWindow = fs.readFileSync(mainWindowPath, "utf8");
 
 const workflowRequirements = [
   ["Windows 11 runner", "runs-on: windows-2025"],
@@ -63,6 +79,24 @@ const smokeRequirements = [
 for (const [label, value] of smokeRequirements) {
   if (!smoke.includes(value)) {
     throw new Error(`Desktop smoke contract is missing ${label}: ${value}`);
+  }
+}
+
+const diagnosticsRequirements = [
+  ["window activation diagnostic", "window.activate.called"],
+  ["window show diagnostic", "window.bring-to-front.completed"],
+  ["notification-area success diagnostic", "notification-area.ready"],
+  ["notification-area failure diagnostic", "notification-area.failed"],
+];
+
+for (const [label, value] of diagnosticsRequirements.slice(0, 2)) {
+  if (!app.includes(value)) {
+    throw new Error(`Startup diagnostics are missing ${label}: ${value}`);
+  }
+}
+for (const [label, value] of diagnosticsRequirements.slice(2)) {
+  if (!mainWindow.includes(value)) {
+    throw new Error(`Startup diagnostics are missing ${label}: ${value}`);
   }
 }
 

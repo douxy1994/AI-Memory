@@ -61,9 +61,11 @@ public sealed partial class MainWindow : Window
                 LocalizationService.Get("TrayOpen"),
                 LocalizationService.Get("TraySyncNow"),
                 LocalizationService.Get("TrayExit"));
+            StartupDiagnostics.Write("notification-area.ready");
         }
         catch (Exception exception)
         {
+            StartupDiagnostics.Write("notification-area.failed", exception);
             System.Diagnostics.Debug.WriteLine(
                 $"Notification-area initialization failed: {exception}");
         }
