@@ -118,6 +118,9 @@
                     <TextBlock x:Uid="AboutFooter" Text="本地优先 · 独立数据 · 原生 Windows 11"
                                FontWeight="SemiBold"
                                Opacity="0.7" />
+                    <TextBlock x:Uid="AboutCopyright" Text="© 2026 douxy1994"
+                               FontWeight="SemiBold"
+                               Opacity="0.7" />
                     <TextBlock Text="Package  com.aimemory.windows"
                                FontFamily="Cascadia Mono"
                                FontSize="11"

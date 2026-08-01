@@ -206,3 +206,5 @@ AI Memory 来源于 [Rimagination/ChatMem](https://github.com/Rimagination/ChatM
 ## License
 
 [GNU Affero General Public License v3.0](./LICENSE)
+
+© 2026 douxy1994

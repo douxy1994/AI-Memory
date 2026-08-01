@@ -177,6 +177,8 @@ struct AboutView: View {
         VStack(spacing: 5) {
             Text("本地优先 · 独立数据 · 原生 macOS")
                 .font(Theme.appFont(size: 11, weight: .medium))
+            Text("© 2026 douxy1994")
+                .font(Theme.appFont(size: 11, weight: .medium))
             Text("Bundle ID  com.aimemory.app")
                 .font(Theme.appFont(size: 10, design: .monospaced))
                 .foregroundStyle(Theme.mutedText)

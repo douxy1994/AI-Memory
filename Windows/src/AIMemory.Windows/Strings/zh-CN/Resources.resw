@@ -554,6 +554,7 @@
   <data name="AboutSoftwareTitle.Text" xml:space="preserve"><value>关于本软件</value></data>
   <data name="AboutSoftwareBody.Text" xml:space="preserve"><value>AI Memory 是一款本地优先的 AI 工作记忆工具。它将不同 AI Agent 与命令行工具产生的对话历史、记忆规则、检查点和交接信息集中到一个原生工作台，帮助你快速找回上下文、检索过去的工作，并从上次中断的位置继续。&#x0a;&#x0a;所有核心数据均由本机管理，兼顾隐私、可靠性与长期可用性。</value></data>
   <data name="AboutFooter.Text" xml:space="preserve"><value>本地优先 · 独立数据 · 原生 Windows 11</value></data>
+  <data name="AboutCopyright.Text" xml:space="preserve"><value>© 2026 douxy1994</value></data>
 
   <data name="HelpPageTitle.Text" xml:space="preserve"><value>需要帮助？</value></data>
   <data name="HelpSubtitle.Text" xml:space="preserve"><value>从常见问题开始，直接打开相应的可用功能。</value></data>
