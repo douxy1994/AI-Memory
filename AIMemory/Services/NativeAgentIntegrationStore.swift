@@ -145,7 +145,7 @@ actor NativeAgentIntegrationStore {
         } else if mcp || (agent.supportsInstructions && rules) {
             state = "partial"
             label = "部分安装"
-        } else if detected && !agent.integrationAvailable {
+        } else if detected {
             state = "detected"
             label = "已检测"
         } else {

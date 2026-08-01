@@ -200,6 +200,29 @@ final class NativeAgentIntegrationStoreTests: XCTestCase {
         XCTAssertFalse(commandCode.mcpInstalled)
     }
 
+    func testDetectedIntegrationAgentWithoutMCPIsShownAsDetectedNotMissing() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("NativeAgentIntegrationDetected-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let helper = try makeHelper(in: root)
+        let geminiSettings = root.appendingPathComponent(".gemini/settings.json")
+        try FileManager.default.createDirectory(
+            at: geminiSettings.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try Data("{}\n".utf8).write(to: geminiSettings)
+
+        let service = NativeAgentIntegrationStore(home: root, helperURL: helper)
+        let statuses = await service.detect()
+        let gemini = try XCTUnwrap(statuses.first { $0.agent == "gemini" })
+
+        XCTAssertTrue(gemini.isAgentDetected)
+        XCTAssertFalse(gemini.mcpInstalled)
+        XCTAssertEqual(gemini.status, "detected")
+        XCTAssertEqual(gemini.statusLabel, "已检测")
+        XCTAssertTrue(gemini.canInstallIntegration)
+    }
+
     func testDetectionRefreshesInjectedPathAndKeepsUnavailableToolsOff() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent("NativeAgentIntegrationPath-\(UUID().uuidString)")
