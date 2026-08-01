@@ -4,6 +4,7 @@ import path from "node:path";
 const root = path.resolve(import.meta.dirname, "../..");
 const notice = "Copyright © 2026 douxy1994";
 const files = [
+  "LICENSE",
   "NOTICE.md",
   "README.md",
   "Windows/README.md",
