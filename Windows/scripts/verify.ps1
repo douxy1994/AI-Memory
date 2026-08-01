@@ -4,6 +4,7 @@ Push-Location $root
 try {
     node .\scripts\verify-agent-catalog.mjs
     node .\scripts\verify-localization.mjs
+    node .\scripts\verify-copyright.mjs
     dotnet restore .\AIMemory.Windows.slnx
     dotnet test .\tests\AIMemory.Core.Tests\AIMemory.Core.Tests.csproj `
         --configuration Release --no-restore

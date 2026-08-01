@@ -208,3 +208,6 @@ AI Memory 来源于 [Rimagination/ChatMem](https://github.com/Rimagination/ChatM
 [GNU Affero General Public License v3.0](./LICENSE)
 
 Copyright © 2026 douxy1994
+
+AI Memory is licensed under the GNU Affero General Public License v3.0
+(AGPL-3.0-only). See [NOTICE.md](./NOTICE.md) for the project copyright notice.

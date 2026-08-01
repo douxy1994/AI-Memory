@@ -138,3 +138,8 @@ pwsh .\Windows\scripts\smoke-desktop.ps1 `
 | `AIMemory.Core.Tests` | 核心数据与业务测试 |
 
 默认数据目录为 `%LOCALAPPDATA%\AIMemory`。登录启动在包清单中默认关闭，只有用户在设置中主动启用后才请求。
+
+Copyright © 2026 douxy1994
+
+AI Memory is licensed under the GNU Affero General Public License v3.0
+(AGPL-3.0-only). See [../NOTICE.md](../NOTICE.md) for the project copyright notice.

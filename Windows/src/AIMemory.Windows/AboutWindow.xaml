@@ -121,6 +121,10 @@
                     <TextBlock x:Uid="AboutCopyright" Text="Copyright © 2026 douxy1994"
                                FontWeight="SemiBold"
                                Opacity="0.7" />
+                    <TextBlock x:Uid="AboutLicense"
+                               Text="Licensed under GNU Affero General Public License v3.0"
+                               FontSize="11"
+                               Opacity="0.55" />
                     <TextBlock Text="Package  com.aimemory.windows"
                                FontFamily="Cascadia Mono"
                                FontSize="11"

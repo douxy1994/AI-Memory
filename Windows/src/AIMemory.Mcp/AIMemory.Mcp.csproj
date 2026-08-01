@@ -4,6 +4,10 @@
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>AIMemory.Mcp</RootNamespace>
     <AssemblyName>aimemory-mcp</AssemblyName>
+    <Authors>douxy1994</Authors>
+    <Copyright>Copyright © 2026 douxy1994</Copyright>
+    <PackageLicenseExpression>AGPL-3.0-only</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/douxy1994/AI-Memory</PackageProjectUrl>
     <PublishSingleFile>true</PublishSingleFile>
     <SelfContained>true</SelfContained>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>

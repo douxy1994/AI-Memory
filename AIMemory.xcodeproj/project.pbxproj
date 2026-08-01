@@ -613,7 +613,7 @@
 				INFOPLIST_FILE = AIMemory/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "AI Memory";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2026 douxy1994 · GNU Affero General Public License v3.0";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2026 douxy1994";
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
@@ -673,7 +673,7 @@
 				INFOPLIST_FILE = AIMemory/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "AI Memory";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2026 douxy1994 · GNU Affero General Public License v3.0";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2026 douxy1994";
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
