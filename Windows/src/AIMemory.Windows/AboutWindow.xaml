@@ -122,7 +122,7 @@
                                FontWeight="SemiBold"
                                Opacity="0.7" />
                     <TextBlock x:Uid="AboutLicense"
-                               Text="Licensed under GNU Affero General Public License v3.0"
+                               Text="Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0-only)"
                                FontSize="11"
                                Opacity="0.55" />
                     <TextBlock Text="Package  com.aimemory.windows"

@@ -179,7 +179,7 @@ struct AboutView: View {
                 .font(Theme.appFont(size: 11, weight: .medium))
             Text("Copyright © 2026 douxy1994")
                 .font(Theme.appFont(size: 11, weight: .medium))
-            Text("Licensed under GNU Affero General Public License v3.0")
+            Text("Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0-only)")
                 .font(Theme.appFont(size: 10))
                 .foregroundStyle(Theme.mutedText)
             Text("Bundle ID  com.aimemory.app")

@@ -141,5 +141,6 @@ pwsh .\Windows\scripts\smoke-desktop.ps1 `
 
 Copyright © 2026 douxy1994
 
-AI Memory is licensed under the GNU Affero General Public License v3.0
-(AGPL-3.0-only). See [../NOTICE.md](../NOTICE.md) for the project copyright notice.
+AI Memory is licensed under the [GNU Affero General Public License v3.0
+(AGPL-3.0-only)](../LICENSE). See [../NOTICE.md](../NOTICE.md) for the
+complete project copyright and third-party attribution notice.

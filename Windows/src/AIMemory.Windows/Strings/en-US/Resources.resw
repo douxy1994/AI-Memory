@@ -557,7 +557,7 @@
   <data name="AboutSoftwareBody.Text" xml:space="preserve"><value>AI Memory is a local-first work-memory tool for AI. It brings conversation history, memory rules, checkpoints, and handoff information from different AI Agents and command-line tools into one native workbench, helping you recover context, find past work, and continue from where you stopped.&#x0a;&#x0a;All core data is managed locally for privacy, reliability, and long-term availability.</value></data>
   <data name="AboutFooter.Text" xml:space="preserve"><value>Local first · Independent data · Native Windows 11</value></data>
   <data name="AboutCopyright.Text" xml:space="preserve"><value>Copyright © 2026 douxy1994</value></data>
-  <data name="AboutLicense.Text" xml:space="preserve"><value>Licensed under GNU Affero General Public License v3.0</value></data>
+  <data name="AboutLicense.Text" xml:space="preserve"><value>Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0-only)</value></data>
 
   <data name="HelpPageTitle.Text" xml:space="preserve"><value>Need help?</value></data>
   <data name="HelpSubtitle.Text" xml:space="preserve"><value>Start with a common question and open the working feature directly.</value></data>
