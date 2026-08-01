@@ -26,6 +26,7 @@ if ($launchMode -eq "Executable") {
     $resolvedExecutable = (
         Resolve-Path -LiteralPath $ExecutablePath -ErrorAction Stop
     ).Path
+    $executableDirectory = Split-Path -LiteralPath $resolvedExecutable -Parent
     if (-not (Test-Path -LiteralPath $resolvedExecutable -PathType Leaf)) {
         throw "The executable path is not a file: $resolvedExecutable"
     }
@@ -139,7 +140,9 @@ public static class AIMemoryWindowProbe
 
 function Start-AIMemory {
     if ($launchMode -eq "Executable") {
-        Start-Process -FilePath $resolvedExecutable | Out-Null
+        Start-Process `
+            -FilePath $resolvedExecutable `
+            -WorkingDirectory $executableDirectory | Out-Null
         return
     }
     Start-Process `
