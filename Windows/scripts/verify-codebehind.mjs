@@ -86,6 +86,7 @@ fs.writeFileSync(
 
 const classFields = new Map();
 const contractFailures = [];
+let eventHandlerCount = 0;
 const eventAttributes = [
   "Click",
   "Loaded",
@@ -129,6 +130,7 @@ for (const file of filesUnder(appRoot, ".xaml")) {
     for (const match of source.matchAll(
       new RegExp(`\\b(?:${attributes})="([A-Za-z_]\\w*)"`, "g"),
     )) {
+      eventHandlerCount += 1;
       if (!new RegExp(`\\b${match[1]}\\s*\\(`).test(code)) {
         contractFailures.push(
           `${path.relative(windowsRoot, file)}: event handler ${match[1]} is not declared in ${path.basename(codeBehind)}`,
@@ -153,6 +155,11 @@ if (contractFailures.length > 0) {
   for (const failure of contractFailures) console.error(failure);
   process.exit(1);
 }
+
+console.log(
+  `WinUI XAML contract verified: ${classFields.size} pages/classes, ` +
+    `${eventHandlerCount} event handlers resolve to code-behind methods.`,
+);
 
 const generated = [
   "// Generated only for cross-platform C# semantic validation.",
