@@ -215,3 +215,13 @@ jobs:
           name: windows-startup-diagnostics
           if-no-files-found: ignore
           path: ${{ runner.temp }}/AIMemory-startup.log
+      - name: Upload Windows build artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-build-artifacts
+          if-no-files-found: ignore
+          path: |
+            Windows/src/AIMemory.Windows/bin/**/*.msix
+            Windows/src/AIMemory.Windows/bin/**/Helpers/aimemory-mcp.exe
+            Windows/src/AIMemory.Windows/bin/**/AIMemorySourceRevision.txt

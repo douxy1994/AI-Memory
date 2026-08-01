@@ -31,6 +31,8 @@ const workflowRequirements = [
   ["manifest executable guard", "AIMemory\\.Windows\\.exe"],
   ["desktop smoke script", "smoke-desktop.ps1"],
   ["startup diagnostics", "AIMemory-startup.log"],
+  ["Windows build artifact upload", "windows-build-artifacts"],
+  ["MSIX artifact path", "Windows/src/AIMemory.Windows/bin/**/*.msix"],
 ];
 
 for (const [label, value] of workflowRequirements) {
