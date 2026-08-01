@@ -36,8 +36,8 @@
     { "id": "font-preferences", "status": "implemented", "evidence": "application-wide WinUI font resource with system, Noto Sans CJK SC, Noto Serif CJK SC and LXGW WenKai compatibility" },
     { "id": "update-and-diagnostics", "status": "implemented", "evidence": "About-centered update flow, UpdateService, DiagnosticsService, five-second success feedback, and a native result dialog for menu-triggered current-version or failure results" },
     { "id": "upgrade-readiness", "status": "implemented", "evidence": "Settings JSON parsing, WebDAV profile, Credential Locker presence, SQLite schema and quick_check are evaluated with localized per-item results" },
-    { "id": "x64-arm64-builds", "status": "implemented", "evidence": "GitHub Actions run 30693711609 built WinUI 3 x64 and ARM64 successfully and generated the unsigned x64 MSIX package" },
-    { "id": "mcp-runtime-smoke", "status": "implemented", "evidence": "GitHub Actions run 30693711609 successfully exercised the packaged aimemory-mcp helper" },
-    { "id": "desktop-lifecycle-smoke", "status": "verification-required", "evidence": "smoke-desktop.ps1 verifies one process, close-to-notification-area, and relaunch recovery; requires an interactive Windows 11 session" }
+    { "id": "x64-arm64-builds", "status": "verification-required", "evidence": "The Windows CI job builds WinUI 3 for x64 and ARM64 and generates an unsigned x64 MSIX package; the last recorded run predates the current lifecycle patch and must be rerun." },
+    { "id": "mcp-runtime-smoke", "status": "verification-required", "evidence": "The Windows CI job exercises the packaged aimemory-mcp helper; the last recorded run predates the current lifecycle patch and must be rerun." },
+    { "id": "desktop-lifecycle-smoke", "status": "verification-required", "evidence": "The CI job registers the generated AppxManifest, launches through AppsFolder, and smoke-desktop.ps1 verifies one process, close-to-notification-area, and relaunch recovery; requires an interactive Windows 11 session." }
   ]
 }
