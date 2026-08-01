@@ -955,6 +955,24 @@ private struct DetectionOnlyAgent: Sendable {
 
     static let all: [DetectionOnlyAgent] = [
         .init(
+            id: "huggingface-cli",
+            label: "Hugging Face CLI",
+            executables: ["hf"],
+            relativePaths: [".cache/huggingface"]
+        ),
+        .init(
+            id: "m365-agents-toolkit",
+            label: "Microsoft 365 Agents Toolkit",
+            executables: ["atk"],
+            relativePaths: [".m365agents", "Library/Application Support/Microsoft/M365AgentsToolkit"]
+        ),
+        .init(
+            id: "github-agentic-workflows",
+            label: "GitHub Agentic Workflows",
+            executables: ["gh-aw"],
+            relativePaths: [".config/gh/extensions/gh-aw", "Library/Application Support/gh/extensions/gh-aw"]
+        ),
+        .init(
             id: "neovate",
             label: "Neovate Code",
             executables: ["neovate"],

@@ -99,6 +99,8 @@ final class NativeAgentIntegrationStoreTests: XCTestCase {
             "aichat", "llm", "fabric", "shell-gpt", "elia", "ollama",
             "lm-studio", "llama-cpp", "tgpt", "crewai", "autogpt",
             "gptscript", "elizaos", "openai-cli",
+            "huggingface-cli", "m365-agents-toolkit",
+            "github-agentic-workflows",
             "neovate", "vtcode", "dexto", "nanobot", "zeroclaw",
             "picoclaw", "ironclaw", "nullclaw", "moltis",
             "opensquilla", "qodo", "coderabbit", "poolside",

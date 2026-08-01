@@ -1266,6 +1266,7 @@ public sealed class CoreTests : IDisposable
             "aichat", "llm", "fabric", "shell-gpt", "elia", "ollama",
             "lm-studio", "llama-cpp", "tgpt", "crewai", "autogpt",
             "gptscript", "elizaos", "openai-cli",
+            "huggingface-cli", "m365-agents-toolkit", "github-agentic-workflows",
             "neovate", "vtcode", "dexto", "nanobot", "zeroclaw",
             "picoclaw", "ironclaw", "nullclaw", "moltis",
             "opensquilla", "qodo", "coderabbit", "poolside",
@@ -1284,7 +1285,7 @@ public sealed class CoreTests : IDisposable
             Assert.False(value.IsIntegrated);
             Assert.Equal(AgentIntegrationState.Missing, value.State);
         });
-        Assert.Equal(100, statuses.Count);
+        Assert.Equal(103, statuses.Count);
 
         var missingWithStaleConfiguration =
             AgentIntegrationStateService.ApplyConfigurationState(
@@ -2505,7 +2506,7 @@ public sealed class CoreTests : IDisposable
         Assert.Equal(1, report.Conversations);
         Assert.Equal(1, report.Messages);
         Assert.Equal(1, report.DetectedAgents);
-        Assert.Equal(100, report.CatalogAgents);
+        Assert.Equal(103, report.CatalogAgents);
         Assert.Contains(databasePath, report.ToDisplayText());
     }
 
