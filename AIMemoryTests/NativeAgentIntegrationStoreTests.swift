@@ -209,7 +209,7 @@ final class NativeAgentIntegrationStoreTests: XCTestCase {
             at: bin,
             withIntermediateDirectories: true
         )
-        for executable in ["hf", "atk"] {
+        for executable in ["hf", "atk", "nanoclaw", "gitclaw"] {
             let path = bin.appendingPathComponent(executable)
             try Data().write(to: path)
             try FileManager.default.setAttributes(
@@ -229,6 +229,13 @@ final class NativeAgentIntegrationStoreTests: XCTestCase {
             ["huggingface-cli", "m365-agents-toolkit"]
         )
         for id in ["huggingface-cli", "m365-agents-toolkit"] {
+            let status = try XCTUnwrap(statuses.first { $0.agent == id })
+            XCTAssertTrue(status.isAgentDetected)
+            XCTAssertEqual(status.status, "detected")
+            XCTAssertFalse(status.canInstallIntegration)
+            XCTAssertFalse(status.mcpInstalled)
+        }
+        for id in ["nanoclaw", "gitclaw"] {
             let status = try XCTUnwrap(statuses.first { $0.agent == id })
             XCTAssertTrue(status.isAgentDetected)
             XCTAssertEqual(status.status, "detected")

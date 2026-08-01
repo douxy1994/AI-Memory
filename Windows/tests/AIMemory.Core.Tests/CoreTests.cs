@@ -1245,6 +1245,8 @@ public sealed class CoreTests : IDisposable
         File.WriteAllText(Path.Combine(bin, "qodercli.cmd"), "");
         File.WriteAllText(Path.Combine(bin, "mimo.cmd"), "");
         File.WriteAllText(Path.Combine(bin, "aichat.cmd"), "");
+        File.WriteAllText(Path.Combine(bin, "nanoclaw.exe"), "");
+        File.WriteAllText(Path.Combine(bin, "gitclaw.cmd"), "");
         var statuses = new AgentCatalog(_root, [bin]).Detect();
         Assert.Equal(
         [
@@ -1287,8 +1289,8 @@ public sealed class CoreTests : IDisposable
         var firstMissing = statuses
             .Select((status, index) => (status, index))
             .First(value => !value.status.IsDetected).index;
-        Assert.Equal(6, firstMissing);
-        Assert.Equal(["opencode", "goose", "vibe", "qoder", "mimo-code", "aichat"], statuses
+        Assert.Equal(8, firstMissing);
+        Assert.Equal(["opencode", "goose", "vibe", "qoder", "mimo-code", "aichat", "nanoclaw", "gitclaw"], statuses
             .Take(firstMissing).Select(value => value.Id).ToArray());
         Assert.All(statuses.Take(firstMissing), value => Assert.True(value.IsDetected));
         Assert.All(statuses.Skip(firstMissing), value =>
