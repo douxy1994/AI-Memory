@@ -140,13 +140,16 @@ jobs:
           # alive without creating a visible AppWindow. Register the generated
           # unpackaged manifest instead, then launch through AppsFolder just as
           # a Windows user launches the installed application.
-          $manifest = Get-ChildItem `
+          $manifests = Get-ChildItem `
             Windows/src/AIMemory.Windows/bin `
             -Recurse -Filter AppxManifest.xml |
             Where-Object FullName -Match '\\x64\\' |
             Where-Object FullName -NotMatch '\\obj\\' |
-            Sort-Object FullName -Descending |
-            Select-Object -First 1
+            Sort-Object LastWriteTime -Descending
+          $manifests | ForEach-Object {
+            Write-Host "Candidate AppxManifest.xml: $($_.FullName)"
+          }
+          $manifest = $manifests | Select-Object -First 1
           if (-not $manifest) {
             throw "AIMemory.Windows AppxManifest.xml was not found in the build output."
           }
