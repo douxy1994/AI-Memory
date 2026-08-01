@@ -145,6 +145,7 @@ jobs:
             -p:Platform=x64 `
             -p:GenerateAppxPackageOnBuild=true `
             -p:AppxPackageSigningEnabled=true `
+            -p:PackageCertificateThumbprint=$($certificate.Thumbprint) `
             -p:PackageCertificateKeyFile=$pfx `
             -p:PackageCertificatePassword=$passwordText
           $package = Get-ChildItem `
