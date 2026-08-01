@@ -10,6 +10,7 @@ try {
     node .\scripts\verify-localization.mjs
     node .\scripts\verify-package-manifest.mjs
     node .\scripts\verify-windows-workflow.mjs
+    node .\scripts\verify-parity.mjs
     node .\scripts\verify-copyright.mjs
     node .\scripts\verify-mcp-contract.mjs
     dotnet restore .\AIMemory.Windows.slnx

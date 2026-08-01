@@ -57,6 +57,8 @@ jobs:
         run: node Windows/scripts/verify-localization.mjs
       - name: Verify Windows package manifest and assets
         run: node Windows/scripts/verify-package-manifest.mjs
+      - name: Verify Windows parity source contracts
+        run: node Windows/scripts/verify-parity.mjs
       - name: Verify macOS and Windows Agent catalogs
         run: node Windows/scripts/verify-agent-catalog.mjs
       - name: Verify macOS and Windows MCP contracts
