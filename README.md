@@ -59,6 +59,7 @@ flowchart LR
 ### 统一历史工作台
 
 - 聚合 Claude Code、Codex、Gemini CLI、Google Antigravity、OpenCode、ZCode、Hermes、Kimi Code 等本地历史；
+- 同时覆盖 Factory Droid、Mistral Vibe、Amazon Q Developer、GitHub Copilot CLI、Qwen Code、Goose、Cline、Roo Code、OpenHands、Aider、Crush、Kilo Code 等主流 Agent 与 CLI；
 - 检测 165 种 Agent、通用 AI CLI 与本地模型 CLI；除主流编码 Agent 外，还覆盖 Hugging Face CLI、Microsoft 365 Agents Toolkit、GitHub Agentic Workflows、Neovate、VT Code、Dexto、xAI Grok Build / Grok CLI、nanobot、ZeroClaw、PicoClaw、IronClaw、NullClaw、Moltis、OpenSquilla、Qodo、CodeRabbit、Poolside、Command Code、Ante、Mentat、Claw Code、Coro、Nori、CodeMachine、Open Codex、Groq Code CLI、Devon、g3、Mini-Kode、zot、VibePod、Every Code、Claw Code Agent、Gitagent、OpenDev、QodeX、ClawCodex、Tutti、acpx、cmux、muxd、muxel、Flowmux、MCPJam、Zenflow、Void、Ruflo / Claude Flow、Claurst、agentty、Herdr、Smol Developer、Claude Engineer、Free Code、ForgeCode、AutoCodeRover、Agentless、Codel、openHarness、Octomind、Codex Infinity、San、Waveloom、picocode、QQCode、Keen Code、Smelt、Grinta、Zap、Binharic、Darce、CLAII、NanoClaw、Clawith、claw0、GitClaw、LionClaw、FetchCoder、Crab Code、OpenAgent、DvalinCode、LettaBot、oh-my-openagent、Ollama 与 LM Studio CLI 等工具；
 - 已安装且存在可读数据的来源优先显示，未安装来源不会自动启用；
 - 按电脑、项目和更新时间组织对话，支持搜索、筛选、排序、折叠和批量操作；
