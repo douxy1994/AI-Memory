@@ -91,7 +91,12 @@ public sealed partial class MainWindow : Window
     {
         _appWindow.Show(true);
         var handle = WindowNative.GetWindowHandle(this);
+        // AppWindow.Show restores the AppWindow state, while the Win32 calls
+        // cover an unpackaged launch whose HWND was created hidden during the
+        // first dispatcher turn.
+        NativeMethods.ShowWindow(handle, 5);
         NativeMethods.ShowWindow(handle, 9);
+        NativeMethods.UpdateWindow(handle);
         NativeMethods.SetForegroundWindow(handle);
     }
 
@@ -587,4 +592,9 @@ file static class NativeMethods
 
     [System.Runtime.InteropServices.DllImport("user32.dll")]
     internal static extern bool ShowWindow(nint hWnd, int nCmdShow);
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    [return: System.Runtime.InteropServices.MarshalAs(
+        System.Runtime.InteropServices.UnmanagedType.Bool)]
+    internal static extern bool UpdateWindow(nint hWnd);
 }

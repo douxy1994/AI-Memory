@@ -17,18 +17,27 @@ public static class Program
             var main = AppInstance.FindOrRegisterForKey("AIMemory.Main");
             if (!main.IsCurrent)
             {
+                StartupDiagnostics.Write("program.instance.redirecting");
                 main.RedirectActivationToAsync(current.GetActivatedEventArgs())
                     .AsTask().GetAwaiter().GetResult();
+                StartupDiagnostics.Write("program.instance.redirected");
                 return;
             }
 
+            StartupDiagnostics.Reset();
+            StartupDiagnostics.Write("program.begin");
+            StartupDiagnostics.Write("program.com.initialized");
+            StartupDiagnostics.Write("program.instance.current");
+            StartupDiagnostics.Write("program.ui.starting");
             Application.Start(_initialization =>
             {
                 var queue = DispatcherQueue.GetForCurrentThread();
                 SynchronizationContext.SetSynchronizationContext(
                     new DispatcherQueueSynchronizationContext(queue));
                 new App(main);
+                StartupDiagnostics.Write("program.app.constructed");
             });
+            StartupDiagnostics.Write("program.ui.returned");
         }
         catch (Exception exception)
         {

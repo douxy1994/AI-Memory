@@ -14,6 +14,7 @@ public sealed partial class App : Application
     private readonly AppInstance _instance;
     private MainWindow? _window;
     private bool _activationPending;
+    private int _launchStarted;
 
     public App(AppInstance instance)
     {
@@ -24,11 +25,31 @@ public sealed partial class App : Application
         {
             System.Diagnostics.Debug.WriteLine(eventArgs.Exception);
         };
+
+        // Application.Start normally raises OnLaunched after constructing the
+        // App.  Starting the shell from the constructor as well keeps direct
+        // unpackaged launches deterministic on Windows runner sessions where
+        // the activation callback can be delayed until after the dispatcher
+        // has already entered its message loop.
+        StartLaunch();
     }
 
-    protected override async void OnLaunched(LaunchActivatedEventArgs args)
+    protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
-        StartupDiagnostics.Reset();
+        StartLaunch();
+    }
+
+    private void StartLaunch()
+    {
+        if (Interlocked.Exchange(ref _launchStarted, 1) != 0)
+        {
+            return;
+        }
+        _ = LaunchAsync();
+    }
+
+    private async Task LaunchAsync()
+    {
         StartupDiagnostics.Write("launch.begin");
         try
         {

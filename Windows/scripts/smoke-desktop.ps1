@@ -41,7 +41,9 @@ elseif (-not $ProcessName) {
 
 Add-Type -TypeDefinition @'
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Text;
 
 public static class AIMemoryWindowProbe
 {
@@ -67,6 +69,39 @@ public static class AIMemoryWindowProbe
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool SetForegroundWindow(IntPtr window);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern int GetWindowText(
+        IntPtr window,
+        StringBuilder text,
+        int maxCount);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern int GetClassName(
+        IntPtr window,
+        StringBuilder className,
+        int maxCount);
+
+    public static string DescribeProcessWindows(int processId)
+    {
+        var lines = new List<string>();
+        EnumWindows((window, _) =>
+        {
+            GetWindowThreadProcessId(window, out var owner);
+            if (owner != processId) return true;
+            var title = new StringBuilder(256);
+            var className = new StringBuilder(256);
+            GetWindowText(window, title, title.Capacity);
+            GetClassName(window, className, className.Capacity);
+            lines.Add(
+                $"0x{window.ToInt64():X} visible={IsWindowVisible(window)} " +
+                $"class={className} title={title}");
+            return true;
+        }, IntPtr.Zero);
+        return lines.Count == 0
+            ? "<no top-level windows>"
+            : String.Join(Environment.NewLine, lines);
+    }
 
     public static IntPtr FindVisibleWindow(int processId)
     {
@@ -168,6 +203,29 @@ function Write-StartupDiagnostics {
     }
 }
 
+function Write-WindowDiagnostics {
+    param([int]$ProcessId)
+
+    if (-not $ProcessId) {
+        Write-Host "AI Memory process id was not captured."
+        return
+    }
+    $process = Get-Process -Id $ProcessId -ErrorAction SilentlyContinue
+    if (-not $process) {
+        Write-Host "AI Memory process $ProcessId is no longer running."
+        return
+    }
+    $process.Refresh()
+    Write-Host (
+        "AI Memory process {0}: MainWindowHandle=0x{1:X}, " +
+        "MainWindowTitle='{2}', SessionId={3}" -f
+        $process.Id,
+        $process.MainWindowHandle.ToInt64(),
+        $process.MainWindowTitle,
+        $process.SessionId)
+    Write-Host ([AIMemoryWindowProbe]::DescribeProcessWindows($ProcessId))
+}
+
 $preexisting = Get-AIMemoryProcesses
 if ($preexisting.Count -ne 0) {
     throw ((
@@ -242,6 +300,7 @@ try {
     } | ConvertTo-Json
 }
 catch {
+    Write-WindowDiagnostics $testProcessId
     Write-StartupDiagnostics
     throw
 }
