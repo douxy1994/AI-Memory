@@ -131,6 +131,22 @@ public sealed class AgentCatalog
         new("command-code", "Command Code", [], [".commandcode"], false),
         new("ante", "Ante", ["ante"], [".ante"], false),
         new("mentat", "Mentat", ["mentat"], [".mentat"], false),
+        new("claw-code", "Claw Code", ["claw"], [".claw"], false),
+        new("coro", "Coro", ["coro"], [".coro"], false),
+        new("nori-cli", "Nori CLI", ["nori"], [".nori"], false),
+        new("codemachine", "CodeMachine CLI", ["codemachine"], [".codemachine"], false),
+        new("open-codex", "Open Codex", ["open-codex"], [], false),
+        new("groq-code-cli", "Groq Code CLI", ["groq"], [".groq"], false),
+        new("devon", "Devon", ["devon-tui", "devon_agent"], [".devon"], false),
+        new("g3", "g3", ["g3"], [".config\\g3"], false),
+        new("mini-kode", "Mini-Kode", ["mini-kode"], [".mini-kode"], false),
+        new("zot", "zot", ["zot"], [".zot", "AppData\\Local\\zot"], false),
+        new("vibepod", "VibePod", ["vp"], [".vibepod"], false),
+        // Use Every Code's distinct `coder` launcher; the generic `code` launcher
+        // belongs to Visual Studio Code/Copilot above and must not be double-counted.
+        new("every-code", "Every Code", ["coder"], [".code"], false),
+        new("claw-code-agent", "Claw Code Agent", ["claw-code-agent", "claw-code-gui"], [".claw-code-agent"], false),
+        new("gitagent", "Gitagent", ["gitagent"], [], false),
     ];
 
     public IReadOnlyList<AgentIntegrationStatus> Detect()

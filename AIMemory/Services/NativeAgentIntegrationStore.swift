@@ -1070,6 +1070,90 @@ private struct DetectionOnlyAgent: Sendable {
             executables: ["mentat"],
             relativePaths: [".mentat"]
         ),
+        .init(
+            id: "claw-code",
+            label: "Claw Code",
+            executables: ["claw"],
+            relativePaths: [".claw"]
+        ),
+        .init(
+            id: "coro",
+            label: "Coro",
+            executables: ["coro"],
+            relativePaths: [".coro"]
+        ),
+        .init(
+            id: "nori-cli",
+            label: "Nori CLI",
+            executables: ["nori"],
+            relativePaths: [".nori"]
+        ),
+        .init(
+            id: "codemachine",
+            label: "CodeMachine CLI",
+            executables: ["codemachine"],
+            relativePaths: [".codemachine"]
+        ),
+        .init(
+            id: "open-codex",
+            label: "Open Codex",
+            executables: ["open-codex"],
+            relativePaths: []
+        ),
+        .init(
+            id: "groq-code-cli",
+            label: "Groq Code CLI",
+            executables: ["groq"],
+            relativePaths: [".groq"]
+        ),
+        .init(
+            id: "devon",
+            label: "Devon",
+            executables: ["devon-tui", "devon_agent"],
+            relativePaths: [".devon"]
+        ),
+        .init(
+            id: "g3",
+            label: "g3",
+            executables: ["g3"],
+            relativePaths: [".config/g3"]
+        ),
+        .init(
+            id: "mini-kode",
+            label: "Mini-Kode",
+            executables: ["mini-kode"],
+            relativePaths: [".mini-kode"]
+        ),
+        .init(
+            id: "zot",
+            label: "zot",
+            executables: ["zot"],
+            relativePaths: [".zot", "Library/Application Support/zot"]
+        ),
+        .init(
+            id: "vibepod",
+            label: "VibePod",
+            executables: ["vp"],
+            relativePaths: [".vibepod"]
+        ),
+        .init(
+            id: "every-code",
+            label: "Every Code",
+            executables: ["coder"],
+            relativePaths: [".code"]
+        ),
+        .init(
+            id: "claw-code-agent",
+            label: "Claw Code Agent",
+            executables: ["claw-code-agent", "claw-code-gui"],
+            relativePaths: [".claw-code-agent"]
+        ),
+        .init(
+            id: "gitagent",
+            label: "Gitagent",
+            executables: ["gitagent"],
+            relativePaths: []
+        ),
     ]
 }
 
