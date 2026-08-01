@@ -139,6 +139,13 @@ public static class AIMemoryWindowProbe
         }, IntPtr.Zero);
         return result;
     }
+
+    public static string GetWindowTitle(IntPtr window)
+    {
+        var title = new StringBuilder(256);
+        GetWindowText(window, title, title.Capacity);
+        return title.ToString();
+    }
 }
 '@
 
@@ -223,12 +230,15 @@ function Write-WindowDiagnostics {
         return
     }
     $process.Refresh()
+    $window = [AIMemoryWindowProbe]::FindAnyWindow($ProcessId)
     Write-Host (
         "AI Memory process {0}: MainWindowHandle=0x{1:X}, " +
         "MainWindowTitle='{2}', SessionId={3}" -f
         $process.Id,
         $process.MainWindowHandle.ToInt64(),
-        $process.MainWindowTitle,
+        $(if ($window -ne [IntPtr]::Zero) {
+            [AIMemoryWindowProbe]::GetWindowTitle($window)
+        } else { $process.MainWindowTitle }),
         $process.SessionId)
     Write-Host ([AIMemoryWindowProbe]::DescribeProcessWindows($ProcessId))
 }
@@ -251,6 +261,7 @@ try {
     $processes = Get-AIMemoryProcesses
     $testProcessId = $processes[0].Id
     $mainWindow = [IntPtr]::Zero
+    $mainWindowTitle = ""
     Wait-Until {
         $script:mainWindow = Get-MainWindowHandle $testProcessId
         if ($script:mainWindow -eq [IntPtr]::Zero) {
@@ -262,8 +273,12 @@ try {
                 [AIMemoryWindowProbe]::SetForegroundWindow($script:mainWindow) | Out-Null
             }
         }
+        $script:mainWindowTitle = if ($script:mainWindow -ne [IntPtr]::Zero) {
+            [AIMemoryWindowProbe]::GetWindowTitle($script:mainWindow)
+        } else { "" }
         $script:mainWindow -ne [IntPtr]::Zero -and
-            [AIMemoryWindowProbe]::IsWindowVisible($script:mainWindow)
+            [AIMemoryWindowProbe]::IsWindowVisible($script:mainWindow) -and
+            $script:mainWindowTitle -like "*AI Memory*"
     } "AI Memory started, but its main window did not become visible."
 
     $startupLog = Get-StartupLogPath
@@ -292,14 +307,19 @@ try {
     } "A second launch created another persistent AI Memory process."
     Wait-Until {
         $reopened = Get-MainWindowHandle $testProcessId
+        $script:mainWindowTitle = if ($reopened -ne [IntPtr]::Zero) {
+            [AIMemoryWindowProbe]::GetWindowTitle($reopened)
+        } else { "" }
         $reopened -ne [IntPtr]::Zero -and
-            [AIMemoryWindowProbe]::IsWindowVisible($reopened)
+            [AIMemoryWindowProbe]::IsWindowVisible($reopened) -and
+            $script:mainWindowTitle -like "*AI Memory*"
     } "The second launch did not restore the hidden main window."
 
     [pscustomobject]@{
         Result = "passed"
         ProcessName = $ProcessName
         ProcessId = $testProcessId
+        WindowTitle = $mainWindowTitle
         SingleInstance = $true
         CloseHidesWindow = $true
         RelaunchRestoresWindow = $true

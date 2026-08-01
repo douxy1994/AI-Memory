@@ -53,6 +53,8 @@ const smokeRequirements = [
   ["package launch mode", "shell:AppsFolder\\$AppUserModelId"],
   ["single process assertion", "Count -eq 1"],
   ["visible window assertion", "IsWindowVisible"],
+  ["window title assertion", "GetWindowTitle"],
+  ["AI Memory title check", "*AI Memory*"],
   ["startup completion assertion", "launch.complete"],
   ["close-to-tray assertion", "CloseMainWindow"],
   ["relaunch assertion", "RelaunchRestoresWindow"],
