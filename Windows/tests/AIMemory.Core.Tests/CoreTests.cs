@@ -1358,11 +1358,22 @@ public sealed class CoreTests : IDisposable
             "Programs",
             "Void");
         Directory.CreateDirectory(voidPath);
+        foreach (var agent in new[] { "claurst", "agentty", "herdr" })
+        {
+            Directory.CreateDirectory(Path.Combine(
+                _root,
+                "AppData",
+                "Local",
+                agent));
+        }
 
         var statuses = new AgentCatalog(_root, []).Detect();
         var windsurf = statuses.Single(value => value.Id == "windsurf");
         var kiro = statuses.Single(value => value.Id == "kiro");
         var status = statuses.Single(value => value.Id == "void");
+        var claurst = statuses.Single(value => value.Id == "claurst");
+        var agentty = statuses.Single(value => value.Id == "agentty");
+        var herdr = statuses.Single(value => value.Id == "herdr");
 
         Assert.Equal("windsurf", statuses[0].Id);
         Assert.True(windsurf.IsDetected);
@@ -1372,6 +1383,9 @@ public sealed class CoreTests : IDisposable
         Assert.True(status.IsDetected);
         Assert.False(status.IsIntegrated);
         Assert.Equal(AgentIntegrationState.Detected, status.State);
+        Assert.True(claurst.IsDetected);
+        Assert.True(agentty.IsDetected);
+        Assert.True(herdr.IsDetected);
     }
 
     [Fact]
