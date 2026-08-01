@@ -420,19 +420,18 @@ public sealed partial class SettingsPage : Page
             return;
         }
         var integration = row.Value;
+        var enabled = !integration.IsIntegrated;
         try
         {
-            _agentIntegrations.SetEnabled(
-                integration,
-                !integration.IsIntegrated);
+            _agentIntegrations.SetEnabled(integration, enabled);
             ReloadAgents();
             Show(
-                integration.IsIntegrated
+                enabled
                     ? LocalizationService.Format(
-                        "AgentIntegrationDisabled",
+                        "AgentIntegrationEnabled",
                         integration.Label)
                     : LocalizationService.Format(
-                        "AgentIntegrationEnabled",
+                        "AgentIntegrationDisabled",
                         integration.Label),
                 InfoBarSeverity.Success);
         }
