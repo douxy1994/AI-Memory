@@ -749,7 +749,9 @@ public sealed partial class SettingsPage : Page
         try
         {
             var result = await new LocalFolderSyncService(_window.Conversations)
-                .SyncAsync(SyncFolderBox.Text.Trim());
+                .SyncAsync(
+                    SyncFolderBox.Text.Trim(),
+                    progress: new Progress<SyncProgress>(ApplySyncProgress));
             Show(
                 LocalizationService.Format(
                     "LocalSyncCompleted",

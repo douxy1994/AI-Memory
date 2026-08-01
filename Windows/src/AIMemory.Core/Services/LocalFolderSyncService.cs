@@ -38,7 +38,8 @@ public sealed class LocalFolderSyncService(ConversationRepository conversations)
 
     public async Task<SyncProgress> SyncAsync(
         string folder,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        IProgress<SyncProgress>? progress = null)
     {
         if (string.IsNullOrWhiteSpace(folder))
         {
@@ -121,6 +122,16 @@ public sealed class LocalFolderSyncService(ConversationRepository conversations)
                     uploaded++;
                 }
             }
+
+            progress?.Report(new SyncProgress(
+                "conversations",
+                uploaded,
+                downloaded,
+                skipped,
+                false,
+                $"正在同步 {key.Agent} · {key.Id}",
+                key.Agent,
+                key.Id));
         }
 
         await WriteStatusManifestAsync(
@@ -131,9 +142,11 @@ public sealed class LocalFolderSyncService(ConversationRepository conversations)
             local.Count,
             remote.Count,
             cancellationToken);
-        return new SyncProgress(
+        var result = new SyncProgress(
             "complete", uploaded, downloaded, skipped, true,
             $"本地同步完成：上传 {uploaded}，下载 {downloaded}，跳过 {skipped}。");
+        progress?.Report(result);
+        return result;
     }
 
     private static async Task<Dictionary<SyncKey, RemotePayload>> ScanRemoteAsync(

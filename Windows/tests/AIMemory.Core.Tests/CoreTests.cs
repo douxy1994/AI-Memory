@@ -2363,6 +2363,41 @@ public sealed class CoreTests : IDisposable
     }
 
     [Fact]
+    public async Task LocalFolderSyncReportsConversationAndCompletionProgress()
+    {
+        var database = new AIMemoryDatabase(Path.Combine(_root, "local-sync-progress.db"));
+        await database.InitializeAsync();
+        var now = DateTimeOffset.UtcNow.ToString("O");
+        await using (var connection = database.OpenConnection())
+        {
+            var insert = connection.CreateCommand();
+            insert.CommandText = """
+                INSERT INTO conversations VALUES(
+                  'progress-1','repo','codex','source','title',$now,$now,NULL);
+                INSERT INTO messages VALUES('progress-m1','progress-1','user','hello',$now);
+                """;
+            insert.Parameters.AddWithValue("$now", now);
+            await insert.ExecuteNonQueryAsync();
+        }
+
+        var reports = new List<SyncProgress>();
+        var progress = new RecordingProgress(reports);
+        var result = await new LocalFolderSyncService(
+            new ConversationRepository(database)).SyncAsync(
+                Path.Combine(_root, "shared-progress"),
+                progress: progress);
+
+        Assert.True(reports.Count >= 2);
+        Assert.Contains(reports, value =>
+            value.Phase == "conversations"
+            && value.CurrentAgent == "codex"
+            && value.CurrentConversationId == "progress-1"
+            && !value.Completed);
+        Assert.Equal(result, reports[^1]);
+        Assert.True(reports[^1].Completed);
+    }
+
+    [Fact]
     public async Task LocalFolderSyncScansCanonicalAndLegacyPayloadsWithoutManifest()
     {
         var database = new AIMemoryDatabase(Path.Combine(
@@ -2853,5 +2888,11 @@ public sealed class CoreTests : IDisposable
             {
                 Content = new StringContent(content, Encoding.UTF8, "application/json"),
             });
+    }
+
+    private sealed class RecordingProgress(ICollection<SyncProgress> reports)
+        : IProgress<SyncProgress>
+    {
+        public void Report(SyncProgress value) => reports.Add(value);
     }
 }

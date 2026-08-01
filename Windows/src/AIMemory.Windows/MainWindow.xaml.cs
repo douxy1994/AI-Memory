@@ -344,7 +344,10 @@ public sealed partial class MainWindow : Window
                 && !string.IsNullOrWhiteSpace(settings.Sync.SyncFolder))
             {
                 result = await new LocalFolderSyncService(Conversations)
-                    .SyncAsync(settings.Sync.SyncFolder);
+                    .SyncAsync(
+                        settings.Sync.SyncFolder,
+                        progress: new Progress<SyncProgress>(
+                            ApplyGlobalSyncProgress));
             }
             else if (settings.Sync.Provider == "webdav"
                      && !string.IsNullOrWhiteSpace(settings.Sync.WebdavHost))
