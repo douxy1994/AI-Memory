@@ -133,19 +133,44 @@ jobs:
             throw "AIMemory.Windows.msix was not found in the build output."
           }
           Write-Host "Unsigned MSIX package: $($package.FullName)"
-      - name: Smoke test WinUI desktop lifecycle
+      - name: Register WinUI package for desktop smoke
         shell: pwsh
         run: |
-          $app = Get-ChildItem `
+          # A raw WinUI executable has no package identity and can remain
+          # alive without creating a visible AppWindow. Register the generated
+          # unpackaged manifest instead, then launch through AppsFolder just as
+          # a Windows user launches the installed application.
+          $manifest = Get-ChildItem `
             Windows/src/AIMemory.Windows/bin `
-            -Recurse -Filter AIMemory.Windows.exe |
+            -Recurse -Filter AppxManifest.xml |
             Where-Object FullName -Match '\\x64\\' |
+            Where-Object FullName -Match '\\AppX\\' |
+            Sort-Object FullName -Descending |
             Select-Object -First 1
-          if (-not $app) {
-            throw "AIMemory.Windows.exe was not found in the build output."
+          if (-not $manifest) {
+            throw "AIMemory.Windows AppxManifest.xml was not found in the build output."
           }
-          pwsh ./Windows/scripts/smoke-desktop.ps1 `
-            -ExecutablePath $app.FullName
+          $existing = Get-AppxPackage -Name "com.aimemory.windows" -ErrorAction SilentlyContinue
+          if ($existing) {
+            $existing | Remove-AppxPackage -ErrorAction Stop
+          }
+          Add-AppxPackage -Path $manifest.FullName -Register -DisableDevelopmentMode
+          $package = Get-AppxPackage -Name "com.aimemory.windows"
+          if (-not $package) {
+            throw "The AI Memory Windows package was not registered."
+          }
+          try {
+            $appUserModelId = "$($package.PackageFamilyName)!App"
+            pwsh ./Windows/scripts/smoke-desktop.ps1 `
+              -AppUserModelId $appUserModelId `
+              -ProcessName "AIMemory.Windows"
+          }
+          finally {
+            $running = Get-AppxPackage -Name "com.aimemory.windows" -ErrorAction SilentlyContinue
+            if ($running) {
+              $running | Remove-AppxPackage -ErrorAction SilentlyContinue
+            }
+          }
       - name: Collect Windows startup diagnostics
         if: always()
         shell: pwsh
