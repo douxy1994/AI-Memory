@@ -18,7 +18,8 @@ ChatMem 建立了本地优先 AI 编程记忆层的核心方向：聚合 Agent �
 
 ## 与 ChatMem 的关系
 
-AI Memory 不是对 `Rimagination/ChatMem` 的官方发布，也不代表原作者。仓库保留原始 MIT 版权声明，并在用户界面和文档中使用自己的品牌。
+AI Memory 不是对 `Rimagination/ChatMem` 的官方发布，也不代表原作者。本仓库按
+GNU Affero General Public License v3.0 发布，并在用户界面和文档中使用自己的品牌。
 
 ## 数据迁移
 

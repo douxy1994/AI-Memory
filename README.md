@@ -11,7 +11,7 @@
   [![Windows](https://img.shields.io/badge/Windows_11-Preview-0078D4?logo=windows11&logoColor=white)](#windows-11)
   [![Swift](https://img.shields.io/badge/Swift_6-SwiftUI_%2B_AppKit-F05138?logo=swift&logoColor=white)](./docs/ARCHITECTURE.md)
   [![WinUI](https://img.shields.io/badge/C%23-WinUI_3-512BD4?logo=dotnet&logoColor=white)](./Windows/README.md)
-  [![License: MIT](https://img.shields.io/badge/License-MIT-2ea44f.svg)](./LICENSE)
+  [![License: AGPL v3.0](https://img.shields.io/badge/License-AGPL--v3.0-blue.svg)](./LICENSE)
 
   <br>
   <img src="./docs/images/hero.svg" width="920" alt="AI Memory product overview">
@@ -192,7 +192,7 @@ AI Memory 来源于 [Rimagination/ChatMem](https://github.com/Rimagination/ChatM
 - 扩展 Agent/CLI 检测、本地历史读取、记忆治理、检查点、交接和增量同步；
 - AI Memory 使用独立名称、Bundle ID、数据目录和凭据空间，不覆盖 ChatMem。
 
-感谢 Rimagination 与 ChatMem 贡献者建立的产品基础。原始版权声明保留在 [MIT License](./LICENSE) 中。更详细的演进边界见[项目来源与迁移](./docs/ORIGIN_AND_MIGRATION.md)。
+感谢 Rimagination 与 ChatMem 贡献者建立的产品基础。本仓库现按 [GNU Affero General Public License v3.0](./LICENSE) 发布。更详细的演进边界见[项目来源与迁移](./docs/ORIGIN_AND_MIGRATION.md)。
 
 ## 文档
 
@@ -205,4 +205,4 @@ AI Memory 来源于 [Rimagination/ChatMem](https://github.com/Rimagination/ChatM
 
 ## License
 
-[MIT](./LICENSE) © Rimagination and AI Memory contributors.
+[GNU Affero General Public License v3.0](./LICENSE)

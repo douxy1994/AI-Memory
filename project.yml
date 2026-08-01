@@ -94,7 +94,7 @@ targets:
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"
         INFOPLIST_KEY_CFBundleDisplayName: "AI Memory"
         INFOPLIST_KEY_LSApplicationCategoryType: "public.app-category.developer-tools"
-        INFOPLIST_KEY_NSHumanReadableCopyright: "MIT License"
+        INFOPLIST_KEY_NSHumanReadableCopyright: "GNU Affero General Public License v3.0"
         INFOPLIST_KEY_NSPrincipalClass: NSApplication
   AIMemoryTests:
     type: bundle.unit-test
