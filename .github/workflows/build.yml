@@ -144,7 +144,7 @@ jobs:
             Windows/src/AIMemory.Windows/bin `
             -Recurse -Filter AppxManifest.xml |
             Where-Object FullName -Match '\\x64\\' |
-            Where-Object FullName -Match '\\AppX\\' |
+            Where-Object FullName -NotMatch '\\obj\\' |
             Sort-Object FullName -Descending |
             Select-Object -First 1
           if (-not $manifest) {
