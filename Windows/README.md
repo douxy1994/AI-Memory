@@ -54,6 +54,8 @@ AI Memory 的 Windows 11 原生版本，使用 C#、WinUI 3 与 Windows App SDK 
   Qwen Code、Goose、Cline、Roo Code、OpenHands、Aider、Crush 与 Kilo Code；
 - 165 种主流 Agent、通用 AI CLI 与本地模型 CLI 安装检测（包括 Claw Code、Coro、Nori、CodeMachine、Open Codex、Groq Code CLI、Devon、g3、Mini-Kode、zot、VibePod、Every Code、Claw Code Agent、Gitagent、OpenDev、QodeX、ClawCodex、Tutti、acpx、cmux、muxd、muxel、Flowmux、MCPJam、Zenflow、Void、Ruflo / Claude Flow、Claurst、agentty、Herdr、Smol Developer、Claude Engineer、Free Code、ForgeCode、AutoCodeRover、Agentless、Codel、openHarness、Octomind、Codex Infinity、San、Waveloom、picocode、QQCode、Keen Code、Smelt、Grinta、Zap、Binharic、Darce、CLAII、xAI Grok Build / Grok CLI、NanoClaw、Clawith、claw0、GitClaw、LionClaw、Crab Code、OpenAgent、DvalinCode、LettaBot 与 oh-my-openagent），兼容无扩展、
   `.exe` 与 `.cmd` 启动器；
+  同时检查用户目录和 Windows 的 Program Files/Common Program Files，系统级安装的桌面 Agent
+  也会进入“已检测”排序；
   已安装项优先，未安装项即使存在旧配置也保持关闭；
 - 16 种具有稳定配置格式的 Agent 可安全启用或关闭 MCP；其中 11 种同时
   安装 AI Memory skill 与受管启动规则。已有配置先备份，部分安装可自动修复，
