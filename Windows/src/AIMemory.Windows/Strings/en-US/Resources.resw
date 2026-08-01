@@ -20,6 +20,8 @@
   <data name="FontSaveFailed" xml:space="preserve"><value>Could not save the font setting: {0}</value></data>
   <data name="DataDirectoryPath" xml:space="preserve"><value>Data folder: {0}</value></data>
   <data name="StartupEnabled" xml:space="preserve"><value>Enabled</value></data>
+  <data name="StartupLoading.Text" xml:space="preserve"><value>Starting AI Memory…</value></data>
+  <data name="StartupFailed" xml:space="preserve"><value>Startup failed: {0}. Please restart AI Memory.</value></data>
   <data name="StartupDisabledByUser" xml:space="preserve"><value>Disabled by Windows or the user. You can restore it in Windows Settings.</value></data>
   <data name="StartupDisabledByPolicy" xml:space="preserve"><value>Your organization’s policy prevents startup at login.</value></data>
   <data name="StartupDisabled" xml:space="preserve"><value>Disabled</value></data>
@@ -554,7 +556,7 @@
   <data name="AboutSoftwareTitle.Text" xml:space="preserve"><value>About This App</value></data>
   <data name="AboutSoftwareBody.Text" xml:space="preserve"><value>AI Memory is a local-first work-memory tool for AI. It brings conversation history, memory rules, checkpoints, and handoff information from different AI Agents and command-line tools into one native workbench, helping you recover context, find past work, and continue from where you stopped.&#x0a;&#x0a;All core data is managed locally for privacy, reliability, and long-term availability.</value></data>
   <data name="AboutFooter.Text" xml:space="preserve"><value>Local first · Independent data · Native Windows 11</value></data>
-  <data name="AboutCopyright.Text" xml:space="preserve"><value>© 2026 douxy1994</value></data>
+  <data name="AboutCopyright.Text" xml:space="preserve"><value>Copyright © 2026 douxy1994</value></data>
 
   <data name="HelpPageTitle.Text" xml:space="preserve"><value>Need help?</value></data>
   <data name="HelpSubtitle.Text" xml:space="preserve"><value>Start with a common question and open the working feature directly.</value></data>

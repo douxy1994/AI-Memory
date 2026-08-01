@@ -128,7 +128,7 @@ jobs:
           if (-not $package) {
             throw "AIMemory.Windows.msix was not found in the build output."
           }
-          Write-Host "Signed MSIX package: $($package.FullName)"
+          Write-Host "Unsigned MSIX package: $($package.FullName)"
       - name: Smoke test WinUI desktop lifecycle
         shell: pwsh
         run: |
@@ -142,3 +142,10 @@ jobs:
           }
           pwsh ./Windows/scripts/smoke-desktop.ps1 `
             -ExecutablePath $app.FullName
+      - name: Upload Windows startup diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-startup-diagnostics
+          if-no-files-found: ignore
+          path: ${{ env.LOCALAPPDATA }}\AIMemory\startup.log

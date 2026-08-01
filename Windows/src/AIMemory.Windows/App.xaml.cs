@@ -28,27 +28,46 @@ public sealed partial class App : Application
 
     protected override async void OnLaunched(LaunchActivatedEventArgs args)
     {
-        DataPaths.EnsureDirectories();
-        var database = new AIMemoryDatabase();
-        await database.InitializeAsync();
-        var settingsStore = new SettingsStore();
-        var settings = await settingsStore.LoadAsync();
-        ApplyApplicationLanguage(settings.Language);
-        ApplyApplicationFont(settings.FontFamily);
-        _window = new MainWindow(database);
-        _window.ApplyFontFamily(settings.FontFamily);
-        _window.Activate();
-        if (_activationPending)
+        StartupDiagnostics.Reset();
+        StartupDiagnostics.Write("launch.begin");
+        try
         {
-            _activationPending = false;
-            _window.BringToFront();
+            DataPaths.EnsureDirectories();
+            StartupDiagnostics.Write("directories.ready");
+            var database = new AIMemoryDatabase();
+            var settingsStore = new SettingsStore();
+            _window = new MainWindow(database);
+            StartupDiagnostics.Write("window.created");
+            _window.Activate();
+            StartupDiagnostics.Write("window.activated");
+            await database.InitializeAsync();
+            StartupDiagnostics.Write("database.ready");
+            var settings = await settingsStore.LoadAsync();
+            StartupDiagnostics.Write("settings.ready");
+            ApplyApplicationLanguage(settings.Language);
+            _window.CompleteStartup(settings);
+            StartupDiagnostics.Write("shell.ready");
+            if (_activationPending)
+            {
+                _activationPending = false;
+                _window.BringToFront();
+                StartupDiagnostics.Write("activation.replayed");
+            }
+            _window.ConfigureAutomaticBackup(settings);
+            // Do compatibility migration after the first window is visible.  A
+            // stale ChatMem profile or credential provider must not delay the
+            // Windows shell, single-instance activation, or the workbench.
+            _ = ImportChatMemWebDavAfterLaunchAsync(settingsStore);
+            _ = CheckForUpdatesAtLaunchAsync();
+            StartupDiagnostics.Write("launch.complete");
         }
-        _window.ConfigureAutomaticBackup(settings);
-        // Do compatibility migration after the first window is visible.  A
-        // stale ChatMem profile or credential provider must not delay the
-        // Windows shell, single-instance activation, or the workbench.
-        _ = ImportChatMemWebDavAfterLaunchAsync(settingsStore);
-        _ = CheckForUpdatesAtLaunchAsync();
+        catch (Exception exception)
+        {
+            StartupDiagnostics.Write("launch.failed", exception);
+            System.Diagnostics.Debug.WriteLine(
+                $"AI Memory launch failed: {exception}");
+            _window?.ShowStartupFailure(exception);
+        }
     }
 
     private async Task ImportChatMemWebDavAfterLaunchAsync(

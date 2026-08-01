@@ -25,6 +25,7 @@ public sealed partial class MainWindow : Window
     private CancellationTokenSource? _automaticBackup;
     private NotificationAreaService? _notificationArea;
     private bool _isExiting;
+    private bool _isStartupComplete;
 
     public MainWindow(AIMemoryDatabase database)
     {
@@ -41,7 +42,6 @@ public sealed partial class MainWindow : Window
         _appWindow.Resize(new global::Windows.Graphics.SizeInt32(1180, 760));
         _appWindow.Closing += OnAppWindowClosing;
         Navigation.SelectedItem = Navigation.MenuItems[0];
-        Navigate("workbench");
         RegisterAccelerators();
 
         try
@@ -63,6 +63,28 @@ public sealed partial class MainWindow : Window
         }
 
         Closed += (_, _) => Cleanup();
+    }
+
+    /// <summary>
+    /// Completes shell initialization after the window is already visible.
+    /// Database migration must not make startup look like a failed launch.
+    /// </summary>
+    public void CompleteStartup(AppSettings settings)
+    {
+        ApplyFontFamily(settings.FontFamily);
+        _isStartupComplete = true;
+        StartupProgress.IsActive = false;
+        StartupOverlay.Visibility = Visibility.Collapsed;
+        Navigate("workbench");
+    }
+
+    public void ShowStartupFailure(Exception exception)
+    {
+        StartupProgress.IsActive = false;
+        StartupStatusText.Text = LocalizationService.Format(
+            "StartupFailed",
+            exception.Message);
+        StartupStatusText.Opacity = 1;
     }
 
     public void BringToFront()
@@ -130,6 +152,7 @@ public sealed partial class MainWindow : Window
         NavigationView sender,
         NavigationViewSelectionChangedEventArgs args)
     {
+        if (!_isStartupComplete) return;
         Navigate(args.IsSettingsSelected
             ? "settings"
             : (args.SelectedItemContainer?.Tag as string ?? "workbench"));
@@ -137,6 +160,7 @@ public sealed partial class MainWindow : Window
 
     public void NavigateTo(string tag)
     {
+        if (!_isStartupComplete) return;
         if (tag == "settings")
         {
             if (ReferenceEquals(Navigation.SelectedItem, Navigation.SettingsItem))
@@ -177,6 +201,7 @@ public sealed partial class MainWindow : Window
     /// </summary>
     public void OpenSettingsCategory(string category)
     {
+        if (!_isStartupComplete) return;
         Navigation.SelectedItem = Navigation.SettingsItem;
         ContentFrame.Navigate(
             typeof(SettingsPage),
@@ -185,6 +210,7 @@ public sealed partial class MainWindow : Window
 
     private void Navigate(string tag)
     {
+        if (!_isStartupComplete) return;
         var page = tag switch
         {
             "history" => typeof(HistoryPage),
@@ -251,6 +277,7 @@ public sealed partial class MainWindow : Window
 
     public async Task RefreshAllSourcesAsync()
     {
+        if (!_isStartupComplete) return;
         BeginGlobalSyncProgress(LocalizationService.Get("RefreshingAllSources"));
         ShowFeedback(
             LocalizationService.Get("RefreshingAllSources"),
@@ -291,6 +318,7 @@ public sealed partial class MainWindow : Window
 
     public async Task SyncNowAsync()
     {
+        if (!_isStartupComplete) return;
         BeginGlobalSyncProgress(LocalizationService.Get("SyncProgressPreparing"));
         ShowFeedback(
             LocalizationService.Get("SyncingChanges"),
@@ -382,6 +410,7 @@ public sealed partial class MainWindow : Window
 
     public async Task ImportChatMemAsync()
     {
+        if (!_isStartupComplete) return;
         string source;
         try
         {

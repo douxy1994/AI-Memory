@@ -152,6 +152,14 @@ try {
             [AIMemoryWindowProbe]::IsWindowVisible($script:mainWindow)
     } "AI Memory started, but its main window did not become visible."
 
+    $startupLog = Join-Path `
+        ([Environment]::GetFolderPath("LocalApplicationData")) `
+        "AIMemory\startup.log"
+    Wait-Until {
+        (Test-Path -LiteralPath $startupLog -PathType Leaf) -and
+            (Select-String -LiteralPath $startupLog -Pattern " launch.complete$" -Quiet)
+    } "AI Memory displayed a window, but did not complete startup."
+
     $process = Get-Process -Id $testProcessId
     if (-not $process.CloseMainWindow()) {
         throw "Windows could not send the close request to the main window."

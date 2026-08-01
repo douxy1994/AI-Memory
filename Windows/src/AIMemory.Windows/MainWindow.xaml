@@ -99,6 +99,26 @@
                 </NavigationView.FooterMenuItems>
                 <Frame x:Name="ContentFrame" />
             </NavigationView>
+            <Grid x:Name="StartupOverlay"
+                  Panel.ZIndex="10"
+                  Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+                <StackPanel HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Spacing="14"
+                            MaxWidth="460">
+                    <ProgressRing x:Name="StartupProgress"
+                                  IsActive="True"
+                                  Width="34"
+                                  Height="34"
+                                  HorizontalAlignment="Center" />
+                    <TextBlock x:Name="StartupStatusText"
+                               x:Uid="StartupLoading"
+                               Text="正在启动 AI Memory…"
+                               TextAlignment="Center"
+                               TextWrapping="Wrap"
+                               Opacity="0.72" />
+                </StackPanel>
+            </Grid>
             <StackPanel VerticalAlignment="Bottom"
                         Margin="16"
                         Spacing="6">

@@ -29,7 +29,7 @@
     <key>NSHighResolutionCapable</key>
     <true/>
     <key>NSHumanReadableCopyright</key>
-    <string>© 2026 douxy1994 · GNU Affero General Public License v3.0</string>
+    <string>Copyright © 2026 douxy1994 · GNU Affero General Public License v3.0</string>
     <key>NSPrincipalClass</key>
     <string>NSApplication</string>
     <key>NSAppTransportSecurity</key>
