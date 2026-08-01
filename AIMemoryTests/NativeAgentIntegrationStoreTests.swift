@@ -16,6 +16,12 @@ final class NativeAgentIntegrationStoreTests: XCTestCase {
             NativeAgentIntegrationStore.bundledHelperURL(bundleURL: helper),
             helper
         )
+
+        let helpers = app.appendingPathComponent("Contents/Helpers")
+        XCTAssertEqual(
+            NativeAgentIntegrationStore.bundledHelperURL(bundleURL: helpers),
+            helper
+        )
     }
 
     func testJSONIntegrationCoexistsWithChatMemAndUninstallsOnlyOwnEntries() async throws {
