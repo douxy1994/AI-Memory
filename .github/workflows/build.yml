@@ -47,6 +47,8 @@ jobs:
           dotnet-version: 10.0.x
       - name: Verify Windows localization resources
         run: node Windows/scripts/verify-localization.mjs
+      - name: Verify macOS and Windows Agent catalogs
+        run: node Windows/scripts/verify-agent-catalog.mjs
       - name: Test Windows core
         run: dotnet test Windows/tests/AIMemory.Core.Tests/AIMemory.Core.Tests.csproj --configuration Release
       - name: Build WinUI 3 x64
