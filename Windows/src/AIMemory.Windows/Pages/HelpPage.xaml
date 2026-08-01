@@ -10,7 +10,7 @@
         </Grid.RowDefinitions>
 
         <StackPanel Spacing="6">
-            <TextBlock x:Uid="HelpTitle"
+            <TextBlock x:Uid="HelpPageTitle"
                        Text="需要帮助？"
                        Style="{StaticResource PageTitleStyle}" />
             <TextBlock x:Uid="HelpSubtitle"
