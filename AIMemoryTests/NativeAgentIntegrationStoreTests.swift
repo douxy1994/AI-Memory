@@ -2,6 +2,22 @@ import XCTest
 @testable import AIMemory
 
 final class NativeAgentIntegrationStoreTests: XCTestCase {
+    func testHelperURLResolutionSupportsAppAndStandaloneBundles() {
+        let app = URL(fileURLWithPath: "/Applications/AIMemory.app")
+        XCTAssertEqual(
+            NativeAgentIntegrationStore.bundledHelperURL(bundleURL: app),
+            app.appendingPathComponent("Contents/Helpers/aimemory-mcp")
+        )
+
+        let helper = app.appendingPathComponent(
+            "Contents/Helpers/aimemory-mcp"
+        )
+        XCTAssertEqual(
+            NativeAgentIntegrationStore.bundledHelperURL(bundleURL: helper),
+            helper
+        )
+    }
+
     func testJSONIntegrationCoexistsWithChatMemAndUninstallsOnlyOwnEntries() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent("NativeAgentIntegrationJSON-\(UUID().uuidString)")

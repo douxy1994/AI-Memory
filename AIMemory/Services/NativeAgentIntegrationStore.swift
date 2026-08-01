@@ -25,10 +25,21 @@ actor NativeAgentIntegrationStore {
     ) {
         self.home = home
         self.helperURL = helperURL
-            ?? Bundle.main.bundleURL.appendingPathComponent(
-                "Contents/Helpers/aimemory-mcp"
-            )
+            ?? Self.bundledHelperURL(bundleURL: Bundle.main.bundleURL)
         self.pathDirectoriesOverride = pathDirectories
+    }
+
+    /// Resolve the helper both from the app bundle and when this same source
+    /// is compiled into the standalone MCP executable.  `Bundle.main` points
+    /// at the helper executable in the latter case, so appending another
+    /// `Contents/Helpers` segment would produce a path that can never exist.
+    static func bundledHelperURL(bundleURL: URL) -> URL {
+        if bundleURL.lastPathComponent == "aimemory-mcp" {
+            return bundleURL
+        }
+        return bundleURL.appendingPathComponent(
+            "Contents/Helpers/aimemory-mcp"
+        )
     }
 
     func detect() -> [AgentIntegrationStatus] {
