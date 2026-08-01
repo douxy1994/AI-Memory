@@ -108,7 +108,8 @@ final class NativeAgentIntegrationStoreTests: XCTestCase {
             "claw-code", "coro", "nori-cli", "codemachine", "open-codex",
             "groq-code-cli", "devon", "g3", "mini-kode", "zot", "vibepod",
             "every-code", "claw-code-agent", "gitagent", "opendev", "qodex",
-            "clawcodex", "tutti", "acpx",
+            "clawcodex", "tutti", "acpx", "cmux", "muxd", "muxel",
+            "flowmux", "mcpjam", "zenflow",
         ]
         XCTAssertEqual(Set(statuses.map(\.agent)), Set(expectedAgents))
         XCTAssertEqual(statuses.count, expectedAgents.count)

@@ -152,6 +152,12 @@ public sealed class AgentCatalog
         new("clawcodex", "ClawCodex", ["clawcodex"], [".clawcodex"], false),
         new("tutti", "Tutti Agent Ops", ["tt", "tutti"], [".tutti"], false),
         new("acpx", "acpx (Agent Client Protocol)", ["acpx"], [".acpx"], false),
+        new("cmux", "Mux (cmux)", ["cmux"], ["AppData\\Local\\cmux"], false),
+        new("muxd", "muxd", ["muxd", "muxd-daemon"], [".muxd", "AppData\\Local\\muxd"], false),
+        new("muxel", "muxel", ["muxel"], [".muxel", "AppData\\Local\\muxel"], false),
+        new("flowmux", "Flowmux", ["flowmux"], [".flowmux", "AppData\\Local\\flowmux"], false),
+        new("mcpjam", "MCPJam CLI", ["mcpjam"], [".mcpjam", "AppData\\Local\\mcpjam"], false),
+        new("zenflow", "Zencoder Zenflow", ["zenflow", "zencoder"], [".zenflow", "AppData\\Local\\zenflow"], false),
     ];
 
     public IReadOnlyList<AgentIntegrationStatus> Detect()

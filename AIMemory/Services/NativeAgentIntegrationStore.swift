@@ -1184,6 +1184,42 @@ private struct DetectionOnlyAgent: Sendable {
             executables: ["acpx"],
             relativePaths: [".acpx"]
         ),
+        .init(
+            id: "cmux",
+            label: "Mux (cmux)",
+            executables: ["cmux"],
+            relativePaths: ["Library/Application Support/cmux"]
+        ),
+        .init(
+            id: "muxd",
+            label: "muxd",
+            executables: ["muxd", "muxd-daemon"],
+            relativePaths: [".muxd"]
+        ),
+        .init(
+            id: "muxel",
+            label: "muxel",
+            executables: ["muxel"],
+            relativePaths: [".muxel"]
+        ),
+        .init(
+            id: "flowmux",
+            label: "Flowmux",
+            executables: ["flowmux"],
+            relativePaths: [".flowmux"]
+        ),
+        .init(
+            id: "mcpjam",
+            label: "MCPJam CLI",
+            executables: ["mcpjam"],
+            relativePaths: [".mcpjam"]
+        ),
+        .init(
+            id: "zenflow",
+            label: "Zencoder Zenflow",
+            executables: ["zenflow", "zencoder"],
+            relativePaths: [".zenflow"]
+        ),
     ]
 }
 
