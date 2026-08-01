@@ -50,18 +50,19 @@ public sealed partial class FavoritesPage : Page
         }
         try
         {
+            var pinned = !row.Value.Pinned;
             await _favorites.UpdateAsync(
                 row.Value.SourceAgent,
                 row.Value.Id,
                 row.Note,
                 ParseTags(row.TagsText),
-                !row.Value.Pinned);
+                pinned);
             await ReloadAsync();
             Show(
                 LocalizationService.Get(
-                    row.Value.Pinned
-                        ? "FavoriteUnpinned"
-                        : "FavoritePinned"),
+                    pinned
+                        ? "FavoritePinned"
+                        : "FavoriteUnpinned"),
                 InfoBarSeverity.Success);
         }
         catch (Exception exception)
