@@ -1,3 +1,8 @@
+<!--
+Copyright © 2026 douxy1994
+SPDX-License-Identifier: AGPL-3.0-only
+-->
+
 # AI Memory 开发指南
 
 AI Memory 是一个双平台原生工程。macOS 与 Windows 共享产品行为和数据语义，但不共享 UI 框架，也不以网页壳实现界面。

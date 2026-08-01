@@ -1,4 +1,8 @@
 #!/bin/sh
+# AI Memory
+# Copyright © 2026 douxy1994
+# SPDX-License-Identifier: AGPL-3.0-only
+#
 set -eu
 
 repo_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)

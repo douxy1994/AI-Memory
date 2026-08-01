@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  AI Memory
+  Copyright © 2026 douxy1994
+  SPDX-License-Identifier: AGPL-3.0-only
+-->
 <assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
   <assemblyIdentity version="1.0.0.0" name="AIMemory.Windows" />
   <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">

@@ -1,3 +1,8 @@
+<!--
+  AI Memory
+  Copyright © 2026 douxy1994
+  SPDX-License-Identifier: AGPL-3.0-only
+-->
 <Solution>
   <Project Path="src/AIMemory.Core/AIMemory.Core.csproj" />
   <Project Path="src/AIMemory.Mcp/AIMemory.Mcp.csproj" />

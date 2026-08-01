@@ -1,3 +1,8 @@
+<!--
+Copyright © 2026 douxy1994
+SPDX-License-Identifier: AGPL-3.0-only
+-->
+
 # AI Memory 0.1.0
 
 AI Memory 0.1.0 是原生 macOS 客户端的首个公开版本。应用使用 Swift、SwiftUI、AppKit 与 Apple 官方 Framework 构建，面向多个 AI Agent 和 CLI 提供本地优先的历史、记忆、检查点与接续工作台。

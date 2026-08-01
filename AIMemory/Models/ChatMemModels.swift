@@ -1,3 +1,7 @@
+// AI Memory
+// Copyright © 2026 douxy1994
+// SPDX-License-Identifier: AGPL-3.0-only
+//
 import Foundation
 
 /// Source agent identifiers. Mirrors the 8 agent keys exposed by

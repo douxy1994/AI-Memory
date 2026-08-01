@@ -1,3 +1,8 @@
+<!--
+Copyright © 2026 douxy1994
+SPDX-License-Identifier: AGPL-3.0-only
+-->
+
 # 项目来源与迁移
 
 ## 来源

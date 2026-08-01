@@ -1,3 +1,7 @@
+-- AI Memory
+-- Copyright © 2026 douxy1994
+-- SPDX-License-Identifier: AGPL-3.0-only
+--
 CREATE TABLE IF NOT EXISTS schema_migrations (
     version INTEGER PRIMARY KEY,
     applied_at TEXT NOT NULL

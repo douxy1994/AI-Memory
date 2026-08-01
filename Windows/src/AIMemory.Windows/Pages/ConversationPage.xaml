@@ -1,3 +1,8 @@
+<!--
+  AI Memory
+  Copyright © 2026 douxy1994
+  SPDX-License-Identifier: AGPL-3.0-only
+-->
 <Page
     x:Class="AIMemory.Windows.Pages.ConversationPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"

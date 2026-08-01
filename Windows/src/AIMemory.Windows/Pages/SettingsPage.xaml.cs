@@ -1,3 +1,7 @@
+// AI Memory
+// Copyright © 2026 douxy1994
+// SPDX-License-Identifier: AGPL-3.0-only
+//
 using AIMemory.Core.Models;
 using AIMemory.Core.Persistence;
 using AIMemory.Core.Services;

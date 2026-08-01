@@ -1,3 +1,7 @@
+// AI Memory
+// Copyright © 2026 douxy1994
+// SPDX-License-Identifier: AGPL-3.0-only
+//
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";

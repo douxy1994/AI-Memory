@@ -1,3 +1,7 @@
+// AI Memory
+// Copyright © 2026 douxy1994
+// SPDX-License-Identifier: AGPL-3.0-only
+//
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppLifecycle;

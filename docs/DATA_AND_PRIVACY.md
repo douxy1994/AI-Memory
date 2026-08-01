@@ -1,3 +1,8 @@
+<!--
+Copyright © 2026 douxy1994
+SPDX-License-Identifier: AGPL-3.0-only
+-->
+
 # 数据与隐私
 
 ## 默认本地优先

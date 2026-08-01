@@ -1,3 +1,8 @@
+<!--
+Copyright © 2026 douxy1994
+SPDX-License-Identifier: AGPL-3.0-only
+-->
+
 # 架构设计
 
 AI Memory 采用“共享行为、平台原生实现”的双端架构。macOS 与 Windows 对数据模型、同步协议和用户流程保持一致，但分别使用 Apple 与 Microsoft 官方技术栈。
