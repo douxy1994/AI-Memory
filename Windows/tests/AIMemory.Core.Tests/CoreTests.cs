@@ -219,6 +219,26 @@ public sealed class CoreTests : IDisposable
         await using var reader = await tables.ExecuteReaderAsync();
         while (await reader.ReadAsync()) names.Add(reader.GetString(0));
         Assert.Equal(7, names.Count);
+
+        var indexes = connection.CreateCommand();
+        indexes.CommandText = """
+            SELECT name FROM sqlite_master
+            WHERE type='index' AND name IN (
+              'idx_conversations_updated_at',
+              'idx_messages_conversation_id',
+              'idx_file_changes_conversation_id')
+            ORDER BY name;
+            """;
+        var indexNames = new List<string>();
+        await using var indexReader = await indexes.ExecuteReaderAsync();
+        while (await indexReader.ReadAsync()) indexNames.Add(indexReader.GetString(0));
+        Assert.Equal(
+            [
+                "idx_conversations_updated_at",
+                "idx_file_changes_conversation_id",
+                "idx_messages_conversation_id",
+            ],
+            indexNames);
     }
 
     [Fact]
@@ -1814,6 +1834,103 @@ public sealed class CoreTests : IDisposable
         Assert.True(File.Exists(antigravityTranscript));
         Assert.True(File.Exists(openCodePath));
         Assert.True(File.Exists(zcodePath));
+    }
+
+    [Fact]
+    public async Task WorkbenchInsightsExposeSignalsCleanupAndRecommendation()
+    {
+        var database = new AIMemoryDatabase(
+            Path.Combine(_root, "workbench-insights.db"));
+        await database.InitializeAsync();
+        var now = DateTimeOffset.Parse("2026-07-29T12:00:00Z");
+        await using (var connection = database.OpenConnection())
+        {
+            var insert = connection.CreateCommand();
+            insert.CommandText = """
+                INSERT INTO repos VALUES(
+                  'repo','C:\repo','fingerprint',NULL,'main',$now,$now);
+                INSERT INTO conversations VALUES
+                  ('latest','repo','Claude','latest','Latest file change',
+                   $recent,$now,NULL),
+                  ('long','repo','Gemini','long','Long conversation',
+                   $recent,$recent,NULL),
+                  ('favorite','repo','Kimi','favorite','Favorite conversation',
+                   $recent,$recent,NULL),
+                  ('cleanup','repo','Codex','cleanup','Old low signal',
+                   $old,$old,NULL);
+                INSERT INTO file_changes VALUES(
+                  'file-1','latest','message-file','Program.cs','modified',$now);
+                INSERT INTO messages VALUES
+                  ('long-01','long','user','1',$recent),
+                  ('long-02','long','assistant','2',$recent),
+                  ('long-03','long','user','3',$recent),
+                  ('long-04','long','assistant','4',$recent),
+                  ('long-05','long','user','5',$recent),
+                  ('long-06','long','assistant','6',$recent),
+                  ('long-07','long','user','7',$recent),
+                  ('long-08','long','assistant','8',$recent),
+                  ('long-09','long','user','9',$recent),
+                  ('long-10','long','assistant','10',$recent),
+                  ('long-11','long','user','11',$recent),
+                  ('long-12','long','assistant','12',$recent),
+                  ('cleanup-1','cleanup','user','old',$old);
+                INSERT INTO approved_memories VALUES(
+                  'memory','repo','rule','Rule','Value','Use it','active',
+                  NULL,NULL,$now,$now,'fresh',1.0,$now,'test');
+                INSERT INTO memory_candidates VALUES(
+                  'candidate','repo','rule','Candidate','Value','Why',
+                  0.8,'test','pending_review',$now,NULL);
+                INSERT INTO wiki_pages VALUES(
+                  'wiki','repo','overview','Overview','Body','active',
+                  '[]','[]',$now,NULL,$now,$now);
+                """;
+            insert.Parameters.AddWithValue("$now", now.ToString("O"));
+            insert.Parameters.AddWithValue(
+                "$recent",
+                now.AddDays(-1).ToString("O"));
+            insert.Parameters.AddWithValue(
+                "$old",
+                now.AddDays(-120).ToString("O"));
+            await insert.ExecuteNonQueryAsync();
+        }
+        var favorite = new FavoriteConversationSnapshot(
+            "favorite",
+            "Kimi",
+            "Favorite conversation",
+            @"C:\repo",
+            now.AddDays(-1));
+        var service = new WorkbenchInsightService(database);
+
+        var result = await service.LoadAsync(
+            new Dictionary<string, FavoriteConversationSnapshot>
+            {
+                ["Kimi:favorite"] = favorite,
+            },
+            now);
+
+        Assert.Equal(1, result.FavoriteCount);
+        Assert.Equal(1, result.ApprovedMemoryCount);
+        Assert.Equal(1, result.PendingCandidateCount);
+        Assert.Equal(1, result.WikiPageCount);
+        Assert.Equal("Codex", result.RecommendedAgent);
+        Assert.True(result.RecommendationUsesFileChanges);
+        var unavailableRecommendation = await service.LoadAsync(
+            new Dictionary<string, FavoriteConversationSnapshot>
+            {
+                ["Kimi:favorite"] = favorite,
+            },
+            now,
+            availableAgentIds: new HashSet<string>(
+                ["claude"],
+                StringComparer.OrdinalIgnoreCase));
+        Assert.Equal("", unavailableRecommendation.RecommendedAgent);
+        Assert.Equal(
+            ["long", "latest", "favorite"],
+            result.HighSignalConversations
+                .Select(value => value.Conversation.Id));
+        Assert.Equal(
+            "cleanup",
+            Assert.Single(result.CleanupCandidates).Conversation.Id);
     }
 
     [Fact]

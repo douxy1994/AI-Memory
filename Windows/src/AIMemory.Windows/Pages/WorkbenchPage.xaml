@@ -213,6 +213,197 @@
                 </Border>
             </Grid>
 
+            <Grid ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel Spacing="9">
+                        <TextBlock x:Uid="WorkbenchFavoritesPanel"
+                                   Text="收藏夹增强"
+                                   FontSize="18"
+                                   FontWeight="SemiBold" />
+                        <TextBlock x:Uid="WorkbenchFavoritesPanelHint"
+                                   Text="置顶、备注、标签和继续卡片。"
+                                   Opacity="0.6"
+                                   TextWrapping="Wrap" />
+                        <TextBlock x:Name="FavoriteCountText"
+                                   Text="0"
+                                   FontSize="28"
+                                   FontWeight="SemiBold" />
+                        <Button x:Uid="WorkbenchOpenFavorites"
+                                Content="打开收藏"
+                                HorizontalAlignment="Left"
+                                Click="OpenFavorites_Click" />
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="1" Style="{StaticResource CardStyle}">
+                    <StackPanel Spacing="9">
+                        <TextBlock x:Uid="WorkbenchMemoryPanel"
+                                   Text="项目记忆沉淀"
+                                   FontSize="18"
+                                   FontWeight="SemiBold" />
+                        <TextBlock x:Uid="WorkbenchMemoryPanelHint"
+                                   Text="汇总已批准规则、候选记忆和 Wiki 页面。"
+                                   Opacity="0.6"
+                                   TextWrapping="Wrap" />
+                        <TextBlock x:Name="MemorySummaryText"
+                                   TextWrapping="Wrap"
+                                   FontWeight="SemiBold" />
+                        <Button x:Uid="WorkbenchOpenMemory"
+                                Content="打开记忆"
+                                HorizontalAlignment="Left"
+                                Click="OpenMemory_Click" />
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="2" Style="{StaticResource CardStyle}">
+                    <StackPanel Spacing="9">
+                        <TextBlock x:Uid="WorkbenchRecommendationPanel"
+                                   Text="跨 Agent 接续推荐"
+                                   FontSize="18"
+                                   FontWeight="SemiBold" />
+                        <TextBlock x:Uid="WorkbenchRecommendationPanelHint"
+                                   Text="根据最近对话信号给出接续建议。"
+                                   Opacity="0.6"
+                                   TextWrapping="Wrap" />
+                        <TextBlock x:Name="RecommendedAgentText"
+                                   FontSize="22"
+                                   FontWeight="SemiBold" />
+                        <TextBlock x:Name="RecommendationReasonText"
+                                   Opacity="0.65"
+                                   TextWrapping="Wrap" />
+                        <Button x:Name="SwitchRecommendedAgentButton"
+                                x:Uid="WorkbenchSwitchRecommendedAgent"
+                                Content="切换来源"
+                                HorizontalAlignment="Left"
+                                Click="SwitchRecommendedAgent_Click"
+                                Visibility="Collapsed" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <Grid ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel Spacing="10">
+                        <TextBlock x:Uid="WorkbenchHighSignalPanel"
+                                   Text="对话质量整理"
+                                   FontSize="18"
+                                   FontWeight="SemiBold" />
+                        <TextBlock x:Uid="WorkbenchHighSignalPanelHint"
+                                   Text="优先展示包含文件、长上下文或已收藏的高信号对话。"
+                                   Opacity="0.6"
+                                   TextWrapping="Wrap" />
+                        <ListView x:Name="HighSignalList"
+                                  SelectionMode="None"
+                                  IsItemClickEnabled="True"
+                                  ItemClick="InsightList_ItemClick">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Padding="0,7" Spacing="3">
+                                        <TextBlock Text="{Binding Title}"
+                                                   FontWeight="SemiBold"
+                                                   TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding Detail}"
+                                                   Opacity="0.6"
+                                                   TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                        <TextBlock x:Name="NoHighSignalText"
+                                   x:Uid="WorkbenchNoHighSignal"
+                                   Text="暂无高信号候选。"
+                                   Opacity="0.6"
+                                   Visibility="Collapsed" />
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="1" Style="{StaticResource CardStyle}">
+                    <StackPanel Spacing="10">
+                        <TextBlock x:Uid="WorkbenchCleanupPanel"
+                                   Text="本地隐私与清理"
+                                   FontSize="18"
+                                   FontWeight="SemiBold" />
+                        <TextBlock x:Uid="WorkbenchCleanupPanelHint"
+                                   Text="仅列出低信号旧对话供确认，不自动删除。"
+                                   Opacity="0.6"
+                                   TextWrapping="Wrap" />
+                        <ListView x:Name="CleanupList"
+                                  SelectionMode="None"
+                                  IsItemClickEnabled="True"
+                                  ItemClick="InsightList_ItemClick">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Padding="0,7" Spacing="3">
+                                        <TextBlock Text="{Binding Title}"
+                                                   FontWeight="SemiBold"
+                                                   TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding Detail}"
+                                                   Opacity="0.6"
+                                                   TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                        <TextBlock x:Name="NoCleanupText"
+                                   x:Uid="WorkbenchNoCleanup"
+                                   Text="暂时没有明显清理候选。"
+                                   Opacity="0.6"
+                                   Visibility="Collapsed" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <Grid ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel Spacing="9">
+                        <TextBlock x:Uid="WorkbenchReleasePanel"
+                                   Text="发布准备状态"
+                                   FontSize="18"
+                                   FontWeight="SemiBold" />
+                        <TextBlock x:Uid="WorkbenchReleasePanelHint"
+                                   Text="发布前检查版本、数据保护和更新通道。"
+                                   Opacity="0.6"
+                                   TextWrapping="Wrap" />
+                        <TextBlock x:Name="ApplicationVersionText"
+                                   TextWrapping="Wrap" />
+                        <TextBlock x:Name="DataDirectoryText"
+                                   TextWrapping="Wrap" />
+                        <TextBlock x:Name="UpdateChannelText"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="1" Style="{StaticResource CardStyle}">
+                    <StackPanel Spacing="9">
+                        <TextBlock x:Uid="WorkbenchNativeParityPanel"
+                                   Text="Windows 11 原生对等状态"
+                                   FontSize="18"
+                                   FontWeight="SemiBold" />
+                        <TextBlock x:Uid="WorkbenchNativeParityPanelHint"
+                                   Text="关键能力使用 WinUI 3、Windows App SDK 与系统框架。"
+                                   Opacity="0.6"
+                                   TextWrapping="Wrap" />
+                        <TextBlock x:Uid="WorkbenchNativeHistory"
+                                   Text="本地历史与搜索 · SQLite / .NET" />
+                        <TextBlock x:Uid="WorkbenchNativeSync"
+                                   Text="同步与凭据 · HttpClient / Credential Locker" />
+                        <TextBlock x:Uid="WorkbenchNativeLifecycle"
+                                   Text="窗口、菜单与通知区域 · WinUI 3 / Win32" />
+                        <TextBlock x:Uid="WorkbenchNativeImport"
+                                   Text="ChatMem 数据保护 · 只读导入 + 备份回滚" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
             <Border Style="{StaticResource CardStyle}">
                 <StackPanel Spacing="12">
                     <TextBlock x:Uid="WorkbenchInstalledAgents" Text="已安装的 Agent / CLI"

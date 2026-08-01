@@ -283,6 +283,12 @@ CREATE INDEX IF NOT EXISTS idx_conversation_chunks_repo_updated
     ON conversation_chunks(repo_id, updated_at);
 CREATE INDEX IF NOT EXISTS idx_conversation_chunks_conversation
     ON conversation_chunks(conversation_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_conversations_updated_at
+    ON conversations(updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_messages_conversation_id
+    ON messages(conversation_id);
+CREATE INDEX IF NOT EXISTS idx_file_changes_conversation_id
+    ON file_changes(conversation_id);
 CREATE INDEX IF NOT EXISTS idx_repo_aliases_alias_root
     ON repo_aliases(alias_root);
 CREATE INDEX IF NOT EXISTS idx_conversation_repo_links_repo

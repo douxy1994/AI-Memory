@@ -386,6 +386,38 @@
   <data name="WorkbenchNoProjects.Text" xml:space="preserve"><value>该来源还没有项目。</value></data>
   <data name="WorkbenchInstalledAgents.Text" xml:space="preserve"><value>已安装的 Agent / CLI</value></data>
   <data name="WorkbenchNoAgents.Text" xml:space="preserve"><value>没有检测到本机 Agent；所有集成保持关闭。</value></data>
+  <data name="WorkbenchFavoritesPanel.Text" xml:space="preserve"><value>收藏夹增强</value></data>
+  <data name="WorkbenchFavoritesPanelHint.Text" xml:space="preserve"><value>置顶、备注、标签和继续卡片。</value></data>
+  <data name="WorkbenchOpenFavorites.Content" xml:space="preserve"><value>打开收藏</value></data>
+  <data name="WorkbenchMemoryPanel.Text" xml:space="preserve"><value>项目记忆沉淀</value></data>
+  <data name="WorkbenchMemoryPanelHint.Text" xml:space="preserve"><value>汇总已批准规则、候选记忆和 Wiki 页面。</value></data>
+  <data name="WorkbenchOpenMemory.Content" xml:space="preserve"><value>打开记忆</value></data>
+  <data name="WorkbenchRecommendationPanel.Text" xml:space="preserve"><value>跨 Agent 接续推荐</value></data>
+  <data name="WorkbenchRecommendationPanelHint.Text" xml:space="preserve"><value>根据最近对话信号给出接续建议。</value></data>
+  <data name="WorkbenchSwitchRecommendedAgent.Content" xml:space="preserve"><value>切换来源</value></data>
+  <data name="WorkbenchHighSignalPanel.Text" xml:space="preserve"><value>对话质量整理</value></data>
+  <data name="WorkbenchHighSignalPanelHint.Text" xml:space="preserve"><value>优先展示包含文件、长上下文或已收藏的高信号对话。</value></data>
+  <data name="WorkbenchNoHighSignal.Text" xml:space="preserve"><value>暂无高信号候选。</value></data>
+  <data name="WorkbenchCleanupPanel.Text" xml:space="preserve"><value>本地隐私与清理</value></data>
+  <data name="WorkbenchCleanupPanelHint.Text" xml:space="preserve"><value>仅列出低信号旧对话供确认，不自动删除。</value></data>
+  <data name="WorkbenchNoCleanup.Text" xml:space="preserve"><value>暂时没有明显清理候选。</value></data>
+  <data name="WorkbenchReleasePanel.Text" xml:space="preserve"><value>发布准备状态</value></data>
+  <data name="WorkbenchReleasePanelHint.Text" xml:space="preserve"><value>发布前检查版本、数据保护和更新通道。</value></data>
+  <data name="WorkbenchNativeParityPanel.Text" xml:space="preserve"><value>Windows 11 原生对等状态</value></data>
+  <data name="WorkbenchNativeParityPanelHint.Text" xml:space="preserve"><value>关键能力使用 WinUI 3、Windows App SDK 与系统框架。</value></data>
+  <data name="WorkbenchNativeHistory.Text" xml:space="preserve"><value>本地历史与搜索 · SQLite / .NET</value></data>
+  <data name="WorkbenchNativeSync.Text" xml:space="preserve"><value>同步与凭据 · HttpClient / Credential Locker</value></data>
+  <data name="WorkbenchNativeLifecycle.Text" xml:space="preserve"><value>窗口、菜单与通知区域 · WinUI 3 / Win32</value></data>
+  <data name="WorkbenchNativeImport.Text" xml:space="preserve"><value>ChatMem 数据保护 · 只读导入 + 备份回滚</value></data>
+  <data name="WorkbenchMemorySummary" xml:space="preserve"><value>已批准 {0} · 待审 {1} · Wiki {2}</value></data>
+  <data name="WorkbenchNoRecommendation" xml:space="preserve"><value>暂无接续建议</value></data>
+  <data name="WorkbenchRecommendationFileChanges" xml:space="preserve"><value>最近对话包含文件变更，建议使用 Codex 接续。</value></data>
+  <data name="WorkbenchRecommendationSource" xml:space="preserve"><value>最近活动来源：{0}</value></data>
+  <data name="WorkbenchInsightDetail" xml:space="preserve"><value>{0} · {1} 条消息 · {2} 项文件变更</value></data>
+  <data name="WorkbenchApplicationVersion" xml:space="preserve"><value>应用版本：{0}</value></data>
+  <data name="WorkbenchDataDirectory" xml:space="preserve"><value>数据目录：{0}</value></data>
+  <data name="WorkbenchUpdateChannelConfigured" xml:space="preserve"><value>更新通道：{0}</value></data>
+  <data name="WorkbenchUpdateChannelMissing" xml:space="preserve"><value>更新通道尚未配置</value></data>
 
   <data name="ConversationBack.Label" xml:space="preserve"><value>返回</value></data>
   <data name="ConversationFavorite.Label" xml:space="preserve"><value>收藏</value></data>

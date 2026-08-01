@@ -6,6 +6,14 @@ namespace AIMemory.Core.Persistence;
 public sealed class AIMemoryDatabase(string? path = null)
 {
     public const int SchemaVersion = 1;
+    private const string WorkbenchIndexes = """
+        CREATE INDEX IF NOT EXISTS idx_conversations_updated_at
+            ON conversations(updated_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_messages_conversation_id
+            ON messages(conversation_id);
+        CREATE INDEX IF NOT EXISTS idx_file_changes_conversation_id
+            ON file_changes(conversation_id);
+        """;
     public string Path { get; } = path ?? DataPaths.DatabasePath;
 
     private string ConnectionString =>
@@ -45,6 +53,12 @@ public sealed class AIMemoryDatabase(string? path = null)
             await command.ExecuteNonQueryAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
         }
+        // Indexes are an additive, idempotent optimization for databases that
+        // were already at schema v1 before the workbench insight queries were
+        // introduced; they do not change any persisted data contract.
+        var indexes = connection.CreateCommand();
+        indexes.CommandText = WorkbenchIndexes;
+        await indexes.ExecuteNonQueryAsync(cancellationToken);
     }
 
     public SqliteConnection OpenConnection()

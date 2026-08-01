@@ -386,6 +386,38 @@
   <data name="WorkbenchNoProjects.Text" xml:space="preserve"><value>This source has no projects yet.</value></data>
   <data name="WorkbenchInstalledAgents.Text" xml:space="preserve"><value>Installed Agents / CLIs</value></data>
   <data name="WorkbenchNoAgents.Text" xml:space="preserve"><value>No local Agent was detected. All integrations remain disabled.</value></data>
+  <data name="WorkbenchFavoritesPanel.Text" xml:space="preserve"><value>Favorites</value></data>
+  <data name="WorkbenchFavoritesPanelHint.Text" xml:space="preserve"><value>Pinned conversations, notes, tags, and continuation cards.</value></data>
+  <data name="WorkbenchOpenFavorites.Content" xml:space="preserve"><value>Open Favorites</value></data>
+  <data name="WorkbenchMemoryPanel.Text" xml:space="preserve"><value>Project Memory</value></data>
+  <data name="WorkbenchMemoryPanelHint.Text" xml:space="preserve"><value>Summarizes approved rules, memory candidates, and Wiki pages.</value></data>
+  <data name="WorkbenchOpenMemory.Content" xml:space="preserve"><value>Open Memory</value></data>
+  <data name="WorkbenchRecommendationPanel.Text" xml:space="preserve"><value>Cross-Agent Continuation</value></data>
+  <data name="WorkbenchRecommendationPanelHint.Text" xml:space="preserve"><value>Suggests the next Agent from recent conversation signals.</value></data>
+  <data name="WorkbenchSwitchRecommendedAgent.Content" xml:space="preserve"><value>Switch Source</value></data>
+  <data name="WorkbenchHighSignalPanel.Text" xml:space="preserve"><value>Conversation Quality</value></data>
+  <data name="WorkbenchHighSignalPanelHint.Text" xml:space="preserve"><value>Prioritizes conversations with files, long context, or favorites.</value></data>
+  <data name="WorkbenchNoHighSignal.Text" xml:space="preserve"><value>No high-signal conversations yet.</value></data>
+  <data name="WorkbenchCleanupPanel.Text" xml:space="preserve"><value>Local Privacy &amp; Cleanup</value></data>
+  <data name="WorkbenchCleanupPanelHint.Text" xml:space="preserve"><value>Lists low-signal older conversations for confirmation; nothing is deleted automatically.</value></data>
+  <data name="WorkbenchNoCleanup.Text" xml:space="preserve"><value>No obvious cleanup candidates right now.</value></data>
+  <data name="WorkbenchReleasePanel.Text" xml:space="preserve"><value>Release Readiness</value></data>
+  <data name="WorkbenchReleasePanelHint.Text" xml:space="preserve"><value>Check version, data protection, and the update channel before release.</value></data>
+  <data name="WorkbenchNativeParityPanel.Text" xml:space="preserve"><value>Native Windows 11 Parity</value></data>
+  <data name="WorkbenchNativeParityPanelHint.Text" xml:space="preserve"><value>Core capabilities use WinUI 3, Windows App SDK, and system frameworks.</value></data>
+  <data name="WorkbenchNativeHistory.Text" xml:space="preserve"><value>Local history &amp; search · SQLite / .NET</value></data>
+  <data name="WorkbenchNativeSync.Text" xml:space="preserve"><value>Sync &amp; credentials · HttpClient / Credential Locker</value></data>
+  <data name="WorkbenchNativeLifecycle.Text" xml:space="preserve"><value>Window, menu &amp; notification area · WinUI 3 / Win32</value></data>
+  <data name="WorkbenchNativeImport.Text" xml:space="preserve"><value>ChatMem data protection · read-only import + backup rollback</value></data>
+  <data name="WorkbenchMemorySummary" xml:space="preserve"><value>{0} approved · {1} pending · {2} Wiki</value></data>
+  <data name="WorkbenchNoRecommendation" xml:space="preserve"><value>No continuation recommendation yet</value></data>
+  <data name="WorkbenchRecommendationFileChanges" xml:space="preserve"><value>The latest conversation has file changes; continue with Codex.</value></data>
+  <data name="WorkbenchRecommendationSource" xml:space="preserve"><value>Most recent source: {0}</value></data>
+  <data name="WorkbenchInsightDetail" xml:space="preserve"><value>{0} · {1} messages · {2} file changes</value></data>
+  <data name="WorkbenchApplicationVersion" xml:space="preserve"><value>App version: {0}</value></data>
+  <data name="WorkbenchDataDirectory" xml:space="preserve"><value>Data folder: {0}</value></data>
+  <data name="WorkbenchUpdateChannelConfigured" xml:space="preserve"><value>Update channel: {0}</value></data>
+  <data name="WorkbenchUpdateChannelMissing" xml:space="preserve"><value>Update channel is not configured</value></data>
 
   <data name="ConversationBack.Label" xml:space="preserve"><value>Back</value></data>
   <data name="ConversationFavorite.Label" xml:space="preserve"><value>Favorite</value></data>

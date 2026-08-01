@@ -4,6 +4,7 @@ using AIMemory.Windows.Services;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
+using Windows.ApplicationModel;
 
 namespace AIMemory.Windows.Pages;
 
@@ -14,6 +15,7 @@ public sealed partial class WorkbenchPage : Page
     private AppSettings _settings = new();
     private readonly MachineGroupingService _machineGrouping = new();
     private bool _loadingSources;
+    private string _recommendedAgent = "";
 
     public WorkbenchPage() => InitializeComponent();
 
@@ -34,6 +36,13 @@ public sealed partial class WorkbenchPage : Page
 
         var agents = new AgentCatalog().Detect();
         var detected = agents.Where(value => value.IsDetected).ToArray();
+        var insights = await new WorkbenchInsightService(_window.Database)
+            .LoadAsync(
+                _settings.FavoriteConversations,
+                availableAgentIds: detected
+                    .Select(value => value.Id)
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase));
+        ApplyWorkbenchInsights(insights);
         AgentList.ItemsSource = detected
             .Select(value => new LocalizedAgentIntegration(value))
             .ToArray();
@@ -45,16 +54,79 @@ public sealed partial class WorkbenchPage : Page
             ? Visibility.Visible
             : Visibility.Collapsed;
 
+        PendingCandidateCount.Text = insights.PendingCandidateCount.ToString();
         await using var connection = _window.Database.OpenConnection();
-        PendingCandidateCount.Text = (await CountAsync(
-            connection,
-            "SELECT COUNT(*) FROM memory_candidates WHERE status='pending_review';"))
-            .ToString();
         CheckpointCount.Text = (await CountAsync(
             connection,
             "SELECT COUNT(*) FROM checkpoints;"))
             .ToString();
     }
+
+    private void ApplyWorkbenchInsights(WorkbenchInsights insights)
+    {
+        if (_window is null) return;
+
+        FavoriteCountText.Text = insights.FavoriteCount.ToString();
+        MemorySummaryText.Text = LocalizationService.Format(
+            "WorkbenchMemorySummary",
+            insights.ApprovedMemoryCount,
+            insights.PendingCandidateCount,
+            insights.WikiPageCount);
+
+        _recommendedAgent = insights.RecommendedAgent;
+        RecommendedAgentText.Text = string.IsNullOrWhiteSpace(
+            _recommendedAgent)
+            ? LocalizationService.Get("WorkbenchNoRecommendation")
+            : _recommendedAgent;
+        RecommendationReasonText.Text = string.IsNullOrWhiteSpace(
+            _recommendedAgent)
+            ? ""
+            : insights.RecommendationUsesFileChanges
+                ? LocalizationService.Get("WorkbenchRecommendationFileChanges")
+                : LocalizationService.Format(
+                    "WorkbenchRecommendationSource",
+                    _recommendedAgent);
+        SwitchRecommendedAgentButton.Visibility = CanSwitchToRecommendedAgent()
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+
+        var highSignalRows = insights.HighSignalConversations
+            .Select(value => new WorkbenchInsightRow(value))
+            .ToArray();
+        HighSignalList.ItemsSource = highSignalRows;
+        NoHighSignalText.Visibility = highSignalRows.Length == 0
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+
+        var cleanupRows = insights.CleanupCandidates
+            .Select(value => new WorkbenchInsightRow(value))
+            .ToArray();
+        CleanupList.ItemsSource = cleanupRows;
+        NoCleanupText.Visibility = cleanupRows.Length == 0
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+
+        ApplicationVersionText.Text = LocalizationService.Format(
+            "WorkbenchApplicationVersion",
+            CurrentVersion());
+        var dataDirectory = Path.GetDirectoryName(_window.Database.Path)
+            ?? _window.Database.Path;
+        DataDirectoryText.Text = LocalizationService.Format(
+            "WorkbenchDataDirectory",
+            dataDirectory);
+        var updateFeed = _settings.UpdateFeedUrl.Trim();
+        UpdateChannelText.Text = string.IsNullOrWhiteSpace(updateFeed)
+            ? LocalizationService.Get("WorkbenchUpdateChannelMissing")
+            : LocalizationService.Format(
+                "WorkbenchUpdateChannelConfigured",
+                updateFeed);
+    }
+
+    private bool CanSwitchToRecommendedAgent() =>
+        !string.IsNullOrWhiteSpace(_recommendedAgent)
+        && _allConversations.Any(value => value.SourceAgent.Equals(
+            _recommendedAgent,
+            StringComparison.OrdinalIgnoreCase));
 
     private void ReloadSourceOptions()
     {
@@ -128,6 +200,16 @@ public sealed partial class WorkbenchPage : Page
         }
     }
 
+    private void InsightList_ItemClick(
+        object sender,
+        ItemClickEventArgs args)
+    {
+        if (args.ClickedItem is WorkbenchInsightRow insight)
+        {
+            OpenConversation(insight.Conversation);
+        }
+    }
+
     private void ProjectList_ItemClick(
         object sender,
         ItemClickEventArgs args)
@@ -144,6 +226,29 @@ public sealed partial class WorkbenchPage : Page
         Frame.Navigate(
             typeof(ConversationPage),
             new ConversationNavigation(_window, conversation));
+    }
+
+    private void OpenFavorites_Click(object sender, RoutedEventArgs args) =>
+        _window?.NavigateTo("favorites");
+
+    private void OpenMemory_Click(object sender, RoutedEventArgs args) =>
+        _window?.NavigateTo("memory");
+
+    private void SwitchRecommendedAgent_Click(
+        object sender,
+        RoutedEventArgs args)
+    {
+        if (!CanSwitchToRecommendedAgent()) return;
+
+        var source = SourceFilterBox.Items
+            .OfType<SourceFilter>()
+            .FirstOrDefault(value => value.Id.Equals(
+                _recommendedAgent,
+                StringComparison.OrdinalIgnoreCase));
+        if (source is null) return;
+
+        SourceFilterBox.SelectedItem = source;
+        ReloadConversationSections();
     }
 
     private static async Task<int> CountAsync(
@@ -368,10 +473,44 @@ public sealed partial class WorkbenchPage : Page
             message,
             InfoBarSeverity.Success,
             title);
+
+    private static string CurrentVersion()
+    {
+        try
+        {
+            var version = Package.Current.Id.Version;
+            return $"{version.Major}.{version.Minor}.{version.Build}";
+        }
+        catch
+        {
+            return typeof(WorkbenchPage).Assembly.GetName().Version?
+                .ToString(3) ?? "0.1.0";
+        }
+    }
 }
 
 public sealed record SourceFilter(string Id, string Label);
 public sealed record MachineChoice(string Id, string Label);
+
+public sealed class WorkbenchInsightRow
+{
+    public WorkbenchInsightRow(WorkbenchConversationInsight value)
+    {
+        Conversation = value.Conversation;
+        Title = string.IsNullOrWhiteSpace(Conversation.Summary)
+            ? LocalizationService.Get("UntitledConversation")
+            : Conversation.Summary;
+        Detail = LocalizationService.Format(
+            "WorkbenchInsightDetail",
+            Conversation.SourceAgent,
+            value.MessageCount,
+            value.FileCount);
+    }
+
+    public ConversationSummary Conversation { get; }
+    public string Title { get; }
+    public string Detail { get; }
+}
 
 public sealed class ProjectRow
 {

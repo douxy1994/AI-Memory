@@ -1,9 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
+import { fileURLToPath } from "node:url";
 
 const windowsRoot = path.resolve(
-  path.dirname(new URL(import.meta.url).pathname),
+  path.dirname(fileURLToPath(import.meta.url)),
   "..",
 );
 const appRoot = path.join(windowsRoot, "src", "AIMemory.Windows");
@@ -23,6 +24,98 @@ function filesUnder(root, suffix) {
   return result;
 }
 
+function validateXml(xml, source) {
+  const stack = [];
+  let index = 0;
+
+  const validateEntities = (text, offset) => {
+    for (const match of text.matchAll(
+      /&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)/g,
+    )) {
+      failures.push(
+        `${source}: malformed XML entity at character ${offset + match.index}`,
+      );
+    }
+  };
+
+  while (index < xml.length) {
+    const tagStart = xml.indexOf("<", index);
+    const textEnd = tagStart === -1 ? xml.length : tagStart;
+    validateEntities(xml.slice(index, textEnd), index);
+    if (tagStart === -1) break;
+
+    if (xml.startsWith("<!--", tagStart)) {
+      const end = xml.indexOf("-->", tagStart + 4);
+      if (end === -1) {
+        failures.push(`${source}: unterminated XML comment`);
+        return;
+      }
+      index = end + 3;
+      continue;
+    }
+    if (xml.startsWith("<?", tagStart)) {
+      const end = xml.indexOf("?>", tagStart + 2);
+      if (end === -1) {
+        failures.push(`${source}: unterminated XML processing instruction`);
+        return;
+      }
+      index = end + 2;
+      continue;
+    }
+    if (xml.startsWith("<![CDATA[", tagStart)) {
+      const end = xml.indexOf("]]>", tagStart + 9);
+      if (end === -1) {
+        failures.push(`${source}: unterminated XML CDATA section`);
+        return;
+      }
+      index = end + 3;
+      continue;
+    }
+
+    let cursor = tagStart + 1;
+    let quote = "";
+    while (cursor < xml.length) {
+      const current = xml[cursor];
+      if (quote) {
+        if (current === quote) quote = "";
+      } else if (current === "\"" || current === "'") {
+        quote = current;
+      } else if (current === ">") {
+        break;
+      }
+      cursor++;
+    }
+    if (cursor >= xml.length) {
+      failures.push(`${source}: unterminated XML tag`);
+      return;
+    }
+
+    const tag = xml.slice(tagStart, cursor + 1);
+    validateEntities(tag, tagStart);
+    const closing = /^<\/([A-Za-z_][\w.:-]*)\s*>$/.exec(tag);
+    if (closing) {
+      const expected = stack.pop();
+      if (expected !== closing[1]) {
+        failures.push(
+          `${source}: XML closing tag ${closing[1]} does not match ${expected ?? "none"}`,
+        );
+      }
+    } else {
+      const opening = /^<([A-Za-z_][\w.:-]*)(?:\s|\/|>)/.exec(tag);
+      if (!opening) {
+        failures.push(`${source}: invalid XML tag ${tag}`);
+      } else if (!/\/\s*>$/.test(tag)) {
+        stack.push(opening[1]);
+      }
+    }
+    index = cursor + 1;
+  }
+
+  if (stack.length > 0) {
+    failures.push(`${source}: unclosed XML tag ${stack.at(-1)}`);
+  }
+}
+
 function resourceMap(language) {
   const file = path.join(
     appRoot,
@@ -31,6 +124,7 @@ function resourceMap(language) {
     "Resources.resw",
   );
   const xml = fs.readFileSync(file, "utf8");
+  validateXml(xml, `${language} Resources.resw`);
   const values = new Map();
   for (const match of xml.matchAll(
     /<data name="([^"]+)"[^>]*><value>([\s\S]*?)<\/value><\/data>/g,
