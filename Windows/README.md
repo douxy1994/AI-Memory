@@ -39,8 +39,10 @@ AI Memory 的 Windows 11 原生版本，使用 C#、WinUI 3 与 Windows App SDK 
   AI Memory 中不同的现有端点，优先读取 Windows Credential Manager 中
   ChatMem 的原凭据，并兼容旧设置文件中的密码回退，密码只写入 AI Memory
   自己的 Credential Locker；
-- WebDAV 与本地文件夹增量同步；本地目录使用 Windows App SDK 原生
-  `FolderPicker` 选择，并可在同步前检查云盘锁文件及短时变动；
+- WebDAV 与本地文件夹增量同步；WebDAV 兼容旧字节哈希并使用与 macOS 共享的
+  语义摘要，JSON 序列化差异不会反复上传；本地目录使用 Windows App SDK 原生
+  `FolderPicker` 选择，采用跨端一致的 `conversations/<agent>/<base64url(id)>.json`
+  布局，并可在同步前检查云盘锁文件及短时变动；
 - 无变化跳过、未变化文件使用 NTFS 硬链接复用的增量恢复点，支持定时备份、
   恢复前安全备份与失败自动回滚；
 - Windows Credential Locker 保存 WebDAV 密码；
