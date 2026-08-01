@@ -163,6 +163,17 @@ jobs:
           if (-not $manifest) {
             throw "AIMemory.Windows AppxManifest.xml was not found in the build output."
           }
+          $manifestText = Get-Content -LiteralPath $manifest.FullName -Raw
+          if ($manifestText -notmatch 'Identity\s+Name="com\.aimemory\.windows"') {
+            throw "The generated AppxManifest has the wrong package identity."
+          }
+          if ($manifestText.Contains('$targetnametoken$') -or
+              $manifestText.Contains('$targetentrypoint$')) {
+            throw "The generated AppxManifest still contains unresolved build tokens."
+          }
+          if ($manifestText -notmatch 'Executable="[^"]*AIMemory\.Windows\.exe"') {
+            throw "The generated AppxManifest does not point to AIMemory.Windows.exe."
+          }
           $existing = Get-AppxPackage -Name "com.aimemory.windows" -ErrorAction SilentlyContinue
           if ($existing) {
             $existing | Remove-AppxPackage -ErrorAction Stop

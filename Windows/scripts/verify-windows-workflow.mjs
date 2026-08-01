@@ -24,6 +24,9 @@ const workflowRequirements = [
   ["generated package manifest", "AppxManifest.xml"],
   ["package registration", "Add-AppxPackage -Path $manifest.FullName -Register -DisableDevelopmentMode"],
   ["package identity", "-AppUserModelId $appUserModelId"],
+  ["manifest identity guard", "Identity\\s+Name=\"com\\.aimemory\\.windows\""],
+  ["manifest token guard", "still contains unresolved build tokens"],
+  ["manifest executable guard", "AIMemory\\.Windows\\.exe"],
   ["desktop smoke script", "smoke-desktop.ps1"],
   ["startup diagnostics", "AIMemory-startup.log"],
 ];
