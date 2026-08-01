@@ -739,6 +739,14 @@ actor NativeAgentIntegrationStore {
         }) {
             return true
         }
+        if agent.appNames.contains(where: {
+            fileManager.fileExists(atPath: "/Applications/\($0).app")
+                || fileManager.fileExists(
+                    atPath: home.appendingPathComponent("Applications/\($0).app").path
+                )
+        }) {
+            return true
+        }
         let searchDirectories = executableSearchDirectories
         return agent.executables.contains { executable in
             searchDirectories.contains {
@@ -950,6 +958,22 @@ private struct DetectionOnlyAgent: Sendable {
     let label: String
     let executables: [String]
     let relativePaths: [String]
+
+    let appNames: [String]
+
+    init(
+        id: String,
+        label: String,
+        executables: [String],
+        relativePaths: [String],
+        appNames: [String] = []
+    ) {
+        self.id = id
+        self.label = label
+        self.executables = executables
+        self.relativePaths = relativePaths
+        self.appNames = appNames
+    }
 
     func detectionPaths(home: URL) -> [URL] {
         relativePaths.map { home.appendingPathComponent($0) }
@@ -1219,6 +1243,19 @@ private struct DetectionOnlyAgent: Sendable {
             label: "Zencoder Zenflow",
             executables: ["zenflow", "zencoder"],
             relativePaths: [".zenflow"]
+        ),
+        .init(
+            id: "void",
+            label: "Void",
+            executables: ["void"],
+            relativePaths: [".config/void"],
+            appNames: ["Void"]
+        ),
+        .init(
+            id: "ruflo",
+            label: "Ruflo / Claude Flow",
+            executables: ["ruflo", "claude-flow"],
+            relativePaths: [".claude-flow", ".ruflo"]
         ),
     ]
 }

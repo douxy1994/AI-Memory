@@ -158,6 +158,8 @@ public sealed class AgentCatalog
         new("flowmux", "Flowmux", ["flowmux"], [".flowmux", "AppData\\Local\\flowmux"], false),
         new("mcpjam", "MCPJam CLI", ["mcpjam"], [".mcpjam", "AppData\\Local\\mcpjam"], false),
         new("zenflow", "Zencoder Zenflow", ["zenflow", "zencoder"], [".zenflow", "AppData\\Local\\zenflow"], false),
+        new("void", "Void", ["void"], ["AppData\\Local\\Programs\\Void", "AppData\\Local\\Void", "AppData\\Roaming\\Void"], false),
+        new("ruflo", "Ruflo / Claude Flow", ["ruflo", "claude-flow"], [".claude-flow", ".ruflo"], false),
     ];
 
     public IReadOnlyList<AgentIntegrationStatus> Detect()
@@ -166,8 +168,8 @@ public sealed class AgentCatalog
         return All.Select((agent, index) =>
             {
                 var detected = agent.RelativePaths.Any(relative =>
-                        File.Exists(Path.Combine(_home, relative))
-                        || Directory.Exists(Path.Combine(_home, relative)))
+                        File.Exists(Path.Combine(_home, NormalizeRelativePath(relative)))
+                        || Directory.Exists(Path.Combine(_home, NormalizeRelativePath(relative))))
                     || agent.Executables.Any(executable =>
                         pathDirectories.Any(directory =>
                             ExecutableExists(directory, executable)));
@@ -194,6 +196,10 @@ public sealed class AgentCatalog
         (Environment.GetEnvironmentVariable("PATH") ?? "")
             .Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries)
             .ToArray();
+
+    private static string NormalizeRelativePath(string relative) =>
+        relative.Replace('\\', Path.DirectorySeparatorChar)
+            .Replace('/', Path.DirectorySeparatorChar);
 
     private static bool ExecutableExists(string directory, string executable)
     {

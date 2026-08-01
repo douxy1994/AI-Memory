@@ -1275,7 +1275,7 @@ public sealed class CoreTests : IDisposable
             "groq-code-cli", "devon", "g3", "mini-kode", "zot", "vibepod",
             "every-code", "claw-code-agent", "gitagent", "opendev", "qodex",
             "clawcodex", "tutti", "acpx", "cmux", "muxd", "muxel",
-            "flowmux", "mcpjam", "zenflow",
+            "flowmux", "mcpjam", "zenflow", "void", "ruflo",
         ], AgentCatalog.All.Select(value => value.Id).ToArray());
         var firstMissing = statuses
             .Select((status, index) => (status, index))
@@ -1290,7 +1290,7 @@ public sealed class CoreTests : IDisposable
             Assert.False(value.IsIntegrated);
             Assert.Equal(AgentIntegrationState.Missing, value.State);
         });
-        Assert.Equal(128, statuses.Count);
+        Assert.Equal(130, statuses.Count);
 
         var missingWithStaleConfiguration =
             AgentIntegrationStateService.ApplyConfigurationState(
@@ -1331,6 +1331,25 @@ public sealed class CoreTests : IDisposable
         {
             Environment.SetEnvironmentVariable("PATH", previousPath);
         }
+    }
+
+    [Fact]
+    public void AgentCatalogDetectsInstalledDesktopAgentPath()
+    {
+        var voidPath = Path.Combine(
+            _root,
+            "AppData",
+            "Local",
+            "Programs",
+            "Void");
+        Directory.CreateDirectory(voidPath);
+
+        var status = new AgentCatalog(_root, []).Detect()
+            .Single(value => value.Id == "void");
+
+        Assert.True(status.IsDetected);
+        Assert.False(status.IsIntegrated);
+        Assert.Equal(AgentIntegrationState.Detected, status.State);
     }
 
     [Fact]
@@ -2511,7 +2530,7 @@ public sealed class CoreTests : IDisposable
         Assert.Equal(1, report.Conversations);
         Assert.Equal(1, report.Messages);
         Assert.Equal(1, report.DetectedAgents);
-        Assert.Equal(128, report.CatalogAgents);
+        Assert.Equal(130, report.CatalogAgents);
         Assert.Contains(databasePath, report.ToDisplayText());
     }
 

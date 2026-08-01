@@ -109,7 +109,7 @@ final class NativeAgentIntegrationStoreTests: XCTestCase {
             "groq-code-cli", "devon", "g3", "mini-kode", "zot", "vibepod",
             "every-code", "claw-code-agent", "gitagent", "opendev", "qodex",
             "clawcodex", "tutti", "acpx", "cmux", "muxd", "muxel",
-            "flowmux", "mcpjam", "zenflow",
+            "flowmux", "mcpjam", "zenflow", "void", "ruflo",
         ]
         XCTAssertEqual(Set(statuses.map(\.agent)), Set(expectedAgents))
         XCTAssertEqual(statuses.count, expectedAgents.count)
@@ -206,6 +206,29 @@ final class NativeAgentIntegrationStoreTests: XCTestCase {
             XCTAssertFalse(status.canInstallIntegration)
             XCTAssertFalse(status.mcpInstalled)
         }
+    }
+
+    func testDetectionFindsInstalledDesktopAgentBundle() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("NativeAgentIntegrationAppDetect-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(
+            at: root.appendingPathComponent("Applications/Void.app"),
+            withIntermediateDirectories: true
+        )
+        let service = NativeAgentIntegrationStore(
+            home: root,
+            helperURL: try makeHelper(in: root)
+        )
+
+        let statuses = await service.detect()
+        let status = try XCTUnwrap(
+            statuses.first { $0.agent == "void" }
+        )
+        XCTAssertTrue(status.isAgentDetected)
+        XCTAssertEqual(status.status, "detected")
+        XCTAssertFalse(status.canInstallIntegration)
+        XCTAssertFalse(status.mcpInstalled)
     }
 
     private func makeHelper(in root: URL) throws -> URL {
