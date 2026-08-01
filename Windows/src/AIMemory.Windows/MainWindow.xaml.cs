@@ -20,7 +20,9 @@ public sealed partial class MainWindow : Window
     public ConversationRepository Conversations { get; }
     public SettingsStore Settings { get; } = new();
     public Microsoft.UI.WindowId WindowId => _appWindow.Id;
+    public nint NativeHandle => _windowHandle;
     private readonly AppWindow _appWindow;
+    private readonly nint _windowHandle;
     private AboutWindow? _aboutWindow;
     private CancellationTokenSource? _automaticBackup;
     private NotificationAreaService? _notificationArea;
@@ -36,8 +38,8 @@ public sealed partial class MainWindow : Window
         SetTitleBar(AppTitleBar);
         Title = "AI Memory";
 
-        var handle = WindowNative.GetWindowHandle(this);
-        var id = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(handle);
+        _windowHandle = WindowNative.GetWindowHandle(this);
+        var id = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(_windowHandle);
         _appWindow = AppWindow.GetFromWindowId(id);
         _appWindow.Resize(new global::Windows.Graphics.SizeInt32(1180, 760));
         _appWindow.Closing += OnAppWindowClosing;
@@ -47,7 +49,7 @@ public sealed partial class MainWindow : Window
         try
         {
             _notificationArea = new NotificationAreaService(
-                handle,
+                _windowHandle,
                 DispatcherQueue,
                 BringToFront,
                 () => _ = SyncNowAsync(),
@@ -90,7 +92,7 @@ public sealed partial class MainWindow : Window
     public void BringToFront()
     {
         _appWindow.Show(true);
-        var handle = WindowNative.GetWindowHandle(this);
+        var handle = _windowHandle;
         // AppWindow.Show restores the AppWindow state, while the Win32 calls
         // cover an unpackaged launch whose HWND was created hidden during the
         // first dispatcher turn.

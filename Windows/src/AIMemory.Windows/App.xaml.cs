@@ -58,13 +58,15 @@ public sealed partial class App : Application
             var database = new AIMemoryDatabase();
             var settingsStore = new SettingsStore();
             _window = new MainWindow(database);
-            StartupDiagnostics.Write("window.created");
+            StartupDiagnostics.Write(
+                $"window.created hwnd=0x{_window.NativeHandle.ToInt64():X}");
             _window.Activate();
             // AppWindow.Show(true) is an explicit restore/show operation.  It
             // matters for unpackaged WinUI launches where Activate can create
             // the HWND without making it visible until the dispatcher turns.
             _window.BringToFront();
-            StartupDiagnostics.Write("window.activated");
+            StartupDiagnostics.Write(
+                $"window.activated hwnd=0x{_window.NativeHandle.ToInt64():X}");
             await database.InitializeAsync();
             StartupDiagnostics.Write("database.ready");
             var settings = await settingsStore.LoadAsync();
