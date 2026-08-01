@@ -49,6 +49,8 @@ jobs:
           dotnet-version: 10.0.x
       - name: Verify Windows localization resources
         run: node Windows/scripts/verify-localization.mjs
+      - name: Verify Windows package manifest and assets
+        run: node Windows/scripts/verify-package-manifest.mjs
       - name: Verify macOS and Windows Agent catalogs
         run: node Windows/scripts/verify-agent-catalog.mjs
       - name: Test Windows core
