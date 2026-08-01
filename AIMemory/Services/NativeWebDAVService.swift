@@ -91,7 +91,8 @@ actor NativeWebDAVService {
                         detail: detail,
                         data: data,
                         updatedAt: detail.updatedAt,
-                        sha256: Self.contentHash(data)
+                        sha256: Self.contentHash(data),
+                        semanticDigest: Self.semanticDigest(detail)
                     )
             } catch {
                 errors.append(
@@ -157,18 +158,59 @@ actor NativeWebDAVService {
                     downloaded += 1
 
                 case (.some(let localPayload), .some(let remoteEntry)):
-                    if let remoteHash = remoteEntry.sha256,
-                       remoteHash == localPayload.sha256 {
-                        merged[key] = remoteEntry.withHash(localPayload.sha256)
+                    let remoteSemanticDigest = Self.currentSemanticDigest(
+                        remoteEntry.semanticDigest
+                    )
+                    if remoteSemanticDigest == localPayload.semanticDigest {
+                        // The versioned semantic digest is shared by Swift and
+                        // .NET, so equivalent JSON never overwrites itself only
+                        // because the two serializers emit different bytes.
+                        merged[key] = remoteEntry
                         skipped += 1
-                    } else if remoteEntry.sha256 == nil,
-                              remoteEntry.updatedAt == localPayload.updatedAt {
-                        // Legacy manifests did not contain hashes. Matching
-                        // timestamps identify the already-uploaded snapshot;
-                        // enrich only the manifest instead of re-uploading it.
-                        merged[key] = remoteEntry.withHash(localPayload.sha256)
+                    } else if Self.hashesEqual(remoteEntry.sha256, localPayload.sha256) {
+                        // Preserve an unchanged legacy raw hash as-is. It is
+                        // already conclusive and does not require a manifest
+                        // rewrite merely to add a newer optional field.
+                        merged[key] = remoteEntry
                         skipped += 1
-                    } else if remoteEntry.updatedAt > localPayload.updatedAt {
+                    } else if remoteSemanticDigest == nil {
+                        // A schema-v1/v2 legacy entry has no semantic digest.
+                        // Its timestamp alone is not evidence of equality: read
+                        // the payload once so equal timestamps with different
+                        // conversation content still follow normal conflict
+                        // resolution rather than being silently skipped.
+                        let payload = try await download(
+                            remoteEntry,
+                            root: root,
+                            username: username,
+                            password: password
+                        )
+                        if payload.entry.semanticDigest == localPayload.semanticDigest {
+                            merged[key] = payload.entry
+                            skipped += 1
+                        } else if Self.isRemoteNewer(
+                            remoteEntry.updatedAt,
+                            than: localPayload.updatedAt
+                        ) {
+                            try await conversations.upsertConversation(payload.detail)
+                            merged[key] = payload.entry
+                            downloaded += 1
+                        } else {
+                            let entry = try await upload(
+                                localPayload,
+                                key: key,
+                                conversationsURL: conversationsURL,
+                                ensuredAgentFolders: &ensuredAgentFolders,
+                                username: username,
+                                password: password
+                            )
+                            merged[key] = entry
+                            uploaded += 1
+                        }
+                    } else if Self.isRemoteNewer(
+                        remoteEntry.updatedAt,
+                        than: localPayload.updatedAt
+                    ) {
                         let payload = try await download(
                             remoteEntry,
                             root: root,
@@ -179,6 +221,10 @@ actor NativeWebDAVService {
                         merged[key] = payload.entry
                         downloaded += 1
                     } else {
+                        // For a genuine equal-timestamp content conflict keep
+                        // the established local-wins policy. The semantic
+                        // digest ensures this branch is not reached for merely
+                        // differently formatted equivalent JSON.
                         let entry = try await upload(
                             localPayload,
                             key: key,
@@ -317,7 +363,10 @@ actor NativeWebDAVService {
         let detail = try JSONDecoder().decode(ConversationDetail.self, from: data)
         return WebDAVRemotePayload(
             detail: detail,
-            entry: entry.withHash(Self.contentHash(data))
+            entry: entry.withDigests(
+                sha256: Self.contentHash(data),
+                semanticDigest: Self.semanticDigest(detail)
+            )
         )
     }
 
@@ -499,6 +548,40 @@ actor NativeWebDAVService {
     nonisolated static func contentHash(_ data: Data) -> String {
         SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
     }
+
+    /// Stable across the native Swift and Windows .NET implementations.
+    /// This deliberately covers only conversation state that both stores
+    /// persist; generated resume commands and non-persisted message metadata
+    /// are excluded so an import/export round trip does not manufacture a
+    /// false content conflict.
+    nonisolated static func semanticDigest(_ conversation: ConversationDetail) -> String {
+        WebDAVSemanticDigest.digest(conversation)
+    }
+
+    nonisolated private static func currentSemanticDigest(_ value: String?) -> String? {
+        guard let value,
+              value.hasPrefix(WebDAVSemanticDigest.prefix) else {
+            return nil
+        }
+        return value
+    }
+
+    nonisolated private static func hashesEqual(_ lhs: String?, _ rhs: String) -> Bool {
+        guard let lhs else { return false }
+        return lhs.caseInsensitiveCompare(rhs) == .orderedSame
+    }
+
+    nonisolated private static func isRemoteNewer(_ remote: String, than local: String) -> Bool {
+        Self.syncDate(remote) > Self.syncDate(local)
+    }
+
+    nonisolated private static func syncDate(_ value: String) -> Date {
+        let fractional = ISO8601DateFormatter()
+        fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return fractional.date(from: value)
+            ?? ISO8601DateFormatter().date(from: value)
+            ?? .distantPast
+    }
 }
 
 private struct WebDAVSyncKey: Hashable {
@@ -511,6 +594,7 @@ private struct WebDAVLocalPayload {
     let data: Data
     let updatedAt: String
     let sha256: String
+    let semanticDigest: String
 }
 
 private struct WebDAVRemotePayload {
@@ -529,7 +613,10 @@ private struct WebDAVManifestEntry: Equatable {
     let id: String
     let file: String
     let updatedAt: String
+    /// Raw payload bytes hash retained for schema-v2 / legacy clients.
     let sha256: String?
+    /// `aimemory-conversation-v1:<sha256>` shared semantic digest.
+    let semanticDigest: String?
 
     init?(
         dictionary: [String: Any]
@@ -545,6 +632,7 @@ private struct WebDAVManifestEntry: Equatable {
         self.file = file
         self.updatedAt = updatedAt
         sha256 = dictionary["sha256"] as? String
+        semanticDigest = dictionary["semantic_digest"] as? String
     }
 
     init(
@@ -552,13 +640,15 @@ private struct WebDAVManifestEntry: Equatable {
         id: String,
         file: String,
         updatedAt: String,
-        sha256: String?
+        sha256: String?,
+        semanticDigest: String? = nil
     ) {
         self.agent = agent
         self.id = id
         self.file = file
         self.updatedAt = updatedAt
         self.sha256 = sha256
+        self.semanticDigest = semanticDigest
     }
 
     var dictionary: [String: Any] {
@@ -569,17 +659,168 @@ private struct WebDAVManifestEntry: Equatable {
             "updated_at": updatedAt,
         ]
         if let sha256 { value["sha256"] = sha256 }
+        if let semanticDigest { value["semantic_digest"] = semanticDigest }
         return value
     }
 
-    func withHash(_ value: String) -> WebDAVManifestEntry {
+    func withDigests(
+        sha256: String?,
+        semanticDigest: String?
+    ) -> WebDAVManifestEntry {
         WebDAVManifestEntry(
             agent: agent,
             id: id,
             file: file,
             updatedAt: updatedAt,
-            sha256: value
+            sha256: sha256,
+            semanticDigest: semanticDigest
         )
+    }
+}
+
+private enum WebDAVSemanticTag: UInt8 {
+    case null = 0
+    case falseValue = 1
+    case trueValue = 2
+    case number = 3
+    case string = 4
+    case array = 5
+    case object = 6
+}
+
+/// Versioned, binary-framed canonical representation shared with
+/// `AIMemory.Core.Services.WebDavService`. It intentionally does not reuse
+/// either platform's JSON serializer because byte-for-byte JSON output differs
+/// between Foundation and System.Text.Json even for the same conversation.
+private enum WebDAVSemanticDigest {
+    static let prefix = "aimemory-conversation-v1:"
+    private static let magic = Data("aimemory-conversation-semantic-v1\0".utf8)
+
+    static func digest(_ conversation: ConversationDetail) -> String {
+        var writer = Writer(magic: magic)
+        writer.writeString(conversation.id)
+        writer.writeString(conversation.sourceAgent)
+        writer.writeString(conversation.projectDir)
+        writer.writeString(conversation.createdAt)
+        writer.writeString(conversation.updatedAt)
+        writer.writePersistentOptionalString(conversation.summary)
+        writer.writePersistentOptionalString(conversation.storagePath)
+
+        writer.writeArrayCount(conversation.messages.count)
+        for message in conversation.messages {
+            writer.writeString(message.id)
+            writer.writeString(message.timestamp)
+            writer.writeString(message.role)
+            writer.writeString(message.content)
+            writer.writeArrayCount(message.toolCalls.count)
+            for tool in message.toolCalls {
+                writer.writeString(tool.id)
+                writer.writeString(tool.name)
+                writer.writeJSONValue(tool.input)
+                writer.writePersistentOptionalString(tool.output)
+                writer.writeString(tool.status)
+            }
+        }
+
+        writer.writeArrayCount(conversation.fileChanges.count)
+        for change in conversation.fileChanges {
+            writer.writeString(change.path)
+            writer.writeString(change.changeType)
+            writer.writeString(change.timestamp)
+            writer.writePersistentOptionalString(change.messageId)
+        }
+        return prefix + writer.finish()
+    }
+
+    private struct Writer {
+        private var hasher = SHA256()
+
+        init(magic: Data) {
+            hasher.update(data: magic)
+        }
+
+        mutating func writePersistentOptionalString(_ value: String?) {
+            guard let value, !value.isEmpty else {
+                writeNull()
+                return
+            }
+            writeString(value)
+        }
+
+        mutating func writeNull() {
+            writeTag(.null)
+        }
+
+        mutating func writeString(_ value: String) {
+            let bytes = Data(value.utf8)
+            writeTag(.string)
+            writeUInt64(UInt64(bytes.count))
+            hasher.update(data: bytes)
+        }
+
+        mutating func writeArrayCount(_ count: Int) {
+            writeTag(.array)
+            writeUInt64(UInt64(count))
+        }
+
+        mutating func writeJSONValue(_ value: JSONValue) {
+            switch value {
+            case .null:
+                writeNull()
+            case .bool(false):
+                writeTag(.falseValue)
+            case .bool(true):
+                writeTag(.trueValue)
+            case .number(let value):
+                writeTag(.number)
+                // JSON numbers are decoded as IEEE-754 doubles by Swift and
+                // .NET. Normalize -0 so equivalent zero values share a digest.
+                writeUInt64(value == 0 ? 0 : value.bitPattern)
+            case .string(let value):
+                writeString(value)
+            case .array(let values):
+                writeArrayCount(values.count)
+                for value in values {
+                    writeJSONValue(value)
+                }
+            case .object(let values):
+                writeTag(.object)
+                let keys = values.keys.sorted(by: WebDAVSemanticDigest.utf8Less)
+                writeUInt64(UInt64(keys.count))
+                for key in keys {
+                    writeString(key)
+                    if let value = values[key] {
+                        writeJSONValue(value)
+                    } else {
+                        writeNull()
+                    }
+                }
+            }
+        }
+
+        mutating func finish() -> String {
+            hasher.finalize().map { String(format: "%02x", $0) }.joined()
+        }
+
+        private mutating func writeTag(_ tag: WebDAVSemanticTag) {
+            hasher.update(data: Data([tag.rawValue]))
+        }
+
+        private mutating func writeUInt64(_ value: UInt64) {
+            var bigEndian = value.bigEndian
+            let data = withUnsafeBytes(of: &bigEndian) { Data($0) }
+            hasher.update(data: data)
+        }
+    }
+
+    private static func utf8Less(_ lhs: String, _ rhs: String) -> Bool {
+        let left = Array(lhs.utf8)
+        let right = Array(rhs.utf8)
+        let sharedCount = Swift.min(left.count, right.count)
+        for index in 0..<sharedCount where left[index] != right[index] {
+            return left[index] < right[index]
+        }
+        return left.count < right.count
     }
 }
 

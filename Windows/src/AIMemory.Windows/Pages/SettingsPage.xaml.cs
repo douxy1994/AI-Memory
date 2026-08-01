@@ -455,7 +455,7 @@ public sealed partial class SettingsPage : Page
     private async void VerifyWebDav_Click(object sender, RoutedEventArgs args)
     {
         ApplyForm();
-        SyncProgress.Visibility = Visibility.Visible;
+        BeginSyncProgress(LocalizationService.Get("SyncProgressVerifying"));
         try
         {
             var status = await new WebDavService().VerifyAsync(
@@ -478,7 +478,7 @@ public sealed partial class SettingsPage : Page
         }
         finally
         {
-            SyncProgress.Visibility = Visibility.Collapsed;
+            EndSyncProgress();
         }
     }
 
@@ -486,14 +486,15 @@ public sealed partial class SettingsPage : Page
     {
         if (_window is null) return;
         ApplyForm();
-        SyncProgress.Visibility = Visibility.Visible;
+        BeginSyncProgress(LocalizationService.Get("SyncProgressPreparing"));
         try
         {
             var service = new WebDavService(_window.Conversations);
             var result = await service.SyncAsync(
                 WebDavService.BuildCollectionUri(_settings.Sync),
                 UsernameBox.Text.Trim(),
-                PasswordBox.Password);
+                PasswordBox.Password,
+                new Progress<SyncProgress>(ApplySyncProgress));
             Show(
                 LocalizationService.Format(
                     "SyncCompleted",
@@ -510,7 +511,7 @@ public sealed partial class SettingsPage : Page
         }
         finally
         {
-            SyncProgress.Visibility = Visibility.Collapsed;
+            EndSyncProgress();
         }
     }
 
@@ -584,7 +585,7 @@ public sealed partial class SettingsPage : Page
 
         try
         {
-            SyncProgress.Visibility = Visibility.Visible;
+            BeginSyncProgress(LocalizationService.Get("SyncProgressPreparing"));
             var safetyBackup = await service.RestoreRecoveryPointAsync(selected);
             await ReloadRestoredSettingsAsync();
             Show(
@@ -603,7 +604,7 @@ public sealed partial class SettingsPage : Page
         }
         finally
         {
-            SyncProgress.Visibility = Visibility.Collapsed;
+            EndSyncProgress();
         }
     }
 
@@ -729,7 +730,7 @@ public sealed partial class SettingsPage : Page
     {
         if (_window is null) return;
         if (!await SaveLocalFolderAsync(showConfirmation: false)) return;
-        SyncProgress.Visibility = Visibility.Visible;
+        BeginSyncProgress(LocalizationService.Get("SyncProgressPreparing"));
         try
         {
             var result = await new LocalFolderSyncService(_window.Conversations)
@@ -752,8 +753,37 @@ public sealed partial class SettingsPage : Page
         }
         finally
         {
-            SyncProgress.Visibility = Visibility.Collapsed;
+            EndSyncProgress();
         }
+    }
+
+    private void BeginSyncProgress(string message)
+    {
+        SyncProgressPanel.Visibility = Visibility.Visible;
+        SyncProgressText.Text = message;
+    }
+
+    private void ApplySyncProgress(SyncProgress progress)
+    {
+        SyncProgressText.Text = string.IsNullOrWhiteSpace(progress.CurrentAgent)
+            ? LocalizationService.Format(
+                "SyncProgressCounters",
+                progress.Uploaded,
+                progress.Downloaded,
+                progress.Skipped)
+            : LocalizationService.Format(
+                "SyncProgressConversation",
+                progress.CurrentAgent,
+                progress.CurrentConversationId ?? "",
+                progress.Uploaded,
+                progress.Downloaded,
+                progress.Skipped);
+    }
+
+    private void EndSyncProgress()
+    {
+        SyncProgressPanel.Visibility = Visibility.Collapsed;
+        SyncProgressText.Text = "";
     }
 
     private async void ImportChatMem_Click(object sender, RoutedEventArgs args)
@@ -773,7 +803,7 @@ public sealed partial class SettingsPage : Page
     private async void ImportNativeHistory_Click(object sender, RoutedEventArgs args)
     {
         if (_window is null) return;
-        SyncProgress.Visibility = Visibility.Visible;
+        BeginSyncProgress(LocalizationService.Get("SyncProgressPreparing"));
         try
         {
             var report = await new NativeHistoryImportService(
@@ -804,7 +834,7 @@ public sealed partial class SettingsPage : Page
         }
         finally
         {
-            SyncProgress.Visibility = Visibility.Collapsed;
+            EndSyncProgress();
         }
     }
 

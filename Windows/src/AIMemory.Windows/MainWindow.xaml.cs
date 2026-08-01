@@ -237,7 +237,7 @@ public sealed partial class MainWindow : Window
 
     public async Task RefreshAllSourcesAsync()
     {
-        GlobalProgress.Visibility = Visibility.Visible;
+        BeginGlobalSyncProgress(LocalizationService.Get("RefreshingAllSources"));
         ShowFeedback(
             LocalizationService.Get("RefreshingAllSources"),
             InfoBarSeverity.Informational);
@@ -271,13 +271,13 @@ public sealed partial class MainWindow : Window
         }
         finally
         {
-            GlobalProgress.Visibility = Visibility.Collapsed;
+            EndGlobalSyncProgress();
         }
     }
 
     public async Task SyncNowAsync()
     {
-        GlobalProgress.Visibility = Visibility.Visible;
+        BeginGlobalSyncProgress(LocalizationService.Get("SyncProgressPreparing"));
         ShowFeedback(
             LocalizationService.Get("SyncingChanges"),
             InfoBarSeverity.Informational);
@@ -298,7 +298,8 @@ public sealed partial class MainWindow : Window
                 result = await new WebDavService(Conversations).SyncAsync(
                     WebDavService.BuildCollectionUri(settings.Sync),
                     credentials?.Username ?? settings.Sync.Username,
-                    credentials?.Password);
+                    credentials?.Password,
+                    new Progress<SyncProgress>(ApplyGlobalSyncProgress));
             }
             else
             {
@@ -324,8 +325,39 @@ public sealed partial class MainWindow : Window
         }
         finally
         {
-            GlobalProgress.Visibility = Visibility.Collapsed;
+            EndGlobalSyncProgress();
         }
+    }
+
+    private void BeginGlobalSyncProgress(string message)
+    {
+        GlobalProgress.Visibility = Visibility.Visible;
+        GlobalProgressText.Text = message;
+        GlobalProgressText.Visibility = Visibility.Visible;
+    }
+
+    private void ApplyGlobalSyncProgress(SyncProgress progress)
+    {
+        GlobalProgressText.Text = string.IsNullOrWhiteSpace(progress.CurrentAgent)
+            ? LocalizationService.Format(
+                "SyncProgressCounters",
+                progress.Uploaded,
+                progress.Downloaded,
+                progress.Skipped)
+            : LocalizationService.Format(
+                "SyncProgressConversation",
+                progress.CurrentAgent,
+                progress.CurrentConversationId ?? "",
+                progress.Uploaded,
+                progress.Downloaded,
+                progress.Skipped);
+    }
+
+    private void EndGlobalSyncProgress()
+    {
+        GlobalProgress.Visibility = Visibility.Collapsed;
+        GlobalProgressText.Visibility = Visibility.Collapsed;
+        GlobalProgressText.Text = "";
     }
 
     public void ShowFeedback(string message, InfoBarSeverity severity)
@@ -380,7 +412,8 @@ public sealed partial class MainWindow : Window
             return;
         }
 
-        GlobalProgress.Visibility = Visibility.Visible;
+        BeginGlobalSyncProgress(
+            LocalizationService.Get("ChatMemImportInProgress"));
         ShowFeedback(
             LocalizationService.Get("ChatMemImportInProgress"),
             InfoBarSeverity.Informational);
@@ -407,7 +440,7 @@ public sealed partial class MainWindow : Window
         }
         finally
         {
-            GlobalProgress.Visibility = Visibility.Collapsed;
+            EndGlobalSyncProgress();
         }
     }
 

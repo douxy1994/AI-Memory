@@ -249,6 +249,15 @@
                                        Opacity="0.65" />
                         </StackPanel>
 
+                        <StackPanel x:Name="SyncProgressPanel"
+                                    Spacing="6"
+                                    Visibility="Collapsed">
+                            <ProgressBar IsIndeterminate="True" />
+                            <TextBlock x:Name="SyncProgressText"
+                                       TextWrapping="Wrap"
+                                       Opacity="0.7" />
+                        </StackPanel>
+
                         <Border Style="{StaticResource CardStyle}">
                             <StackPanel Spacing="14">
                                 <TextBlock x:Uid="SettingsLocalSyncTitle" Text="本地同步目录"
@@ -331,9 +340,6 @@
                                                   Label="保存"
                                                   Click="SaveSettings_Click" />
                                 </CommandBar>
-                                <ProgressBar x:Name="SyncProgress"
-                                             IsIndeterminate="True"
-                                             Visibility="Collapsed" />
                             </StackPanel>
                         </Border>
 

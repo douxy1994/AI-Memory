@@ -27,6 +27,7 @@ public static class Program
         var database = new AIMemoryDatabase();
         await database.InitializeAsync();
         var query = new MemoryQueryService(database);
+        var mcpContext = new McpProjectContextService(database);
         var conversations = new ConversationRepository(database);
         var history = new NativeHistoryImportService(conversations);
         var diagnostics = new DiagnosticsService(database);
@@ -48,6 +49,7 @@ public static class Program
                 response = await HandleAsync(
                     document.RootElement,
                     query,
+                    mcpContext,
                     conversations,
                     history,
                     diagnostics,
@@ -69,6 +71,7 @@ public static class Program
     private static async Task<object?> HandleAsync(
         JsonElement request,
         MemoryQueryService query,
+        McpProjectContextService mcpContext,
         ConversationRepository conversations,
         NativeHistoryImportService history,
         DiagnosticsService diagnostics,
@@ -103,87 +106,100 @@ public static class Program
             return Error(id, -32601, $"Unknown method: {method}");
         }
 
-        var parameters = request.GetProperty("params");
-        var name = parameters.GetProperty("name").GetString() ?? "";
-        var arguments = parameters.TryGetProperty("arguments", out var values)
-            ? values
-            : JsonSerializer.SerializeToElement(new { });
-        object result = name switch
+        try
         {
-            "get_repo_memory" => await GetRepoMemoryAsync(query, arguments),
-            "get_project_context" => await GetContextAsync(query, arguments),
-            "get_repo_memory_health" => await GetHealthAsync(
-                query,
-                diagnostics,
-                arguments),
-            "import_all_local_history" => await ImportHistoryAsync(history),
-            "scan_repo_conversations" => await ScanRepositoryAsync(
-                query,
-                history,
-                arguments),
-            "merge_repo_alias" => await MergeAliasAsync(
-                governance,
-                arguments),
-            "search_repo_history" => await SearchAsync(query, arguments),
-            "read_history_conversation" => await ReadAsync(conversations, arguments),
-            "create_memory_candidate" => await CreateCandidateAsync(
-                governance,
-                arguments),
-            "propose_memory_merge" => await ProposeMergeAsync(
-                governance,
-                arguments),
-            "list_memory_candidates" => await ListCandidatesAsync(
-                governance,
-                arguments),
-            "create_checkpoint" => await CreateCheckpointAsync(
-                continuation,
-                arguments),
-            "build_handoff_packet" => await BuildHandoffAsync(
-                continuation,
-                arguments),
-            "list_active_runs" => new
+            var parameters = request.GetProperty("params");
+            var name = parameters.GetProperty("name").GetString() ?? "";
+            var arguments = parameters.TryGetProperty("arguments", out var values)
+                ? values
+                : JsonSerializer.SerializeToElement(new { });
+            object result = name switch
             {
-                runs = await continuation.ListRunsAsync(
+                "get_repo_memory" => await GetRepoMemoryAsync(query, arguments),
+                "get_project_context" => await GetContextAsync(mcpContext, arguments),
+                "get_repo_memory_health" => await GetHealthAsync(
+                    query,
+                    diagnostics,
+                    arguments),
+                "import_all_local_history" => await ImportHistoryAsync(history),
+                "scan_repo_conversations" => await ScanRepositoryAsync(
+                    query,
+                    history,
+                    arguments),
+                "merge_repo_alias" => await MergeAliasAsync(
+                    governance,
+                    arguments),
+                "search_repo_history" => await SearchAsync(query, arguments),
+                "read_history_conversation" => await ReadAsync(conversations, arguments),
+                "create_memory_candidate" => await CreateCandidateAsync(
+                    governance,
+                    arguments),
+                "propose_memory_merge" => await ProposeMergeAsync(
+                    governance,
+                    arguments),
+                "list_memory_candidates" => await ListCandidatesAsync(
+                    governance,
+                    arguments),
+                "create_checkpoint" => await CreateCheckpointAsync(
+                    continuation,
+                    arguments),
+                "build_handoff_packet" => await BuildHandoffAsync(
+                    continuation,
+                    arguments),
+                "list_active_runs" => new
+                {
+                    runs = await continuation.ListRunsAsync(
+                        Required(arguments, "repo_root")),
+                },
+                "list_run_artifacts" => new
+                {
+                    artifacts = await continuation.ListArtifactsAsync(
+                        Required(arguments, "repo_root")),
+                },
+                "resume_from_checkpoint" => await ResumeCheckpointAsync(
+                    continuation,
+                    arguments),
+                "list_repo_wiki_pages" => new
+                {
+                    pages = await continuation.ListWikiAsync(
+                        Required(arguments, "repo_root")),
+                },
+                "rebuild_repo_wiki" => new
+                {
+                    pages = await knowledge.RebuildWikiAsync(
+                        Required(arguments, "repo_root")),
+                },
+                "rebuild_repo_embeddings" => await knowledge.RebuildSearchIndexAsync(
                     Required(arguments, "repo_root")),
-            },
-            "list_run_artifacts" => new
-            {
-                artifacts = await continuation.ListArtifactsAsync(
-                    Required(arguments, "repo_root")),
-            },
-            "resume_from_checkpoint" => await ResumeCheckpointAsync(
-                continuation,
-                arguments),
-            "list_repo_wiki_pages" => new
-            {
-                pages = await continuation.ListWikiAsync(
-                    Required(arguments, "repo_root")),
-            },
-            "rebuild_repo_wiki" => new
-            {
-                pages = await knowledge.RebuildWikiAsync(
-                    Required(arguments, "repo_root")),
-            },
-            "rebuild_repo_embeddings" => await knowledge.RebuildSearchIndexAsync(
-                Required(arguments, "repo_root")),
-            "list_memory_conflicts" => new
-            {
-                conflicts = await knowledge.ListConflictsAsync(
+                "list_memory_conflicts" => new
+                {
+                    conflicts = await knowledge.ListConflictsAsync(
+                        Required(arguments, "repo_root"),
+                        Optional(arguments, "status")),
+                },
+                "list_entity_graph" => await knowledge.ListEntityGraphAsync(
                     Required(arguments, "repo_root"),
-                    Optional(arguments, "status")),
-            },
-            "list_entity_graph" => await knowledge.ListEntityGraphAsync(
-                Required(arguments, "repo_root"),
-                OptionalInt(arguments, "limit", 25)),
-            "detect_agent_integrations" => new AgentCatalog().Detect(),
-            _ => throw new InvalidOperationException($"Unknown tool: {name}"),
-        };
-        var text = JsonSerializer.Serialize(result, ToolPayloadJsonOptions);
-        return Success(id, new
+                    OptionalInt(arguments, "limit", 25)),
+                "detect_agent_integrations" => new AgentCatalog().Detect(),
+                _ => throw new InvalidOperationException($"Unknown tool: {name}"),
+            };
+            var text = JsonSerializer.Serialize(result, ToolPayloadJsonOptions);
+            return Success(id, new
+            {
+                content = new[] { new { type = "text", text } },
+                isError = false,
+            });
+        }
+        catch (Exception exception)
         {
-            content = new[] { new { type = "text", text } },
-            isError = false,
-        });
+            // The macOS helper reports tools/call validation and lookup errors
+            // as an MCP tool result, not as a transport-level JSON-RPC error.
+            return Success(id, new
+            {
+                content = new[] { new { type = "text", text = exception.Message } },
+                isError = true,
+            });
+        }
     }
 
     private static async Task<object> GetRepoMemoryAsync(
@@ -204,13 +220,14 @@ public static class Program
     }
 
     private static async Task<object> GetContextAsync(
-        MemoryQueryService service,
+        McpProjectContextService service,
         JsonElement arguments)
     {
         var root = Required(arguments, "repo_root");
-        var query = Optional(arguments, "query");
-        var limit = OptionalInt(arguments, "limit", 3);
-        return await service.GetProjectContextAsync(root, query, limit);
+        var query = Required(arguments, "query");
+        var intent = Optional(arguments, "intent");
+        var limit = BoundedLimit(arguments, "limit", 3);
+        return await service.GetProjectContextAsync(root, query, intent, limit);
     }
 
     private static async Task<object> SearchAsync(
@@ -350,11 +367,27 @@ public static class Program
         ConversationRepository repository,
         JsonElement arguments)
     {
+        _ = Required(arguments, "repo_root");
         var id = Required(arguments, "conversation_id");
+        var read = await repository.ReadForMcpAsync(
+            id,
+            Optional(arguments, "message_id"),
+            Optional(arguments, "query"),
+            BoundedLimit(arguments, "limit", 12));
         return new
         {
-            conversation_id = id,
-            messages = await repository.ReadMessagesAsync(id),
+            id = read.Detail.Id,
+            source_agent = read.Detail.SourceAgent,
+            project_dir = read.Detail.ProjectDir,
+            created_at = read.Detail.CreatedAt,
+            updated_at = read.Detail.UpdatedAt,
+            summary = read.Detail.Summary,
+            storage_path = read.Detail.StoragePath,
+            resume_command = read.Detail.ResumeCommand,
+            messages = read.Messages,
+            file_changes = read.Detail.FileChanges,
+            returned_message_count = read.ReturnedMessageCount,
+            focused_message_id = read.FocusedMessageId,
         };
     }
 
@@ -374,6 +407,22 @@ public static class Program
         && property.TryGetInt32(out var result)
             ? result
             : fallback;
+
+    private static int BoundedLimit(
+        JsonElement value,
+        string key,
+        int fallback)
+    {
+        if (!value.TryGetProperty(key, out var property)
+            || property.ValueKind != JsonValueKind.Number
+            || !property.TryGetDouble(out var numeric))
+        {
+            return Math.Clamp(fallback, 1, 50);
+        }
+        if (numeric <= 1) return 1;
+        if (numeric >= 50) return 50;
+        return Math.Clamp((int)numeric, 1, 50);
+    }
 
     private static double OptionalDouble(
         JsonElement value,
@@ -403,9 +452,15 @@ public static class Program
             ["repo_root"]),
         Tool(
             "get_project_context",
-            "Return approved memory, checkpoints and compact local history.",
-            new { repo_root = StringSchema(), query = StringSchema(), limit = IntSchema() },
-            ["repo_root"]),
+            "Return approved rules, recent handoff, diagnostics, and compact local-history evidence.",
+            new
+            {
+                repo_root = StringSchema(),
+                query = StringSchema(),
+                intent = StringSchema(),
+                limit = LimitSchema(),
+            },
+            ["repo_root", "query"]),
         Tool(
             "get_repo_memory_health",
             "Return local-history and memory diagnostics.",
@@ -437,8 +492,15 @@ public static class Program
             ["repo_root", "query"]),
         Tool(
             "read_history_conversation",
-            "Read messages from a local indexed conversation.",
-            new { repo_root = StringSchema(), conversation_id = StringSchema() },
+            "Read an indexed local conversation.",
+            new
+            {
+                repo_root = StringSchema(),
+                conversation_id = StringSchema(),
+                message_id = StringSchema(),
+                query = StringSchema(),
+                limit = LimitSchema(),
+            },
             ["repo_root", "conversation_id"]),
         Tool(
             "create_memory_candidate",
@@ -578,12 +640,19 @@ public static class Program
         {
             name,
             description,
-            inputSchema = new { type = "object", properties, required },
+            inputSchema = new
+            {
+                type = "object",
+                properties,
+                required,
+                additionalProperties = false,
+            },
         };
 
     private static object StringSchema() => new { type = "string" };
     private static object IntSchema() =>
         new { type = "integer", minimum = 1, maximum = 50 };
+    private static object LimitSchema() => new { type = "number" };
     private static object NumberSchema() =>
         new { type = "number", minimum = 0, maximum = 1 };
 }

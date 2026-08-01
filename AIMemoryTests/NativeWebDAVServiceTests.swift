@@ -148,6 +148,229 @@ final class NativeWebDAVServiceTests: XCTestCase {
         XCTAssertEqual(putCount, 0)
     }
 
+    func testSemanticDigestMatchesSharedProtocolVector() {
+        let detail = ConversationDetail(
+            id: "vector-1",
+            sourceAgent: "codex",
+            projectDir: "/tmp/semantic",
+            createdAt: "2026-07-23T10:00:00Z",
+            updatedAt: "2026-07-23T11:00:00Z",
+            summary: "跨平台",
+            storagePath: nil,
+            resumeCommand: "ignored resume",
+            messages: [
+                ConversationMessage(
+                    id: "m-1",
+                    timestamp: "2026-07-23T10:30:00Z",
+                    role: "user",
+                    content: "hello 🌿",
+                    toolCalls: [
+                        ToolCall(
+                            id: "tool-1",
+                            name: "shell",
+                            input: .object([
+                                "z": .object([
+                                    "nested": .array([.bool(true), .null, .string("x")]),
+                                ]),
+                                "alpha": .number(1),
+                            ]),
+                            output: nil,
+                            status: "completed"
+                        ),
+                    ],
+                    metadata: ["ignored": .string("metadata")]
+                ),
+            ],
+            fileChanges: [
+                FileChange(
+                    path: "/tmp/a.swift",
+                    changeType: "modified",
+                    timestamp: "2026-07-23T10:31:00Z",
+                    messageId: "m-1"
+                ),
+            ]
+        )
+        let equivalentAfterStoreRoundTrip = ConversationDetail(
+            id: detail.id,
+            sourceAgent: detail.sourceAgent,
+            projectDir: detail.projectDir,
+            createdAt: detail.createdAt,
+            updatedAt: detail.updatedAt,
+            summary: detail.summary,
+            storagePath: detail.storagePath,
+            resumeCommand: "another generated command",
+            messages: [
+                ConversationMessage(
+                    id: "m-1",
+                    timestamp: "2026-07-23T10:30:00Z",
+                    role: "user",
+                    content: "hello 🌿",
+                    toolCalls: detail.messages[0].toolCalls,
+                    metadata: [:]
+                ),
+            ],
+            fileChanges: detail.fileChanges
+        )
+
+        let expected =
+            "aimemory-conversation-v1:41c37b3f58708d33d64d27c22a6f37ac74559d75b7d488b3c574f1a9f63db550"
+        XCTAssertEqual(NativeWebDAVService.semanticDigest(detail), expected)
+        XCTAssertEqual(NativeWebDAVService.semanticDigest(equivalentAfterStoreRoundTrip), expected)
+    }
+
+    func testIncrementalSyncSkipsSemanticEquivalentSerializerVariant() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("NativeWebDAVServiceTests-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let databaseURL = root.appendingPathComponent("aimemory.db")
+        var database: NativeDatabase? = try NativeDatabase(url: databaseURL)
+        _ = try await database?.currentSchemaVersion()
+        database = nil
+        let store = NativeConversationStore(databaseURL: databaseURL)
+        let detail = conversation(id: "semantic", agent: "codex")
+        try await store.upsertConversation(detail)
+        let storedDetail = try await store.readConversation(agent: "codex", id: detail.id)
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+        let localBytes = try encoder.encode(storedDetail)
+        let remoteBody = try JSONSerialization.data(
+            withJSONObject: JSONSerialization.jsonObject(with: localBytes),
+            options: [.prettyPrinted]
+        )
+        XCTAssertNotEqual(localBytes, remoteBody)
+        let filename = Data(storedDetail.id.utf8).base64EncodedString()
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "=", with: "") + ".json"
+        let manifest = try JSONSerialization.data(
+            withJSONObject: [
+                "schema_version": 2,
+                "conversations": [[
+                    "agent": storedDetail.sourceAgent,
+                    "id": storedDetail.id,
+                    "file": "conversations/\(storedDetail.sourceAgent)/\(filename)",
+                    "updated_at": storedDetail.updatedAt,
+                    "sha256": "different-serializer-byte-hash",
+                    "semantic_digest": NativeWebDAVService.semanticDigest(storedDetail),
+                ]],
+            ]
+        )
+        var conversationPutCount = 0
+        var manifestPutCount = 0
+        WebDAVURLProtocol.handler = { request in
+            if request.httpMethod == "GET",
+               request.url?.path.hasSuffix("/manifest.json") == true {
+                return (200, manifest)
+            }
+            if request.httpMethod == "GET" {
+                return (200, remoteBody)
+            }
+            if request.httpMethod == "PUT" {
+                if request.url?.path.hasSuffix("/manifest.json") == true {
+                    manifestPutCount += 1
+                } else {
+                    conversationPutCount += 1
+                }
+                return (201, Data())
+            }
+            return (207, Data())
+        }
+
+        let result = try await NativeWebDAVService(
+            conversations: store,
+            session: makeSession()
+        ).sync(
+            host: "dav.example.test",
+            path: "chatmem",
+            username: "alice",
+            password: "secret"
+        )
+
+        XCTAssertEqual(result.uploadedCount, 0)
+        XCTAssertEqual(result.skippedCount, 1)
+        XCTAssertFalse(result.manifestUploaded)
+        XCTAssertEqual(conversationPutCount, 0)
+        XCTAssertEqual(manifestPutCount, 0)
+    }
+
+    func testIncrementalSyncLegacyEqualTimestampDifferentContentUploadsLocal() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("NativeWebDAVServiceTests-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let databaseURL = root.appendingPathComponent("aimemory.db")
+        var database: NativeDatabase? = try NativeDatabase(url: databaseURL)
+        _ = try await database?.currentSchemaVersion()
+        database = nil
+        let store = NativeConversationStore(databaseURL: databaseURL)
+        let local = conversation(
+            id: "legacy-conflict",
+            agent: "codex",
+            summary: "local content",
+            content: "local message"
+        )
+        try await store.upsertConversation(local)
+        let storedLocal = try await store.readConversation(agent: "codex", id: local.id)
+        let remote = conversation(
+            id: local.id,
+            agent: local.sourceAgent,
+            summary: "remote content",
+            content: "remote message"
+        )
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+        let remoteBody = try encoder.encode(remote)
+        let filename = Data(local.id.utf8).base64EncodedString()
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "=", with: "") + ".json"
+        let manifest = try JSONSerialization.data(
+            withJSONObject: [
+                "schema_version": 1,
+                "conversations": [[
+                    "agent": local.sourceAgent,
+                    "id": local.id,
+                    "file": "conversations/\(local.sourceAgent)/\(filename)",
+                    "updated_at": storedLocal.updatedAt,
+                ]],
+            ]
+        )
+        var conversationPutCount = 0
+        var manifestPutCount = 0
+        WebDAVURLProtocol.handler = { request in
+            if request.httpMethod == "GET",
+               request.url?.path.hasSuffix("/manifest.json") == true {
+                return (200, manifest)
+            }
+            if request.httpMethod == "GET" {
+                return (200, remoteBody)
+            }
+            if request.httpMethod == "PUT" {
+                if request.url?.path.hasSuffix("/manifest.json") == true {
+                    manifestPutCount += 1
+                } else {
+                    conversationPutCount += 1
+                }
+                return (201, Data())
+            }
+            return (207, Data())
+        }
+
+        let result = try await NativeWebDAVService(
+            conversations: store,
+            session: makeSession()
+        ).sync(
+            host: "dav.example.test",
+            path: "chatmem",
+            username: "alice",
+            password: "secret"
+        )
+
+        XCTAssertEqual(result.uploadedCount, 1)
+        XCTAssertEqual(result.skippedCount, 0)
+        XCTAssertEqual(conversationPutCount, 1)
+        XCTAssertEqual(manifestPutCount, 1)
+    }
+
     func testIncrementalSyncDownloadsRemoteOnlyConversation() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent("NativeWebDAVServiceTests-\(UUID().uuidString)")
@@ -208,14 +431,19 @@ final class NativeWebDAVServiceTests: XCTestCase {
         return URLSession(configuration: configuration)
     }
 
-    private func conversation(id: String, agent: String) -> ConversationDetail {
+    private func conversation(
+        id: String,
+        agent: String,
+        summary: String? = nil,
+        content: String = "hello"
+    ) -> ConversationDetail {
         ConversationDetail(
             id: id,
             sourceAgent: agent,
             projectDir: "/tmp/webdav-project",
             createdAt: "2026-07-23T10:00:00Z",
             updatedAt: "2026-07-23T11:00:00Z",
-            summary: "\(agent) conversation",
+            summary: summary ?? "\(agent) conversation",
             storagePath: nil,
             resumeCommand: nil,
             messages: [
@@ -223,7 +451,7 @@ final class NativeWebDAVServiceTests: XCTestCase {
                     id: "\(id)-message",
                     timestamp: "2026-07-23T11:00:00Z",
                     role: "user",
-                    content: "hello",
+                    content: content,
                     toolCalls: [],
                     metadata: [:]
                 ),

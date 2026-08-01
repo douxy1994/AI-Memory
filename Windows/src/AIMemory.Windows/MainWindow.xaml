@@ -105,6 +105,10 @@
                 <ProgressBar x:Name="GlobalProgress"
                              IsIndeterminate="True"
                              Visibility="Collapsed" />
+                <TextBlock x:Name="GlobalProgressText"
+                           TextWrapping="Wrap"
+                           Opacity="0.7"
+                           Visibility="Collapsed" />
                 <InfoBar x:Name="GlobalFeedback"
                          IsOpen="False"
                          IsClosable="True" />

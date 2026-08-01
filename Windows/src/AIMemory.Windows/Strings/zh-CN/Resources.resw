@@ -39,6 +39,10 @@
   <data name="WebDavVerificationSucceeded" xml:space="preserve"><value>连接验证成功（HTTP {0}）。</value></data>
   <data name="WebDavVerificationFailed" xml:space="preserve"><value>连接验证失败：{0}</value></data>
   <data name="SyncCompleted" xml:space="preserve"><value>同步完成：上传 {0}，下载 {1}，跳过 {2}。</value></data>
+  <data name="SyncProgressPreparing" xml:space="preserve"><value>正在准备增量同步…</value></data>
+  <data name="SyncProgressVerifying" xml:space="preserve"><value>正在验证 WebDAV 连接…</value></data>
+  <data name="SyncProgressCounters" xml:space="preserve"><value>同步进度：已上传 {0}，已下载 {1}，已跳过 {2}。</value></data>
+  <data name="SyncProgressConversation" xml:space="preserve"><value>正在处理 {0} · {1}：已上传 {2}，已下载 {3}，已跳过 {4}。</value></data>
   <data name="SyncFailed" xml:space="preserve"><value>同步失败：{0}</value></data>
   <data name="RecoveryPointCreated" xml:space="preserve"><value>恢复点已创建：{0}</value></data>
   <data name="RecoveryPointUnchanged" xml:space="preserve"><value>数据没有变化，已保留现有恢复点：{0}</value></data>

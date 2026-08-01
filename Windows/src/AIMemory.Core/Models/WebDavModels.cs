@@ -36,6 +36,18 @@ public sealed record WebDavFileChange(
     [property: JsonPropertyName("timestamp")] string Timestamp,
     [property: JsonPropertyName("message_id")] string? MessageId);
 
+/// <summary>
+/// A source-backed conversation detail plus the MCP-specific message window.
+/// The full detail remains available so callers retain tool calls, metadata,
+/// file changes, storage information, and resume command when the message list
+/// is narrowed around a requested message or query.
+/// </summary>
+public sealed record McpConversationReadResult(
+    WebDavConversationDetail Detail,
+    IReadOnlyList<WebDavMessage> Messages,
+    int ReturnedMessageCount,
+    string FocusedMessageId);
+
 public sealed record WebDavManifest(
     [property: JsonPropertyName("schema_version")] int SchemaVersion,
     [property: JsonPropertyName("generated_at")] string GeneratedAt,
@@ -46,4 +58,7 @@ public sealed record WebDavManifestEntry(
     [property: JsonPropertyName("id")] string Id,
     [property: JsonPropertyName("file")] string File,
     [property: JsonPropertyName("updated_at")] string UpdatedAt,
-    [property: JsonPropertyName("sha256")] string? Sha256);
+    [property: JsonPropertyName("sha256")] string? Sha256,
+    [property: JsonPropertyName("semantic_digest")]
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    string? SemanticDigest = null);

@@ -151,7 +151,9 @@ public sealed class ConversationRepository(AIMemoryDatabase database)
                    c.started_at, c.updated_at, c.summary, c.storage_path
             FROM conversations c
             LEFT JOIN repos r ON r.repo_id=c.repo_id
-            WHERE c.conversation_id=$id LIMIT 1;
+            WHERE c.conversation_id=$id OR c.source_conversation_id=$id
+            ORDER BY c.updated_at DESC
+            LIMIT 1;
             """;
         rootCommand.Parameters.AddWithValue("$id", conversationId);
         await using var root = await rootCommand.ExecuteReaderAsync(cancellationToken);
@@ -174,7 +176,7 @@ public sealed class ConversationRepository(AIMemoryDatabase database)
             FROM messages WHERE conversation_id=$id
             ORDER BY timestamp, rowid;
             """;
-        messageCommand.Parameters.AddWithValue("$id", conversationId);
+        messageCommand.Parameters.AddWithValue("$id", id);
         var messageRows = new List<(string Id, string Timestamp, string Role, string Content)>();
         await using (var reader = await messageCommand.ExecuteReaderAsync(cancellationToken))
         {
@@ -205,7 +207,7 @@ public sealed class ConversationRepository(AIMemoryDatabase database)
             FROM file_changes WHERE conversation_id=$id
             ORDER BY timestamp, rowid;
             """;
-        changeCommand.Parameters.AddWithValue("$id", conversationId);
+        changeCommand.Parameters.AddWithValue("$id", id);
         var changes = new List<WebDavFileChange>();
         await using (var reader = await changeCommand.ExecuteReaderAsync(cancellationToken))
         {
@@ -221,6 +223,63 @@ public sealed class ConversationRepository(AIMemoryDatabase database)
         return new WebDavConversationDetail(
             id, agent, projectDir, createdAt, updatedAt, summary, storagePath,
             ResumeCommand(agent, id), messages, changes);
+    }
+
+    /// <summary>
+    /// Reads the same full conversation payload used by sync and the native
+    /// detail UI, then applies the macOS MCP helper's compact context window.
+    /// Filtering only narrows <c>messages</c>; file changes and every returned
+    /// message's tool-call detail remain source-backed.
+    /// </summary>
+    public async Task<McpConversationReadResult> ReadForMcpAsync(
+        string conversationId,
+        string? messageId,
+        string? query,
+        int limit,
+        CancellationToken cancellationToken = default)
+    {
+        var detail = await ExportAsync(conversationId, cancellationToken);
+        var messages = FocusMcpMessages(detail.Messages, messageId, query, limit);
+        var focusedId = messages.FirstOrDefault(message =>
+            string.Equals(message.Id, messageId, StringComparison.Ordinal))?.Id
+            ?? "";
+        return new McpConversationReadResult(
+            detail,
+            messages,
+            messages.Count,
+            focusedId);
+    }
+
+    public static IReadOnlyList<WebDavMessage> FocusMcpMessages(
+        IReadOnlyList<WebDavMessage> messages,
+        string? messageId,
+        string? query,
+        int limit)
+    {
+        var safeLimit = Math.Clamp(limit, 1, 50);
+        if (messages.Count <= safeLimit) return messages;
+
+        var focusIndex = -1;
+        if (!string.IsNullOrWhiteSpace(messageId))
+        {
+            focusIndex = IndexOf(messages, message =>
+                string.Equals(message.Id, messageId, StringComparison.Ordinal));
+        }
+        else if (!string.IsNullOrWhiteSpace(query))
+        {
+            focusIndex = IndexOf(messages, message =>
+                message.Content.Contains(query, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (focusIndex < 0)
+        {
+            return messages.Skip(messages.Count - safeLimit).ToArray();
+        }
+
+        var lower = Math.Max(0, Math.Min(
+            focusIndex - safeLimit / 2,
+            messages.Count - safeLimit));
+        return messages.Skip(lower).Take(safeLimit).ToArray();
     }
 
     public async Task UpsertAsync(
@@ -361,6 +420,17 @@ public sealed class ConversationRepository(AIMemoryDatabase database)
                 reader.GetString(4)));
         }
         return result;
+    }
+
+    private static int IndexOf<T>(
+        IReadOnlyList<T> values,
+        Func<T, bool> predicate)
+    {
+        for (var index = 0; index < values.Count; index++)
+        {
+            if (predicate(values[index])) return index;
+        }
+        return -1;
     }
 
     private static string? ResumeCommand(string agent, string id) =>

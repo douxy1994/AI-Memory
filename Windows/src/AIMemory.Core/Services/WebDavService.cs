@@ -1,3 +1,4 @@
+using System.Buffers.Binary;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
@@ -65,7 +66,8 @@ public sealed class WebDavService(
 
         var local = new Dictionary<
             (string Agent, string Id),
-            (WebDavConversationDetail Detail, byte[] Data, string Hash)>();
+            (WebDavConversationDetail Detail, byte[] Data, string Hash,
+             string SemanticDigest)>();
         foreach (var summary in await conversations.ListAsync(
                      limit: 5_000,
                      cancellationToken: cancellationToken))
@@ -74,7 +76,7 @@ public sealed class WebDavService(
                 summary.Id, cancellationToken);
             var data = JsonSerializer.SerializeToUtf8Bytes(detail, JsonOptions);
             local[(detail.SourceAgent, detail.Id)] =
-                (detail, data, Hash(data));
+                (detail, data, Hash(data), SemanticDigest(detail));
         }
 
         var keys = local.Keys.Union(remote.Keys)
@@ -106,15 +108,63 @@ public sealed class WebDavService(
             }
             else if (localValue.Detail is not null && remoteValue is not null)
             {
+                var remoteSemanticDigest = IsCurrentSemanticDigest(
+                    remoteValue.SemanticDigest)
+                    ? remoteValue.SemanticDigest
+                    : null;
                 if (string.Equals(
+                        remoteSemanticDigest,
+                        localValue.SemanticDigest,
+                        StringComparison.Ordinal))
+                {
+                    // The versioned semantic digest is shared by Foundation
+                    // and System.Text.Json, so equivalent JSON never uploads
+                    // merely because the two serializers format bytes
+                    // differently.
+                    merged[key] = remoteValue;
+                    skipped++;
+                }
+                else if (string.Equals(
                         remoteValue.Sha256,
                         localValue.Hash,
-                        StringComparison.OrdinalIgnoreCase)
-                    || (remoteValue.Sha256 is null
-                        && remoteValue.UpdatedAt == localValue.Detail.UpdatedAt))
+                        StringComparison.OrdinalIgnoreCase))
                 {
-                    merged[key] = remoteValue with { Sha256 = localValue.Hash };
+                    // A legacy byte hash is already conclusive. Keep its
+                    // unchanged manifest entry intact rather than rewriting
+                    // every legacy snapshot solely to append an optional field.
+                    merged[key] = remoteValue;
                     skipped++;
+                }
+                else if (remoteSemanticDigest is null)
+                {
+                    // Legacy schema-v1/v2 entries cannot use an equal timestamp
+                    // as proof of equality. Read once, calculate the shared
+                    // digest, and preserve the established local-wins behavior
+                    // when logically different snapshots have the same time.
+                    var payload = await ReadRemotePayloadAsync(
+                        root, remoteValue, username, password, cancellationToken);
+                    if (string.Equals(
+                            payload.Entry.SemanticDigest,
+                            localValue.SemanticDigest,
+                            StringComparison.Ordinal))
+                    {
+                        merged[key] = payload.Entry;
+                        skipped++;
+                    }
+                    else if (ParseDate(remoteValue.UpdatedAt)
+                             > ParseDate(localValue.Detail.UpdatedAt))
+                    {
+                        await conversations.UpsertAsync(payload.Detail, cancellationToken);
+                        merged[key] = payload.Entry;
+                        downloaded++;
+                    }
+                    else
+                    {
+                        merged[key] = await UploadAsync(
+                            conversationRoot, key, localValue,
+                            ensuredAgents, username, password, cancellationToken);
+                        uploaded++;
+                    }
                 }
                 else if (ParseDate(remoteValue.UpdatedAt)
                          > ParseDate(localValue.Detail.UpdatedAt))
@@ -125,6 +175,9 @@ public sealed class WebDavService(
                 }
                 else
                 {
+                    // Same timestamp plus a different semantic digest is a real
+                    // conflict, not a serializer difference: retain the prior
+                    // local-wins policy.
                     merged[key] = await UploadAsync(
                         conversationRoot, key, localValue,
                         ensuredAgents, username, password, cancellationToken);
@@ -133,19 +186,28 @@ public sealed class WebDavService(
             }
             progress?.Report(new SyncProgress(
                 "conversations", uploaded, downloaded, skipped, false,
-                $"正在同步 {key.Agent} · {key.Id}"));
+                $"正在同步 {key.Agent} · {key.Id}", key.Agent, key.Id));
         }
 
         var entries = merged.Values
             .OrderBy(value => value.Agent, StringComparer.Ordinal)
             .ThenBy(value => value.Id, StringComparer.Ordinal)
             .ToArray();
-        var manifest = new WebDavManifest(
-            2, DateTimeOffset.UtcNow.ToString("O"), entries);
-        await PutAsync(
-            new Uri(root, "manifest.json"),
-            JsonSerializer.SerializeToUtf8Bytes(manifest, JsonOptions),
-            username, password, cancellationToken);
+        var remoteEntries = remoteManifest.Conversations
+            .OrderBy(value => value.Agent, StringComparer.Ordinal)
+            .ThenBy(value => value.Id, StringComparer.Ordinal)
+            .ToArray();
+        var manifestChanged = remoteManifest.SchemaVersion < 2
+            || !entries.SequenceEqual(remoteEntries);
+        if (manifestChanged)
+        {
+            var manifest = new WebDavManifest(
+                2, DateTimeOffset.UtcNow.ToString("O"), entries);
+            await PutAsync(
+                new Uri(root, "manifest.json"),
+                JsonSerializer.SerializeToUtf8Bytes(manifest, JsonOptions),
+                username, password, cancellationToken);
+        }
         var result = new SyncProgress(
             "complete", uploaded, downloaded, skipped, true,
             $"同步完成：上传 {uploaded}，下载 {downloaded}，跳过 {skipped}。");
@@ -243,7 +305,8 @@ public sealed class WebDavService(
     private async Task<WebDavManifestEntry> UploadAsync(
         Uri conversationRoot,
         (string Agent, string Id) key,
-        (WebDavConversationDetail Detail, byte[] Data, string Hash) payload,
+        (WebDavConversationDetail Detail, byte[] Data, string Hash,
+         string SemanticDigest) payload,
         ISet<string> ensuredAgents,
         string? username,
         string? password,
@@ -264,7 +327,8 @@ public sealed class WebDavService(
             key.Agent, key.Id,
             $"conversations/{key.Agent}/{fileName}",
             payload.Detail.UpdatedAt,
-            payload.Hash);
+            payload.Hash,
+            payload.SemanticDigest);
     }
 
     private async Task<WebDavManifestEntry> DownloadAsync(
@@ -272,7 +336,25 @@ public sealed class WebDavService(
         WebDavManifestEntry entry,
         string? username,
         string? password,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool persist = true)
+    {
+        var payload = await ReadRemotePayloadAsync(
+            root, entry, username, password, cancellationToken);
+        if (persist)
+        {
+            await conversations!.UpsertAsync(payload.Detail, cancellationToken);
+        }
+        return payload.Entry;
+    }
+
+    private async Task<(WebDavConversationDetail Detail, WebDavManifestEntry Entry)>
+        ReadRemotePayloadAsync(
+            Uri root,
+            WebDavManifestEntry entry,
+            string? username,
+            string? password,
+            CancellationToken cancellationToken)
     {
         using var request = Request(
             HttpMethod.Get, new Uri(root, entry.File), username, password);
@@ -282,8 +364,13 @@ public sealed class WebDavService(
         var detail = JsonSerializer.Deserialize<WebDavConversationDetail>(
             data, JsonOptions)
             ?? throw new InvalidDataException($"远程对话 {entry.Id} 无法解析。");
-        await conversations!.UpsertAsync(detail, cancellationToken);
-        return entry with { Sha256 = Hash(data) };
+        return (
+            detail,
+            entry with
+            {
+                Sha256 = Hash(data),
+                SemanticDigest = SemanticDigest(detail),
+            });
     }
 
     private async Task PutAsync(
@@ -299,6 +386,170 @@ public sealed class WebDavService(
             new MediaTypeHeaderValue("application/json") { CharSet = "utf-8" };
         using var response = await _client.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
+    }
+
+    private const string SemanticDigestPrefix = "aimemory-conversation-v1:";
+    private static readonly byte[] SemanticDigestMagic =
+        Encoding.UTF8.GetBytes("aimemory-conversation-semantic-v1\0");
+
+    /// Shared with NativeWebDAVService.semanticDigest on macOS. The binary
+    /// framing is independent of JSON text formatting and only includes fields
+    /// the two local stores preserve across a sync round-trip.
+    public static string SemanticDigest(WebDavConversationDetail detail)
+    {
+        using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+        var writer = new SemanticDigestWriter(hash);
+        writer.WriteString(detail.Id);
+        writer.WriteString(detail.SourceAgent);
+        writer.WriteString(detail.ProjectDir);
+        writer.WriteString(detail.CreatedAt);
+        writer.WriteString(detail.UpdatedAt);
+        writer.WritePersistentOptionalString(detail.Summary);
+        writer.WritePersistentOptionalString(detail.StoragePath);
+
+        writer.WriteArrayCount(detail.Messages.Count);
+        foreach (var message in detail.Messages)
+        {
+            writer.WriteString(message.Id);
+            writer.WriteString(message.Timestamp);
+            writer.WriteString(message.Role);
+            writer.WriteString(message.Content);
+            writer.WriteArrayCount(message.ToolCalls.Count);
+            foreach (var tool in message.ToolCalls)
+            {
+                writer.WriteString(tool.Id);
+                writer.WriteString(tool.Name);
+                writer.WriteJson(tool.Input);
+                writer.WritePersistentOptionalString(tool.Output);
+                writer.WriteString(tool.Status);
+            }
+        }
+
+        writer.WriteArrayCount(detail.FileChanges.Count);
+        foreach (var change in detail.FileChanges)
+        {
+            writer.WriteString(change.Path);
+            writer.WriteString(change.ChangeType);
+            writer.WriteString(change.Timestamp);
+            writer.WritePersistentOptionalString(change.MessageId);
+        }
+        return SemanticDigestPrefix
+            + Convert.ToHexString(hash.GetHashAndReset()).ToLowerInvariant();
+    }
+
+    private static bool IsCurrentSemanticDigest(string? value) =>
+        value?.StartsWith(SemanticDigestPrefix, StringComparison.Ordinal) == true;
+
+    private sealed class SemanticDigestWriter
+    {
+        private const byte Null = 0;
+        private const byte False = 1;
+        private const byte True = 2;
+        private const byte Number = 3;
+        private const byte String = 4;
+        private const byte Array = 5;
+        private const byte Object = 6;
+        private readonly IncrementalHash _hash;
+
+        public SemanticDigestWriter(IncrementalHash hash)
+        {
+            _hash = hash;
+            _hash.AppendData(SemanticDigestMagic);
+        }
+
+        public void WritePersistentOptionalString(string? value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                WriteNull();
+                return;
+            }
+            WriteString(value);
+        }
+
+        public void WriteString(string value)
+        {
+            var bytes = Encoding.UTF8.GetBytes(value);
+            WriteTag(String);
+            WriteUInt64((ulong)bytes.Length);
+            _hash.AppendData(bytes);
+        }
+
+        public void WriteArrayCount(int count)
+        {
+            WriteTag(Array);
+            WriteUInt64((ulong)count);
+        }
+
+        public void WriteJson(JsonElement value)
+        {
+            switch (value.ValueKind)
+            {
+                case JsonValueKind.Null:
+                case JsonValueKind.Undefined:
+                    WriteNull();
+                    break;
+                case JsonValueKind.False:
+                    WriteTag(False);
+                    break;
+                case JsonValueKind.True:
+                    WriteTag(True);
+                    break;
+                case JsonValueKind.Number:
+                    WriteTag(Number);
+                    var number = value.GetDouble();
+                    WriteUInt64(number == 0
+                        ? 0
+                        : unchecked((ulong)BitConverter.DoubleToInt64Bits(number)));
+                    break;
+                case JsonValueKind.String:
+                    WriteString(value.GetString() ?? string.Empty);
+                    break;
+                case JsonValueKind.Array:
+                    var elements = value.EnumerateArray().ToArray();
+                    WriteArrayCount(elements.Length);
+                    foreach (var element in elements) WriteJson(element);
+                    break;
+                case JsonValueKind.Object:
+                    var properties = value.EnumerateObject().ToList();
+                    properties.Sort((left, right) => CompareUtf8(left.Name, right.Name));
+                    WriteTag(Object);
+                    WriteUInt64((ulong)properties.Count);
+                    foreach (var property in properties)
+                    {
+                        WriteString(property.Name);
+                        WriteJson(property.Value);
+                    }
+                    break;
+                default:
+                    WriteNull();
+                    break;
+            }
+        }
+
+        private void WriteNull() => WriteTag(Null);
+
+        private void WriteTag(byte value) => _hash.AppendData(new[] { value });
+
+        private void WriteUInt64(ulong value)
+        {
+            Span<byte> bytes = stackalloc byte[sizeof(ulong)];
+            BinaryPrimitives.WriteUInt64BigEndian(bytes, value);
+            _hash.AppendData(bytes);
+        }
+    }
+
+    private static int CompareUtf8(string left, string right)
+    {
+        var leftBytes = Encoding.UTF8.GetBytes(left);
+        var rightBytes = Encoding.UTF8.GetBytes(right);
+        var sharedLength = Math.Min(leftBytes.Length, rightBytes.Length);
+        for (var index = 0; index < sharedLength; index++)
+        {
+            var comparison = leftBytes[index].CompareTo(rightBytes[index]);
+            if (comparison != 0) return comparison;
+        }
+        return leftBytes.Length.CompareTo(rightBytes.Length);
     }
 
     private static string Hash(byte[] data) =>

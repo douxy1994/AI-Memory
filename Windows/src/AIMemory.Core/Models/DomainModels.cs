@@ -64,4 +64,6 @@ public sealed record SyncProgress(
     int Downloaded,
     int Skipped,
     bool Completed,
-    string Message);
+    string Message,
+    string? CurrentAgent = null,
+    string? CurrentConversationId = null);

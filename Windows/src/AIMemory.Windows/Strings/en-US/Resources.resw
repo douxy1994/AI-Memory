@@ -39,6 +39,10 @@
   <data name="WebDavVerificationSucceeded" xml:space="preserve"><value>Connection verified (HTTP {0}).</value></data>
   <data name="WebDavVerificationFailed" xml:space="preserve"><value>Connection verification failed: {0}</value></data>
   <data name="SyncCompleted" xml:space="preserve"><value>Sync complete: {0} uploaded, {1} downloaded, {2} unchanged.</value></data>
+  <data name="SyncProgressPreparing" xml:space="preserve"><value>Preparing incremental sync…</value></data>
+  <data name="SyncProgressVerifying" xml:space="preserve"><value>Verifying the WebDAV connection…</value></data>
+  <data name="SyncProgressCounters" xml:space="preserve"><value>Sync progress: {0} uploaded, {1} downloaded, {2} unchanged.</value></data>
+  <data name="SyncProgressConversation" xml:space="preserve"><value>Processing {0} · {1}: {2} uploaded, {3} downloaded, {4} unchanged.</value></data>
   <data name="SyncFailed" xml:space="preserve"><value>Sync failed: {0}</value></data>
   <data name="RecoveryPointCreated" xml:space="preserve"><value>Recovery point created: {0}</value></data>
   <data name="RecoveryPointUnchanged" xml:space="preserve"><value>No data changed. Existing recovery point kept: {0}</value></data>

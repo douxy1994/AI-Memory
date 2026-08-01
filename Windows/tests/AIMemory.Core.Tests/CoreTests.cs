@@ -3,6 +3,7 @@ using AIMemory.Core.Persistence;
 using AIMemory.Core.Services;
 using Microsoft.Data.Sqlite;
 using System.Net;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using Xunit;
@@ -1634,6 +1635,162 @@ public sealed class CoreTests : IDisposable
     }
 
     [Fact]
+    public void WebDavSemanticDigestMatchesSharedProtocolVector()
+    {
+        using var input = JsonDocument.Parse(
+            """{"z":{"nested":[true,null,"x"]},"alpha":1}""");
+        var detail = new WebDavConversationDetail(
+            "vector-1", "codex", "/tmp/semantic",
+            "2026-07-23T10:00:00Z", "2026-07-23T11:00:00Z",
+            "跨平台", null, "ignored resume",
+            [
+                new WebDavMessage(
+                    "m-1", "2026-07-23T10:30:00Z", "user", "hello 🌿",
+                    [
+                        new WebDavToolCall(
+                            "tool-1", "shell", input.RootElement.Clone(), null,
+                            "completed"),
+                    ],
+                    new Dictionary<string, JsonElement>
+                    {
+                        ["ignored"] = JsonSerializer.SerializeToElement("metadata"),
+                    }),
+            ],
+            [
+                new WebDavFileChange(
+                    "/tmp/a.swift", "modified", "2026-07-23T10:31:00Z", "m-1"),
+            ]);
+
+        var equivalentAfterStoreRoundTrip = detail with
+        {
+            ResumeCommand = "another generated command",
+            Messages =
+            [
+                detail.Messages[0] with
+                {
+                    Metadata = new Dictionary<string, JsonElement>(),
+                },
+            ],
+        };
+
+        const string expected =
+            "aimemory-conversation-v1:41c37b3f58708d33d64d27c22a6f37ac74559d75b7d488b3c574f1a9f63db550";
+        Assert.Equal(expected, WebDavService.SemanticDigest(detail));
+        Assert.Equal(expected, WebDavService.SemanticDigest(equivalentAfterStoreRoundTrip));
+    }
+
+    [Fact]
+    public async Task WebDavSyncSkipsSemanticEquivalentSerializerVariant()
+    {
+        var database = new AIMemoryDatabase(Path.Combine(_root, "webdav-semantic.db"));
+        await database.InitializeAsync();
+        const string updatedAt = "2026-07-23T11:00:00Z";
+        await using (var connection = database.OpenConnection())
+        {
+            var insert = connection.CreateCommand();
+            insert.CommandText = """
+                INSERT INTO conversations VALUES(
+                  'semantic','repo','codex','source','same logical content',$now,$now,NULL);
+                INSERT INTO messages VALUES('semantic-message','semantic','user','hello',$now);
+                """;
+            insert.Parameters.AddWithValue("$now", updatedAt);
+            await insert.ExecuteNonQueryAsync();
+        }
+        var repository = new ConversationRepository(database);
+        var detail = await repository.ExportAsync("semantic");
+        var compactOptions = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+            WriteIndented = false,
+        };
+        var remotePayload = JsonSerializer.SerializeToUtf8Bytes(detail, compactOptions);
+        var prettyPayload = JsonSerializer.SerializeToUtf8Bytes(detail, new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+            WriteIndented = true,
+        });
+        Assert.False(remotePayload.AsSpan().SequenceEqual(prettyPayload));
+
+        var idFileName = Convert.ToBase64String(Encoding.UTF8.GetBytes(detail.Id))
+            .TrimEnd('=').Replace('+', '-').Replace('/', '_') + ".json";
+        var entry = new WebDavManifestEntry(
+            detail.SourceAgent, detail.Id,
+            $"conversations/{detail.SourceAgent}/{idFileName}",
+            detail.UpdatedAt, "different-serializer-byte-hash",
+            WebDavService.SemanticDigest(detail));
+        var manifest = JsonSerializer.SerializeToUtf8Bytes(
+            new WebDavManifest(2, updatedAt, [entry]), compactOptions);
+        var handler = new MemoryWebDavHandler();
+        handler.Seed("/chatmem/manifest.json", manifest);
+        handler.Seed($"/chatmem/conversations/{detail.SourceAgent}/{idFileName}", remotePayload);
+        var service = new WebDavService(repository, new HttpClient(handler));
+
+        var result = await service.SyncAsync(
+            new Uri("https://dav.example.test/chatmem/"), null, null);
+
+        Assert.Equal(0, result.Uploaded);
+        Assert.Equal(1, result.Skipped);
+        Assert.Equal(0, handler.ConversationPutCount);
+        Assert.Equal(0, handler.ManifestPutCount);
+    }
+
+    [Fact]
+    public async Task WebDavSyncLegacyEqualTimestampDifferentContentUploadsLocal()
+    {
+        var database = new AIMemoryDatabase(Path.Combine(_root, "webdav-legacy-conflict.db"));
+        await database.InitializeAsync();
+        const string updatedAt = "2026-07-23T11:00:00Z";
+        await using (var connection = database.OpenConnection())
+        {
+            var insert = connection.CreateCommand();
+            insert.CommandText = """
+                INSERT INTO conversations VALUES(
+                  'legacy-conflict','repo','codex','source','local content',$now,$now,NULL);
+                INSERT INTO messages VALUES(
+                  'legacy-conflict-message','legacy-conflict','user','local message',$now);
+                """;
+            insert.Parameters.AddWithValue("$now", updatedAt);
+            await insert.ExecuteNonQueryAsync();
+        }
+        var repository = new ConversationRepository(database);
+        var local = await repository.ExportAsync("legacy-conflict");
+        var remote = local with
+        {
+            Summary = "remote content",
+            Messages =
+            [
+                local.Messages[0] with { Content = "remote message" },
+            ],
+        };
+        var jsonOptions = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+            WriteIndented = false,
+        };
+        var remotePayload = JsonSerializer.SerializeToUtf8Bytes(remote, jsonOptions);
+        var idFileName = Convert.ToBase64String(Encoding.UTF8.GetBytes(local.Id))
+            .TrimEnd('=').Replace('+', '-').Replace('/', '_') + ".json";
+        var entry = new WebDavManifestEntry(
+            local.SourceAgent, local.Id,
+            $"conversations/{local.SourceAgent}/{idFileName}",
+            local.UpdatedAt, null);
+        var manifest = JsonSerializer.SerializeToUtf8Bytes(
+            new WebDavManifest(1, updatedAt, [entry]), jsonOptions);
+        var handler = new MemoryWebDavHandler();
+        handler.Seed("/chatmem/manifest.json", manifest);
+        handler.Seed($"/chatmem/conversations/{local.SourceAgent}/{idFileName}", remotePayload);
+        var service = new WebDavService(repository, new HttpClient(handler));
+
+        var result = await service.SyncAsync(
+            new Uri("https://dav.example.test/chatmem/"), null, null);
+
+        Assert.Equal(1, result.Uploaded);
+        Assert.Equal(0, result.Skipped);
+        Assert.Equal(1, handler.ConversationPutCount);
+        Assert.Equal(1, handler.ManifestPutCount);
+    }
+
+    [Fact]
     public async Task NativeHistoryImportCopiesAllEightSourcesReadOnly()
     {
         var home = Path.Combine(_root, "home");
@@ -2075,9 +2232,105 @@ public sealed class CoreTests : IDisposable
         var first = await service.SyncAsync(folder);
         Assert.Equal(1, first.Uploaded);
         Assert.Equal(0, first.Skipped);
+        var canonicalFile = Path.Combine(
+            folder, "conversations", "codex", LocalSyncFilename("local-1"));
+        Assert.True(File.Exists(canonicalFile));
+        Assert.False(File.Exists(Path.Combine(
+            folder, "AIMemorySync", "conversations", "codex",
+            LocalSyncFilename("local-1"))));
+
         var second = await service.SyncAsync(folder);
         Assert.Equal(0, second.Uploaded);
         Assert.Equal(1, second.Skipped);
+    }
+
+    [Fact]
+    public async Task LocalFolderSyncScansCanonicalAndLegacyPayloadsWithoutManifest()
+    {
+        var database = new AIMemoryDatabase(Path.Combine(
+            _root, "local-sync-cross-platform.db"));
+        await database.InitializeAsync();
+        var repository = new ConversationRepository(database);
+        var folder = Path.Combine(_root, "shared-cross-platform");
+        var canonical = Path.Combine(folder, "conversations", "codex");
+        var legacy = Path.Combine(
+            folder, "AIMemorySync", "conversations", "codex");
+        Directory.CreateDirectory(canonical);
+        Directory.CreateDirectory(legacy);
+
+        var canonicalId = "swift-canonical";
+        var canonicalData = Encoding.UTF8.GetBytes(
+            SwiftStyleSyncPayload(canonicalId));
+        await File.WriteAllBytesAsync(Path.Combine(
+            canonical, LocalSyncFilename(canonicalId)), canonicalData);
+        // Duplicate payload in the legacy layout must resolve to one logical
+        // conversation rather than import twice.
+        await File.WriteAllBytesAsync(Path.Combine(
+            legacy, LocalSyncFilename(canonicalId)), canonicalData);
+        var legacyId = "legacy-windows";
+        await File.WriteAllTextAsync(
+            Path.Combine(legacy, LocalSyncFilename(legacyId)),
+            SwiftStyleSyncPayload(legacyId));
+
+        var service = new LocalFolderSyncService(repository);
+        var first = await service.SyncAsync(folder);
+        Assert.Equal(0, first.Uploaded);
+        Assert.Equal(2, first.Downloaded);
+        Assert.Equal(2, await repository.CountAsync());
+        Assert.True(File.Exists(Path.Combine(folder, "manifest.json")));
+
+        var second = await service.SyncAsync(folder);
+        Assert.Equal(0, second.Uploaded);
+        Assert.Equal(0, second.Downloaded);
+        Assert.Equal(2, second.Skipped);
+        Assert.Equal(canonicalData, await File.ReadAllBytesAsync(Path.Combine(
+            canonical, LocalSyncFilename(canonicalId))));
+    }
+
+    [Fact]
+    public void LocalFolderSyncSemanticHashMatchesCrossPlatformFixture()
+    {
+        var method = typeof(LocalFolderSyncService).GetMethod(
+            "SemanticHash",
+            BindingFlags.Static | BindingFlags.NonPublic);
+        Assert.NotNull(method);
+        var actual = (string?)method!.Invoke(
+            null,
+            [LocalFolderSemanticFixture()]);
+        Assert.Equal(
+            "2e7f520d598623953fcf41fb1ab39b49b1644e1a3401efeb7271699b7807ff16",
+            actual);
+    }
+
+    [Fact]
+    public async Task LocalFolderSyncIgnoresManifestPathsAndAgentDirectoryMismatches()
+    {
+        var database = new AIMemoryDatabase(Path.Combine(
+            _root, "local-sync-traversal.db"));
+        await database.InitializeAsync();
+        var repository = new ConversationRepository(database);
+        var folder = Path.Combine(_root, "shared-traversal");
+        var outside = Path.Combine(_root, "outside.json");
+        var outsideData = Encoding.UTF8.GetBytes(
+            SwiftStyleSyncPayload("outside"));
+        await File.WriteAllBytesAsync(outside, outsideData);
+        var mismatchedFolder = Path.Combine(folder, "conversations", "codex");
+        Directory.CreateDirectory(mismatchedFolder);
+        await File.WriteAllTextAsync(
+            Path.Combine(mismatchedFolder, LocalSyncFilename("mismatched")),
+            SwiftStyleSyncPayload("mismatched", "claude"));
+        await File.WriteAllTextAsync(
+            Path.Combine(folder, "manifest.json"),
+            """
+            {"schema_version":2,"conversations":[
+              {"agent":"codex","id":"outside","file":"../outside.json"}
+            ]}
+            """);
+
+        var result = await new LocalFolderSyncService(repository).SyncAsync(folder);
+        Assert.Equal(0, result.Downloaded);
+        Assert.Equal(0, await repository.CountAsync());
+        Assert.Equal(outsideData, await File.ReadAllBytesAsync(outside));
     }
 
     [Fact]
@@ -2235,6 +2488,86 @@ public sealed class CoreTests : IDisposable
         Assert.Contains(databasePath, report.ToDisplayText());
     }
 
+    private static WebDavConversationDetail LocalFolderSemanticFixture() =>
+        new(
+            "vector-1",
+            "codex",
+            "/tmp/semantic",
+            "2026-07-23T10:00:00Z",
+            "2026-07-23T11:00:00Z",
+            "跨平台",
+            null,
+            "ignored resume",
+            [
+                new WebDavMessage(
+                    "m-1",
+                    "2026-07-23T10:30:00Z",
+                    "user",
+                    "hello 🌿",
+                    [
+                        new WebDavToolCall(
+                            "tool-1",
+                            "shell",
+                            JsonSerializer.SerializeToElement(new
+                            {
+                                z = new
+                                {
+                                    nested = new object?[] { true, null, "x" },
+                                },
+                                alpha = 1,
+                            }),
+                            null,
+                            "completed"),
+                    ],
+                    new Dictionary<string, JsonElement>
+                    {
+                        ["ignored"] = JsonSerializer.SerializeToElement("metadata"),
+                    }),
+            ],
+            [
+                new WebDavFileChange(
+                    "/tmp/a.swift",
+                    "modified",
+                    "2026-07-23T10:31:00Z",
+                    "m-1"),
+            ]);
+
+    private static string LocalSyncFilename(string id) =>
+        Convert.ToBase64String(Encoding.UTF8.GetBytes(id))
+            .TrimEnd('=').Replace('+', '-').Replace('/', '_') + ".json";
+
+    private static string SwiftStyleSyncPayload(
+        string id,
+        string agent = "codex") =>
+        $$"""
+        {
+          "id": "{{id}}",
+          "source_agent": "{{agent}}",
+          "project_dir": "/tmp/sync-project",
+          "created_at": "2026-07-23T10:00:00Z",
+          "updated_at": "2026-07-23T11:00:00Z",
+          "summary": "codex conversation",
+          "messages": [
+            {
+              "id": "{{id}}-message",
+              "timestamp": "2026-07-23T11:00:00Z",
+              "role": "user",
+              "content": "hello",
+              "tool_calls": [
+                {
+                  "id": "{{id}}-tool",
+                  "name": "read_file",
+                  "input": {"path":"README.md","answer":42},
+                  "output": null,
+                  "status": "success"
+                }
+              ]
+            }
+          ],
+          "file_changes": []
+        }
+        """;
+
     private static async Task InsertRestoreConversationAsync(
         AIMemoryDatabase database,
         string id,
@@ -2339,6 +2672,11 @@ public sealed class CoreTests : IDisposable
         private readonly Dictionary<string, byte[]> _files = [];
         private readonly HashSet<string> _collections = [];
 
+        public int ConversationPutCount { get; private set; }
+        public int ManifestPutCount { get; private set; }
+
+        public void Seed(string path, byte[] data) => _files[path] = data;
+
         protected override async Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
             CancellationToken cancellationToken)
@@ -2360,6 +2698,14 @@ public sealed class CoreTests : IDisposable
             {
                 _files[path] = await request.Content!.ReadAsByteArrayAsync(
                     cancellationToken);
+                if (path.EndsWith("/manifest.json", StringComparison.Ordinal))
+                {
+                    ManifestPutCount++;
+                }
+                else
+                {
+                    ConversationPutCount++;
+                }
                 return new HttpResponseMessage(System.Net.HttpStatusCode.Created);
             }
             if (request.Method == HttpMethod.Get)
