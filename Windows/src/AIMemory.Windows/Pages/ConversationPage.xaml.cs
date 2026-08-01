@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Text.Json;
 using AIMemory.Core.Models;
 using AIMemory.Core.Services;
 using AIMemory.Windows.Services;
@@ -14,21 +16,147 @@ public sealed partial class ConversationPage : Page
     private WebDavConversationDetail? _detail;
     private FavoriteService? _favorites;
     private CancellationTokenSource? _automaticCapture;
+    private CancellationTokenSource? _detailLoad;
 
     public ConversationPage() => InitializeComponent();
 
     protected override async void OnNavigatedTo(NavigationEventArgs args)
     {
-        var context = (ConversationNavigation)args.Parameter;
+        if (args.Parameter is not ConversationNavigation context)
+        {
+            _context = null;
+            ShowLoadFailure(
+                LocalizationService.Get("ConversationNavigationUnavailable"),
+                showFeedback: false);
+            return;
+        }
+
         _context = context;
         _favorites = new FavoriteService(context.Window.Settings);
-        TitleText.Text = string.IsNullOrWhiteSpace(context.Conversation.Summary)
-            ? LocalizationService.Get("UntitledConversation")
-            : context.Conversation.Summary;
-        _detail = await context.Window.Conversations.ExportAsync(
-            context.Conversation.Id);
-        ApplyDetail(_detail);
-        await ReloadFavoriteStateAsync();
+        TitleText.Text = ConversationTitle(context.Conversation);
+        MetadataText.Text = "";
+        await LoadDetailAsync();
+    }
+
+    protected override void OnNavigatedFrom(NavigationEventArgs args)
+    {
+        CancelDetailLoad();
+        _automaticCapture?.Cancel();
+        _automaticCapture?.Dispose();
+        _automaticCapture = null;
+        base.OnNavigatedFrom(args);
+    }
+
+    private async Task LoadDetailAsync()
+    {
+        var context = _context;
+        if (context is null)
+        {
+            ShowLoadFailure(
+                LocalizationService.Get("ConversationNavigationUnavailable"),
+                showFeedback: false);
+            return;
+        }
+
+        CancelDetailLoad();
+        var request = new CancellationTokenSource();
+        _detailLoad = request;
+        ShowLoadingState();
+        TitleText.Text = ConversationTitle(context.Conversation);
+        MetadataText.Text = "";
+
+        try
+        {
+            var detail = await context.Window.Conversations.ExportAsync(
+                context.Conversation.Id,
+                request.Token);
+            if (request.IsCancellationRequested
+                || !ReferenceEquals(_context, context))
+            {
+                return;
+            }
+
+            _detail = detail;
+            ApplyDetail(detail);
+            ShowLoadedState();
+
+            try
+            {
+                await ReloadFavoriteStateAsync();
+            }
+            catch (Exception exception)
+            {
+                Show(
+                    LocalizationService.Format(
+                        "FavoriteUpdateFailed",
+                        exception.Message),
+                    InfoBarSeverity.Warning);
+            }
+
+            ConfigureHandoffTargets();
+            StartAutomaticCapture();
+        }
+        catch (OperationCanceledException) when (request.IsCancellationRequested)
+        {
+            // A newer navigation or retry superseded this read.
+        }
+        catch (Exception exception)
+        {
+            if (!request.IsCancellationRequested
+                && ReferenceEquals(_context, context))
+            {
+                ShowLoadFailure(
+                    LocalizationService.Format(
+                        "ConversationLoadFailed",
+                        exception.Message),
+                    showFeedback: true);
+            }
+        }
+        finally
+        {
+            if (ReferenceEquals(_detailLoad, request))
+            {
+                _detailLoad = null;
+            }
+            request.Dispose();
+        }
+    }
+
+    private void CancelDetailLoad()
+    {
+        _detailLoad?.Cancel();
+        _detailLoad = null;
+    }
+
+    private void ShowLoadingState()
+    {
+        LoadingPanel.Visibility = Visibility.Visible;
+        ErrorPanel.Visibility = Visibility.Collapsed;
+        DetailContent.Visibility = Visibility.Collapsed;
+    }
+
+    private void ShowLoadedState()
+    {
+        LoadingPanel.Visibility = Visibility.Collapsed;
+        ErrorPanel.Visibility = Visibility.Collapsed;
+        DetailContent.Visibility = Visibility.Visible;
+    }
+
+    private void ShowLoadFailure(string message, bool showFeedback)
+    {
+        _detail = null;
+        LoadingPanel.Visibility = Visibility.Collapsed;
+        DetailContent.Visibility = Visibility.Collapsed;
+        ErrorPanel.Visibility = Visibility.Visible;
+        ErrorDetailText.Text = message;
+        if (showFeedback)
+        {
+            Show(message, InfoBarSeverity.Error);
+        }
+    }
+
+    private void ConfigureHandoffTargets()
+    {
         var detected = new AgentCatalog().Detect()
             .Where(value => value.IsDetected)
             .ToArray();
@@ -36,31 +164,36 @@ public sealed partial class ConversationPage : Page
             ? detected
             : new AgentCatalog().Detect();
         TargetAgentBox.SelectedIndex = 0;
-        StartAutomaticCapture();
     }
 
-    protected override void OnNavigatedFrom(NavigationEventArgs args)
-    {
-        _automaticCapture?.Cancel();
-        _automaticCapture?.Dispose();
-        _automaticCapture = null;
-        base.OnNavigatedFrom(args);
-    }
+    private static string ConversationTitle(ConversationSummary conversation) =>
+        string.IsNullOrWhiteSpace(conversation.Summary)
+            ? LocalizationService.Get("UntitledConversation")
+            : conversation.Summary;
 
     private void ApplyDetail(WebDavConversationDetail detail)
     {
         TitleText.Text = string.IsNullOrWhiteSpace(detail.Summary)
             ? LocalizationService.Get("UntitledConversation")
             : detail.Summary;
-        MetadataText.Text =
-            $"{detail.SourceAgent} · {detail.ProjectDir} · {detail.UpdatedAt}";
-        MessageList.ItemsSource = detail.Messages;
+        var project = string.IsNullOrWhiteSpace(detail.ProjectDir)
+            ? LocalizationService.Get("NotProvided")
+            : detail.ProjectDir;
+        MetadataText.Text = $"{detail.SourceAgent} · {project} · {FormatTimestamp(detail.UpdatedAt)}";
+        MessageList.ItemsSource = detail.Messages
+            .Select(value => new ConversationMessageRow(value))
+            .ToArray();
         FileChangeList.ItemsSource = detail.FileChanges;
-        MessageCountText.Text = detail.Messages.Count.ToString();
-        FileCountText.Text = detail.FileChanges.Count.ToString();
+        MessageCountText.Text = detail.Messages.Count.ToString(
+            CultureInfo.CurrentCulture);
+        FileCountText.Text = detail.FileChanges.Count.ToString(
+            CultureInfo.CurrentCulture);
         ToolCallCountText.Text = detail.Messages
             .Sum(value => value.ToolCalls.Count)
-            .ToString();
+            .ToString(CultureInfo.CurrentCulture);
+        NoMessagesPanel.Visibility = detail.Messages.Count == 0
+            ? Visibility.Visible
+            : Visibility.Collapsed;
         NoFileChangesText.Visibility = detail.FileChanges.Count == 0
             ? Visibility.Visible
             : Visibility.Collapsed;
@@ -72,6 +205,14 @@ public sealed partial class ConversationPage : Page
             ? LocalizationService.Get("NotProvided")
             : detail.StoragePath;
     }
+
+    private static string FormatTimestamp(string value) =>
+        DateTimeOffset.TryParse(value, out var parsed)
+            ? parsed.ToLocalTime().ToString("g", CultureInfo.CurrentCulture)
+            : value;
+
+    private async void Retry_Click(object sender, RoutedEventArgs args)
+        => await LoadDetailAsync();
 
     private void StartAutomaticCapture()
     {
@@ -418,5 +559,117 @@ public sealed partial class ConversationPage : Page
         package.SetText(value);
         Clipboard.SetContent(package);
         Clipboard.Flush();
+    }
+}
+
+/// <summary>
+/// Presentation row for a source-backed conversation message. Keeping the
+/// original WebDAV payload intact while projecting it for XAML means a message
+/// with tool calls is never reduced to plain transcript text in the desktop UI.
+/// </summary>
+public sealed class ConversationMessageRow
+{
+    public ConversationMessageRow(WebDavMessage value)
+    {
+        RoleLabel = LocalizeRole(value.Role);
+        Content = value.Content ?? "";
+        TimestampLabel = FormatTimestamp(value.Timestamp);
+        ToolCalls = (value.ToolCalls ?? [])
+            .Select(tool => new ConversationToolCallRow(tool))
+            .ToArray();
+    }
+
+    public string RoleLabel { get; }
+    public string Content { get; }
+    public string TimestampLabel { get; }
+    public IReadOnlyList<ConversationToolCallRow> ToolCalls { get; }
+    public Visibility ContentVisibility => string.IsNullOrWhiteSpace(Content)
+        ? Visibility.Collapsed
+        : Visibility.Visible;
+    public Visibility ToolCallsVisibility => ToolCalls.Count == 0
+        ? Visibility.Collapsed
+        : Visibility.Visible;
+    public string ToolCallsHeader => LocalizationService.Format(
+        "ConversationToolCallsCount",
+        ToolCalls.Count);
+
+    private static string LocalizeRole(string? value) =>
+        value?.Trim().ToLowerInvariant() switch
+        {
+            "user" => LocalizationService.Get("ConversationRoleUser"),
+            "assistant" => LocalizationService.Get("ConversationRoleAssistant"),
+            "system" => LocalizationService.Get("ConversationRoleSystem"),
+            _ when string.IsNullOrWhiteSpace(value) =>
+                LocalizationService.Get("NotProvided"),
+            _ => value,
+        };
+
+    private static string FormatTimestamp(string value) =>
+        DateTimeOffset.TryParse(value, out var parsed)
+            ? parsed.ToLocalTime().ToString("g", CultureInfo.CurrentCulture)
+            : value;
+}
+
+/// <summary>
+/// A readable, copyable projection of a tool invocation. Input and output stay
+/// in the original detail model for sync/MCP and are rendered here only for the
+/// conversation screen.
+/// </summary>
+public sealed class ConversationToolCallRow
+{
+    public ConversationToolCallRow(WebDavToolCall value)
+    {
+        Name = string.IsNullOrWhiteSpace(value.Name)
+            ? LocalizationService.Get("NotProvided")
+            : value.Name;
+        InputDetails = FormatJson(value.Input, indented: true);
+        InputPreview = Compact(InputDetails);
+        OutputText = value.Output ?? "";
+        StatusLabel = string.IsNullOrWhiteSpace(value.Status)
+            ? LocalizationService.Get("NotProvided")
+            : value.Status;
+    }
+
+    public string Name { get; }
+    public string InputPreview { get; }
+    public string InputDetails { get; }
+    public string OutputText { get; }
+    public string StatusLabel { get; }
+    public Visibility OutputVisibility => string.IsNullOrWhiteSpace(OutputText)
+        ? Visibility.Collapsed
+        : Visibility.Visible;
+    public Visibility NoOutputVisibility => string.IsNullOrWhiteSpace(OutputText)
+        ? Visibility.Visible
+        : Visibility.Collapsed;
+
+    private static string FormatJson(JsonElement value, bool indented)
+    {
+        if (value.ValueKind == JsonValueKind.Undefined)
+        {
+            return LocalizationService.Get("NotProvided");
+        }
+
+        try
+        {
+            return JsonSerializer.Serialize(
+                value,
+                new JsonSerializerOptions { WriteIndented = indented });
+        }
+        catch (Exception)
+        {
+            return value.ToString();
+        }
+    }
+
+    private static string Compact(string value)
+    {
+        var compact = string.Join(
+            " ",
+            value.Split(
+                ['\r', '\n', '\t', ' '],
+                StringSplitOptions.RemoveEmptyEntries));
+        return compact.Length <= 180
+            ? compact
+            : compact[..177] + "…";
     }
 }

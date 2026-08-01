@@ -170,6 +170,19 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    /// <summary>
+    /// Opens the settings surface at a concrete category.  This keeps Help
+    /// destinations actionable instead of leaving users on the generic
+    /// settings landing section.
+    /// </summary>
+    public void OpenSettingsCategory(string category)
+    {
+        Navigation.SelectedItem = Navigation.SettingsItem;
+        ContentFrame.Navigate(
+            typeof(SettingsPage),
+            new SettingsNavigation(this, category));
+    }
+
     private void Navigate(string tag)
     {
         var page = tag switch
@@ -179,6 +192,7 @@ public sealed partial class MainWindow : Window
             "favorites" => typeof(FavoritesPage),
             "trash" => typeof(TrashPage),
             "settings" => typeof(SettingsPage),
+            "help" => typeof(HelpPage),
             _ => typeof(WorkbenchPage),
         };
         ContentFrame.Navigate(page, this);
@@ -209,7 +223,7 @@ public sealed partial class MainWindow : Window
         AddAccelerator(VirtualKey.Left, VirtualKeyModifiers.Menu,
             GoBack);
         AddAccelerator(VirtualKey.F1, VirtualKeyModifiers.None,
-            () => _ = ShowHelpAsync());
+            ShowHelp);
     }
 
     private void AddAccelerator(
@@ -444,17 +458,7 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private async Task ShowHelpAsync()
-    {
-        var dialog = new ContentDialog
-        {
-            XamlRoot = RootLayout.XamlRoot,
-            Title = LocalizationService.Get("HelpTitle"),
-            Content = LocalizationService.Get("HelpContent"),
-            CloseButtonText = LocalizationService.Get("Done"),
-        };
-        await dialog.ShowAsync();
-    }
+    private void ShowHelp() => NavigateTo("help");
 
     private void ShowAbout(bool checkForUpdates)
     {
@@ -535,8 +539,8 @@ public sealed partial class MainWindow : Window
     private void SettingsMenu_Click(object sender, RoutedEventArgs args) =>
         NavigateTo("settings");
 
-    private async void HelpMenu_Click(object sender, RoutedEventArgs args) =>
-        await ShowHelpAsync();
+    private void HelpMenu_Click(object sender, RoutedEventArgs args) =>
+        ShowHelp();
 
     private void AboutMenu_Click(object sender, RoutedEventArgs args) =>
         ShowAbout(checkForUpdates: false);

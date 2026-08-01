@@ -27,7 +27,9 @@ public sealed partial class SettingsPage : Page
 
     protected override async void OnNavigatedTo(NavigationEventArgs args)
     {
-        _window = (MainWindow)args.Parameter;
+        var navigation = args.Parameter as SettingsNavigation;
+        _window = navigation?.Window ?? args.Parameter as MainWindow;
+        if (_window is null) return;
         _loading = true;
         try
         {
@@ -97,13 +99,7 @@ public sealed partial class SettingsPage : Page
                     "ChatMemSourceDetected",
                     chatMemSource);
             await RefreshDiagnosticsAsync();
-            if (SettingsCategories.SelectedIndex < 0)
-            {
-                SettingsCategories.SelectedIndex = 0;
-            }
-            ShowCategory(
-                (SettingsCategories.SelectedItem as ListViewItem)?.Tag as string
-                ?? "general");
+            SelectCategory(navigation?.Category ?? "general");
         }
         finally
         {
@@ -135,6 +131,22 @@ public sealed partial class SettingsPage : Page
         UpdatesPanel.Visibility = category == "updates"
             ? Visibility.Visible
             : Visibility.Collapsed;
+    }
+
+    private void SelectCategory(string requestedCategory)
+    {
+        var item = SettingsCategories.Items
+            .OfType<ListViewItem>()
+            .FirstOrDefault(value => string.Equals(
+                value.Tag as string,
+                requestedCategory,
+                StringComparison.Ordinal));
+        item ??= SettingsCategories.Items
+            .OfType<ListViewItem>()
+            .FirstOrDefault();
+        if (item is null) return;
+        SettingsCategories.SelectedItem = item;
+        ShowCategory(item.Tag as string ?? "general");
     }
 
     private async Task ReloadStartupAsync()
@@ -1053,3 +1065,7 @@ public sealed partial class SettingsPage : Page
             message,
             severity);
 }
+
+public sealed record SettingsNavigation(
+    MainWindow Window,
+    string Category);

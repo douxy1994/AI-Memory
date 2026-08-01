@@ -554,4 +554,66 @@
   <data name="AboutSoftwareTitle.Text" xml:space="preserve"><value>关于本软件</value></data>
   <data name="AboutSoftwareBody.Text" xml:space="preserve"><value>AI Memory 是一款本地优先的 AI 工作记忆工具。它将不同 AI Agent 与命令行工具产生的对话历史、记忆规则、检查点和交接信息集中到一个原生工作台，帮助你快速找回上下文、检索过去的工作，并从上次中断的位置继续。&#x0a;&#x0a;所有核心数据均由本机管理，兼顾隐私、可靠性与长期可用性。</value></data>
   <data name="AboutFooter.Text" xml:space="preserve"><value>本地优先 · 独立数据 · 原生 Windows 11</value></data>
+
+  <data name="HelpTitle.Text" xml:space="preserve"><value>需要帮助？</value></data>
+  <data name="HelpSubtitle.Text" xml:space="preserve"><value>从常见问题开始，直接打开相应的可用功能。</value></data>
+  <data name="HelpSearch.PlaceholderText" xml:space="preserve"><value>搜索问题</value></data>
+  <data name="HelpTopicsTitle.Text" xml:space="preserve"><value>常见问题</value></data>
+  <data name="HelpNoSearchResults.Text" xml:space="preserve"><value>没有匹配的问题。</value></data>
+  <data name="HelpHowItWorksTitle.Text" xml:space="preserve"><value>后台工作方式</value></data>
+  <data name="HelpHowItWorksData.Text" xml:space="preserve"><value>本机数据：对话、恢复点和设置都保存在当前 Windows 用户的数据目录中。</value></data>
+  <data name="HelpHowItWorksSync.Text" xml:space="preserve"><value>增量同步：WebDAV 与本地同步目录只处理发生变化的对话，完成后显示上传、下载和跳过数量。</value></data>
+  <data name="HelpHowItWorksIntegrations.Text" xml:space="preserve"><value>Agent 集成：只为已检测到且支持自动配置的 Agent 写入 AI Memory 托管的 MCP、skill 和启动规则。</value></data>
+  <data name="HelpDiagnostics.Header" xml:space="preserve"><value>高级排障</value></data>
+  <data name="HelpDiagnosticDatabase.Text" xml:space="preserve"><value>数据库</value></data>
+  <data name="HelpDiagnosticSettings.Text" xml:space="preserve"><value>设置文件</value></data>
+  <data name="HelpOpenDataFolder.Label" xml:space="preserve"><value>打开数据目录</value></data>
+  <data name="HelpCopyDiagnostics.Label" xml:space="preserve"><value>复制诊断</value></data>
+  <data name="HelpReturnWorkbench.Label" xml:space="preserve"><value>返回工作台</value></data>
+  <data name="HelpOpenDataFolderRejected" xml:space="preserve"><value>系统未能打开数据目录。</value></data>
+  <data name="HelpOpenDataFolderFailed" xml:space="preserve"><value>打开数据目录失败：{0}</value></data>
+  <data name="HelpDiagnosticDatabaseValue" xml:space="preserve"><value>数据库：{0}</value></data>
+  <data name="HelpDiagnosticSettingsValue" xml:space="preserve"><value>设置文件：{0}</value></data>
+  <data name="HelpDiagnosticDataDirectoryValue" xml:space="preserve"><value>数据目录：{0}</value></data>
+  <data name="HelpDiagnosticsCopied" xml:space="preserve"><value>诊断信息已复制。</value></data>
+  <data name="HelpTopicContinueTitle" xml:space="preserve"><value>如何继续上次工作？</value></data>
+  <data name="HelpTopicContinueDescription" xml:space="preserve"><value>从工作台查看最近对话和来源状态。</value></data>
+  <data name="HelpTopicContinueAnswer" xml:space="preserve"><value>工作台会列出最近活动、项目分组和可继续的对话入口。</value></data>
+  <data name="HelpTopicContinueAction" xml:space="preserve"><value>打开工作台</value></data>
+  <data name="HelpTopicSwitchAgentTitle" xml:space="preserve"><value>如何切换来源？</value></data>
+  <data name="HelpTopicSwitchAgentDescription" xml:space="preserve"><value>在记忆页按来源查看跨 Agent 的规则和交接。</value></data>
+  <data name="HelpTopicSwitchAgentAnswer" xml:space="preserve"><value>记忆页保留来源证据，并可打开相关来源对话。</value></data>
+  <data name="HelpTopicSwitchAgentAction" xml:space="preserve"><value>打开记忆</value></data>
+  <data name="HelpTopicRememberedTitle" xml:space="preserve"><value>AI Memory 记住了什么？</value></data>
+  <data name="HelpTopicRememberedDescription" xml:space="preserve"><value>检查候选规则、已批准规则和冲突。</value></data>
+  <data name="HelpTopicRememberedAnswer" xml:space="preserve"><value>所有记忆规则都能查看证据、来源和当前状态。</value></data>
+  <data name="HelpTopicRememberedAction" xml:space="preserve"><value>查看记忆</value></data>
+  <data name="HelpTopicMcpTitle" xml:space="preserve"><value>如何管理 Agent 集成？</value></data>
+  <data name="HelpTopicMcpDescription" xml:space="preserve"><value>打开设置中的 Agent 集成，查看检测结果。</value></data>
+  <data name="HelpTopicMcpAnswer" xml:space="preserve"><value>未安装或未检测到的 Agent 默认保持关闭，已安装项会优先显示。</value></data>
+  <data name="HelpTopicMcpAction" xml:space="preserve"><value>打开 Agent 设置</value></data>
+  <data name="HelpTopicStartTitle" xml:space="preserve"><value>如何让 AI Memory 随系统启动？</value></data>
+  <data name="HelpTopicStartDescription" xml:space="preserve"><value>在设置的常规页管理登录启动。</value></data>
+  <data name="HelpTopicStartAnswer" xml:space="preserve"><value>开关连接 Windows 启动任务；系统策略或用户禁用状态会明确显示。</value></data>
+  <data name="HelpTopicStartAction" xml:space="preserve"><value>打开常规设置</value></data>
+  <data name="HelpTopicSyncTitle" xml:space="preserve"><value>同步为什么只处理变化？</value></data>
+  <data name="HelpTopicSyncDescription" xml:space="preserve"><value>打开数据同步与备份设置查看进度和结果。</value></data>
+  <data name="HelpTopicSyncAnswer" xml:space="preserve"><value>WebDAV 与本地目录按会话语义摘要合并，完成后显示上传、下载和跳过数量。</value></data>
+  <data name="HelpTopicSyncAction" xml:space="preserve"><value>打开同步设置</value></data>
+
+  <data name="ConversationLoadingDetail.Text" xml:space="preserve"><value>正在读取完整对话…</value></data>
+  <data name="ConversationLoadFailedTitle.Text" xml:space="preserve"><value>无法读取对话</value></data>
+  <data name="ConversationBackFromError.Content" xml:space="preserve"><value>返回历史</value></data>
+  <data name="ConversationRetry.Content" xml:space="preserve"><value>重试</value></data>
+  <data name="ConversationNoMessages.Text" xml:space="preserve"><value>这段对话还没有可显示的消息。</value></data>
+  <data name="ConversationToolCallDetails.Header" xml:space="preserve"><value>查看参数与输出</value></data>
+  <data name="ConversationToolCallInput.Text" xml:space="preserve"><value>输入</value></data>
+  <data name="ConversationToolCallOutput.Text" xml:space="preserve"><value>输出</value></data>
+  <data name="ConversationToolCallNoOutput.Text" xml:space="preserve"><value>这次工具调用没有返回内容。</value></data>
+  <data name="ConversationNavigationUnavailable" xml:space="preserve"><value>没有提供可读取的对话。</value></data>
+  <data name="ConversationLoadFailed" xml:space="preserve"><value>读取对话失败：{0}</value></data>
+  <data name="ConversationRoleUser" xml:space="preserve"><value>用户</value></data>
+  <data name="ConversationRoleAssistant" xml:space="preserve"><value>助手</value></data>
+  <data name="ConversationRoleSystem" xml:space="preserve"><value>系统</value></data>
+  <data name="ConversationToolCallsCount" xml:space="preserve"><value>工具调用（{0}）</value></data>
 </root>

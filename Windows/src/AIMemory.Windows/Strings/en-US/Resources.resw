@@ -554,4 +554,66 @@
   <data name="AboutSoftwareTitle.Text" xml:space="preserve"><value>About This App</value></data>
   <data name="AboutSoftwareBody.Text" xml:space="preserve"><value>AI Memory is a local-first work-memory tool for AI. It brings conversation history, memory rules, checkpoints, and handoff information from different AI Agents and command-line tools into one native workbench, helping you recover context, find past work, and continue from where you stopped.&#x0a;&#x0a;All core data is managed locally for privacy, reliability, and long-term availability.</value></data>
   <data name="AboutFooter.Text" xml:space="preserve"><value>Local first · Independent data · Native Windows 11</value></data>
+
+  <data name="HelpTitle.Text" xml:space="preserve"><value>Need help?</value></data>
+  <data name="HelpSubtitle.Text" xml:space="preserve"><value>Start with a common question and open the working feature directly.</value></data>
+  <data name="HelpSearch.PlaceholderText" xml:space="preserve"><value>Search questions</value></data>
+  <data name="HelpTopicsTitle.Text" xml:space="preserve"><value>Common questions</value></data>
+  <data name="HelpNoSearchResults.Text" xml:space="preserve"><value>No matching questions.</value></data>
+  <data name="HelpHowItWorksTitle.Text" xml:space="preserve"><value>How it works</value></data>
+  <data name="HelpHowItWorksData.Text" xml:space="preserve"><value>Local data: conversations, recovery points, and settings stay in the current Windows user's data directory.</value></data>
+  <data name="HelpHowItWorksSync.Text" xml:space="preserve"><value>Incremental sync: WebDAV and local folders process only changed conversations and report uploaded, downloaded, and skipped counts.</value></data>
+  <data name="HelpHowItWorksIntegrations.Text" xml:space="preserve"><value>Agent integrations: AI Memory writes managed MCP, skill, and startup rules only for detected Agents that support automatic configuration.</value></data>
+  <data name="HelpDiagnostics.Header" xml:space="preserve"><value>Advanced diagnostics</value></data>
+  <data name="HelpDiagnosticDatabase.Text" xml:space="preserve"><value>Database</value></data>
+  <data name="HelpDiagnosticSettings.Text" xml:space="preserve"><value>Settings file</value></data>
+  <data name="HelpOpenDataFolder.Label" xml:space="preserve"><value>Open Data Folder</value></data>
+  <data name="HelpCopyDiagnostics.Label" xml:space="preserve"><value>Copy Diagnostics</value></data>
+  <data name="HelpReturnWorkbench.Label" xml:space="preserve"><value>Back to Workbench</value></data>
+  <data name="HelpOpenDataFolderRejected" xml:space="preserve"><value>The system did not open the data folder.</value></data>
+  <data name="HelpOpenDataFolderFailed" xml:space="preserve"><value>Could not open the data folder: {0}</value></data>
+  <data name="HelpDiagnosticDatabaseValue" xml:space="preserve"><value>Database: {0}</value></data>
+  <data name="HelpDiagnosticSettingsValue" xml:space="preserve"><value>Settings: {0}</value></data>
+  <data name="HelpDiagnosticDataDirectoryValue" xml:space="preserve"><value>Data directory: {0}</value></data>
+  <data name="HelpDiagnosticsCopied" xml:space="preserve"><value>Diagnostics copied.</value></data>
+  <data name="HelpTopicContinueTitle" xml:space="preserve"><value>How do I continue my last task?</value></data>
+  <data name="HelpTopicContinueDescription" xml:space="preserve"><value>Review recent conversations and source status from the Workbench.</value></data>
+  <data name="HelpTopicContinueAnswer" xml:space="preserve"><value>The Workbench lists recent activity, project groups, and actionable continuation entries.</value></data>
+  <data name="HelpTopicContinueAction" xml:space="preserve"><value>Open Workbench</value></data>
+  <data name="HelpTopicSwitchAgentTitle" xml:space="preserve"><value>How do I switch sources?</value></data>
+  <data name="HelpTopicSwitchAgentDescription" xml:space="preserve"><value>Review cross-Agent rules and handoffs from Memory.</value></data>
+  <data name="HelpTopicSwitchAgentAnswer" xml:space="preserve"><value>Memory keeps source evidence and opens the related source conversation.</value></data>
+  <data name="HelpTopicSwitchAgentAction" xml:space="preserve"><value>Open Memory</value></data>
+  <data name="HelpTopicRememberedTitle" xml:space="preserve"><value>What does AI Memory remember?</value></data>
+  <data name="HelpTopicRememberedDescription" xml:space="preserve"><value>Review candidate rules, approved rules, and conflicts.</value></data>
+  <data name="HelpTopicRememberedAnswer" xml:space="preserve"><value>Every memory rule exposes its evidence, source, and current state.</value></data>
+  <data name="HelpTopicRememberedAction" xml:space="preserve"><value>View Memory</value></data>
+  <data name="HelpTopicMcpTitle" xml:space="preserve"><value>How do I manage Agent integrations?</value></data>
+  <data name="HelpTopicMcpDescription" xml:space="preserve"><value>Open Agent integrations in Settings to inspect detection results.</value></data>
+  <data name="HelpTopicMcpAnswer" xml:space="preserve"><value>Missing or undetected Agents stay off by default, while installed entries appear first.</value></data>
+  <data name="HelpTopicMcpAction" xml:space="preserve"><value>Open Agent Settings</value></data>
+  <data name="HelpTopicStartTitle" xml:space="preserve"><value>How do I start AI Memory with Windows?</value></data>
+  <data name="HelpTopicStartDescription" xml:space="preserve"><value>Manage launch at login from General settings.</value></data>
+  <data name="HelpTopicStartAnswer" xml:space="preserve"><value>The toggle uses the Windows startup task and reports policy or user-disabled states explicitly.</value></data>
+  <data name="HelpTopicStartAction" xml:space="preserve"><value>Open General Settings</value></data>
+  <data name="HelpTopicSyncTitle" xml:space="preserve"><value>Why does sync process only changes?</value></data>
+  <data name="HelpTopicSyncDescription" xml:space="preserve"><value>Open Data sync and backup settings to see progress and results.</value></data>
+  <data name="HelpTopicSyncAnswer" xml:space="preserve"><value>WebDAV and local folders merge by conversation semantic digest and report uploaded, downloaded, and skipped counts.</value></data>
+  <data name="HelpTopicSyncAction" xml:space="preserve"><value>Open Sync Settings</value></data>
+
+  <data name="ConversationLoadingDetail.Text" xml:space="preserve"><value>Reading full conversation…</value></data>
+  <data name="ConversationLoadFailedTitle.Text" xml:space="preserve"><value>Could not read conversation</value></data>
+  <data name="ConversationBackFromError.Content" xml:space="preserve"><value>Back to History</value></data>
+  <data name="ConversationRetry.Content" xml:space="preserve"><value>Retry</value></data>
+  <data name="ConversationNoMessages.Text" xml:space="preserve"><value>This conversation has no messages to display yet.</value></data>
+  <data name="ConversationToolCallDetails.Header" xml:space="preserve"><value>View input and output</value></data>
+  <data name="ConversationToolCallInput.Text" xml:space="preserve"><value>Input</value></data>
+  <data name="ConversationToolCallOutput.Text" xml:space="preserve"><value>Output</value></data>
+  <data name="ConversationToolCallNoOutput.Text" xml:space="preserve"><value>This tool call has no recorded output.</value></data>
+  <data name="ConversationNavigationUnavailable" xml:space="preserve"><value>No conversation was provided to read.</value></data>
+  <data name="ConversationLoadFailed" xml:space="preserve"><value>Could not read the conversation: {0}</value></data>
+  <data name="ConversationRoleUser" xml:space="preserve"><value>User</value></data>
+  <data name="ConversationRoleAssistant" xml:space="preserve"><value>Assistant</value></data>
+  <data name="ConversationRoleSystem" xml:space="preserve"><value>System</value></data>
+  <data name="ConversationToolCallsCount" xml:space="preserve"><value>Tool calls ({0})</value></data>
 </root>
