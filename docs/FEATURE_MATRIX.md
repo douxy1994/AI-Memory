@@ -33,6 +33,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 | 简体中文 / English 界面 | 已实现 | 已实现：MRT Core 原生资源，可跟随系统或独立选择 |
 | GitHub 更新检查 | 已实现 | 已实现核心 |
 | 升级就绪与运行诊断 | 已实现 | 已实现：设置、WebDAV、Credential Locker、数据库结构及完整性检查 |
-| 签名公开安装包 | 已发布：v0.1.0 universal DMG、本地固定签名与 SHA-256；尚未 Apple Developer ID 公证 | 暂未发布 |
+| 签名公开安装包 | 已发布：v0.1.1 universal DMG、本地固定签名与 SHA-256；尚未 Apple Developer ID 公证 | 暂未发布 |
 
 Windows 标记为 Preview 的原因是 WinUI 桌面端源码、核心测试和跨架构 helper 产物已完成，但当前提交仍需在真实 Windows 11 桌面会话完成 MSIX 安装与交互验证。

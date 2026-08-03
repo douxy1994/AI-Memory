@@ -993,7 +993,7 @@ struct SettingsView: View {
             )
             let version = Bundle.main.object(
                 forInfoDictionaryKey: "CFBundleShortVersionString"
-            ) as? String ?? "0.1.0"
+            ) as? String ?? "0.1.1"
             let result = try await updateService.check(
                 feedURL: feed,
                 currentVersion: version

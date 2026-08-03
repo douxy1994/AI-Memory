@@ -123,7 +123,7 @@ struct RootView: View {
     private var appVersion: String {
         let value = Bundle.main.object(
             forInfoDictionaryKey: "CFBundleShortVersionString"
-        ) as? String ?? "0.1.0"
+        ) as? String ?? "0.1.1"
         return "v\(value)"
     }
 }

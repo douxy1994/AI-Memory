@@ -349,6 +349,277 @@ final class NativeConversationStoreTests: XCTestCase {
         XCTAssertEqual(checkpoints.first?.summary, "Updated")
         XCTAssertEqual(checkpoints.first?.messageCount, 3)
     }
+
+    // MARK: - tool_calls.input_json recursive escaping
+    // See docs/TOOL_CALL_JSON_BLOAT.md
+
+    /// Core regression. Tool inputs are frequently top-level JSON strings —
+    /// `exec` and `node_repl` take a code blob, not an object. Before the fix
+    /// `JSONSerialization` rejected those fragments, the reader returned the
+    /// raw quoted text, and the writer encoded it again, doubling the value on
+    /// every round trip until single rows reached 364 MB. The stored length
+    /// must now stay constant.
+    func testTopLevelJSONStringToolInputDoesNotGrowAcrossRoundTrips() async throws {
+        let databaseURL = try await Self.makeSeededDatabase(
+            inputJSON: #"'"const x = 1;\nconsole.log(\"hi\");"'"#
+        )
+        defer { try? FileManager.default.removeItem(
+            at: databaseURL.deletingLastPathComponent()
+        ) }
+
+        let store = NativeConversationStore(databaseURL: databaseURL)
+        var lengths: [Int] = [try Self.storedInputLength(databaseURL)]
+        for _ in 0..<5 {
+            let detail = try await store.readConversationByID("conversation-1")
+            try await store.upsertConversation(detail)
+            lengths.append(try Self.storedInputLength(databaseURL))
+        }
+
+        XCTAssertEqual(
+            Set(lengths).count,
+            1,
+            "input_json 长度在往返中发生变化，递归转义已回归：\(lengths)"
+        )
+    }
+
+    /// Numbers, booleans and null are top-level fragments too, and hit exactly
+    /// the same rejected-fragment path as strings did.
+    func testAllJSONFragmentKindsRoundTripWithoutGrowing() async throws {
+        for literal in [#"'42'"#, #"'true'"#, #"'null'"#, #"'"plain"'"#] {
+            let databaseURL = try await Self.makeSeededDatabase(inputJSON: literal)
+            defer { try? FileManager.default.removeItem(
+                at: databaseURL.deletingLastPathComponent()
+            ) }
+
+            let store = NativeConversationStore(databaseURL: databaseURL)
+            let before = try Self.storedInputLength(databaseURL)
+            let detail = try await store.readConversationByID("conversation-1")
+            try await store.upsertConversation(detail)
+            let after = try Self.storedInputLength(databaseURL)
+
+            XCTAssertEqual(before, after, "字面量 \(literal) 在往返后长度改变")
+        }
+    }
+
+    /// The unwrap helper must collapse accumulated layers and then be a no-op.
+    func testUnwrapNestedJSONTextCollapsesLayersAndIsIdempotent() throws {
+        let payload = #""payload""#
+        var bloated = payload
+        for _ in 0..<20 {
+            let data = try JSONSerialization.data(
+                withJSONObject: bloated,
+                options: [.fragmentsAllowed]
+            )
+            bloated = String(data: data, encoding: .utf8)!
+        }
+        XCTAssertGreaterThan(bloated.count, 100_000)
+
+        let once = NativeDatabase.unwrapNestedJSONText(bloated)
+        XCTAssertEqual(once, payload)
+        // Already-correct values report "nothing to do" rather than rewriting.
+        XCTAssertNil(NativeDatabase.unwrapNestedJSONText(payload))
+        XCTAssertNil(NativeDatabase.unwrapNestedJSONText(#"{"cmd":"pwd"}"#))
+    }
+
+    /// Schema 2 must repair rows damaged by older builds when the database is
+    /// opened, without touching rows that are already correct.
+    func testMigrationRepairsBloatedToolInputOnOpen() async throws {
+        let databaseURL = try await Self.makeSeededDatabase(inputJSON: #"'{"cmd":"pwd"}'"#)
+        defer { try? FileManager.default.removeItem(
+            at: databaseURL.deletingLastPathComponent()
+        ) }
+
+        var bloated = #""echo hi""#
+        for _ in 0..<12 {
+            let data = try JSONSerialization.data(
+                withJSONObject: bloated,
+                options: [.fragmentsAllowed]
+            )
+            bloated = String(data: data, encoding: .utf8)!
+        }
+
+        var raw: OpaquePointer?
+        XCTAssertEqual(sqlite3_open(databaseURL.path, &raw), SQLITE_OK)
+        var insert: OpaquePointer?
+        XCTAssertEqual(
+            sqlite3_prepare_v2(
+                raw,
+                """
+                INSERT INTO tool_calls(
+                  tool_call_id, message_id, name, input_json, output_text, status
+                ) VALUES('tool-bloated', 'message-2', 'exec', ?, 'ok', 'success');
+                """,
+                -1,
+                &insert,
+                nil
+            ),
+            SQLITE_OK
+        )
+        sqlite3_bind_text(insert, 1, bloated, -1, unsafeBitCast(
+            -1,
+            to: sqlite3_destructor_type.self
+        ))
+        XCTAssertEqual(sqlite3_step(insert), SQLITE_DONE)
+        sqlite3_finalize(insert)
+        // Force the migration to run again over the damaged row.
+        XCTAssertEqual(
+            sqlite3_exec(raw, "PRAGMA user_version = 1;", nil, nil, nil),
+            SQLITE_OK
+        )
+        sqlite3_close(raw)
+
+        var database: NativeDatabase? = try NativeDatabase(
+            url: databaseURL,
+            createMigrationBackup: false
+        )
+        let version = try await database?.currentSchemaVersion()
+        XCTAssertEqual(version, 2)
+        database = nil
+
+        XCTAssertEqual(
+            try Self.storedInput(databaseURL, toolCallID: "tool-bloated"),
+            #""echo hi""#
+        )
+        // The healthy row must be byte-identical afterwards.
+        XCTAssertEqual(
+            try Self.storedInput(databaseURL, toolCallID: "tool-1"),
+            #"{"cmd":"pwd"}"#
+        )
+    }
+
+    /// A single tool input past the cap is truncated with a diagnosable marker
+    /// instead of being persisted whole.
+    func testOversizedToolInputIsTruncatedBeforeInsert() async throws {
+        let databaseURL = try await Self.makeSeededDatabase(inputJSON: #"'{"cmd":"pwd"}'"#)
+        defer { try? FileManager.default.removeItem(
+            at: databaseURL.deletingLastPathComponent()
+        ) }
+
+        let store = NativeConversationStore(databaseURL: databaseURL)
+        let detail = try await store.readConversationByID("conversation-1")
+        let huge = String(repeating: "x", count: 4_000_000)
+        let target = detail.messages[1]
+        let original = target.toolCalls[0]
+        let patchedMessage = ConversationMessage(
+            id: target.id,
+            timestamp: target.timestamp,
+            role: target.role,
+            content: target.content,
+            toolCalls: [
+                ToolCall(
+                    id: original.id,
+                    name: original.name,
+                    input: .string(huge),
+                    output: original.output,
+                    status: original.status
+                )
+            ],
+            metadata: target.metadata
+        )
+        let patched = ConversationDetail(
+            id: detail.id,
+            sourceAgent: detail.sourceAgent,
+            projectDir: detail.projectDir,
+            createdAt: detail.createdAt,
+            updatedAt: detail.updatedAt,
+            summary: detail.summary,
+            storagePath: detail.storagePath,
+            resumeCommand: detail.resumeCommand,
+            messages: [detail.messages[0], patchedMessage],
+            fileChanges: detail.fileChanges
+        )
+        try await store.upsertConversation(patched)
+
+        let stored = try Self.storedInput(databaseURL, toolCallID: original.id)
+        XCTAssertLessThan(stored.utf8.count, NativeConversationStore.maxToolInputBytes + 4_096)
+        XCTAssertTrue(stored.contains("_truncated"))
+        XCTAssertTrue(stored.contains("_original_bytes"))
+    }
+
+    // MARK: - helpers
+
+    private static func makeSeededDatabase(inputJSON: String) async throws -> URL {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("ToolInputBloat-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(
+            at: root,
+            withIntermediateDirectories: true
+        )
+        let databaseURL = root.appendingPathComponent("aimemory.db")
+
+        var database: NativeDatabase? = try NativeDatabase(url: databaseURL)
+        _ = try await database?.currentSchemaVersion()
+        database = nil
+
+        var raw: OpaquePointer?
+        guard sqlite3_open(databaseURL.path, &raw) == SQLITE_OK else {
+            throw NativeDatabaseError.openFailed("seed open failed")
+        }
+        let seed = """
+        INSERT INTO repos VALUES(
+          'repo-1', '/tmp/native-project', 'fingerprint', NULL, NULL,
+          '2026-07-23T10:00:00Z', '2026-07-23T10:00:00Z'
+        );
+        INSERT INTO conversations VALUES(
+          'conversation-1', 'repo-1', 'codex', 'conversation-1',
+          'Bloat regression', '2026-07-23T10:00:00Z',
+          '2026-07-23T11:00:00Z', '/tmp/rollout.jsonl'
+        );
+        INSERT INTO messages VALUES(
+          'message-1', 'conversation-1', 'user',
+          'run it', '2026-07-23T10:01:00Z'
+        );
+        INSERT INTO messages VALUES(
+          'message-2', 'conversation-1', 'assistant',
+          'Done', '2026-07-23T10:02:00Z'
+        );
+        INSERT INTO tool_calls VALUES(
+          'tool-1', 'message-2', 'exec', \(inputJSON), 'ok', 'success'
+        );
+        """
+        let result = sqlite3_exec(raw, seed, nil, nil, nil)
+        let message = raw.map { String(cString: sqlite3_errmsg($0)) } ?? "no database"
+        sqlite3_close(raw)
+        guard result == SQLITE_OK else {
+            throw NativeDatabaseError.statementFailed(message)
+        }
+        return databaseURL
+    }
+
+    private static func storedInput(
+        _ databaseURL: URL,
+        toolCallID: String
+    ) throws -> String {
+        var raw: OpaquePointer?
+        guard sqlite3_open(databaseURL.path, &raw) == SQLITE_OK else {
+            throw NativeDatabaseError.openFailed("read open failed")
+        }
+        defer { sqlite3_close(raw) }
+        var statement: OpaquePointer?
+        guard sqlite3_prepare_v2(
+            raw,
+            "SELECT input_json FROM tool_calls WHERE tool_call_id = ?;",
+            -1,
+            &statement,
+            nil
+        ) == SQLITE_OK else {
+            throw NativeDatabaseError.statementFailed("prepare failed")
+        }
+        defer { sqlite3_finalize(statement) }
+        sqlite3_bind_text(statement, 1, toolCallID, -1, unsafeBitCast(
+            -1,
+            to: sqlite3_destructor_type.self
+        ))
+        guard sqlite3_step(statement) == SQLITE_ROW,
+              let value = sqlite3_column_text(statement, 0) else {
+            throw NativeDatabaseError.statementFailed("row not found")
+        }
+        return String(cString: value)
+    }
+
+    private static func storedInputLength(_ databaseURL: URL) throws -> Int {
+        try storedInput(databaseURL, toolCallID: "tool-1").utf8.count
+    }
 }
 
 private func XCTAssertThrowsErrorAsync(

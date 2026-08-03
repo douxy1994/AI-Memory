@@ -47,12 +47,12 @@
 		759580487E651A55903E4431 /* NativeCredentialStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72186E86423999D7388DD8F8 /* NativeCredentialStore.swift */; };
 		77188B40AFB11270306054A3 /* NativeDatabaseImporterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ECE416DDFA8A6380650A993 /* NativeDatabaseImporterTests.swift */; };
 		7F6D96568E1A42211C2F2F62 /* BridgeClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F366ACE133848110399E70D /* BridgeClient.swift */; };
+		80B5C9A785F7480346BF7819 /* NativeAgentIntegrationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33D57E247576D13A5CBCB1F1 /* NativeAgentIntegrationStore.swift */; };
 		846B0AA10A21951EBCE03AAD /* NativeTrashStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB62D89BCD696354ECA0320B /* NativeTrashStoreTests.swift */; };
 		863086A332D9EA4F8F14D0EC /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93726B76BD9203A9DAA42688 /* SidebarView.swift */; };
 		8966E91B96DD9FDE565FE5F4 /* NativeTrashStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71653498514199497320EF84 /* NativeTrashStore.swift */; };
 		9C05D3A00800FD58C2647461 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEDD815264B0500FD0D66275 /* HistoryView.swift */; };
 		9C93E44E5B84C00EAFF81390 /* NativeBackupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 668123A7E6493C3195017969 /* NativeBackupService.swift */; };
-		A1B2C3D4E5F60718293A4B5C /* NativeAgentIntegrationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33D57E247576D13A5CBCB1F1 /* NativeAgentIntegrationStore.swift */; };
 		A2FD2DEA9F4BB03D9947F2D5 /* NativeAgentConversationWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A79A1BE16793B8EC1264FF12 /* NativeAgentConversationWriter.swift */; };
 		A3B1004284C11E82A9749B6F /* Telemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF2DBA420615AEAB587DB9A9 /* Telemetry.swift */; };
 		A5ED8D035A3A9640CB8FA308 /* NativeWebDAVServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EB7D809C535C39A43618511 /* NativeWebDAVServiceTests.swift */; };
@@ -477,7 +477,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "set -eu\nrevision=\"$(git -C \"${SRCROOT}\" rev-parse --short=7 HEAD 2>/dev/null || true)\"\nif [ -z \"${revision}\" ]; then\n  revision=\"uncommitted\"\nfi\nresource_dir=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}\"\nmkdir -p \"${resource_dir}\"\nprintf '%s\\n' \"${revision}\" > \"${resource_dir}/AIMemorySourceRevision.txt\"\n";
+			shellScript = "set -eu\nrevision=\"$(git -C \"${SRCROOT}\" rev-parse --short=7 HEAD 2>/dev/null || true)\"\nif [ -z \"${revision}\" ]; then\n  revision=\"uncommitted\"\nfi\n/usr/libexec/PlistBuddy \\\n  -c \"Delete :AIMemorySourceRevision\" \\\n  \"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\" 2>/dev/null || true\n/usr/libexec/PlistBuddy \\\n  -c \"Add :AIMemorySourceRevision string ${revision}\" \\\n  \"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\n";
 		};
 		F463DB0AEFE42BA3D1A12112 /* Embed native MCP helper */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -530,7 +530,7 @@
 				06658F5D58AEAD15211EB197 /* DataPaths.swift in Sources */,
 				C1540FC772E5643E6B47FB8C /* MCPMain.swift in Sources */,
 				DC7FC3B20F8D6ED5147B68BB /* NativeAdditionalHistoryImporter.swift in Sources */,
-				A1B2C3D4E5F60718293A4B5C /* NativeAgentIntegrationStore.swift in Sources */,
+				80B5C9A785F7480346BF7819 /* NativeAgentIntegrationStore.swift in Sources */,
 				5AAE86C002E7EABC74C81BCA /* NativeConversationStore.swift in Sources */,
 				B19FE1875D64D7823322FEED /* NativeDatabase.swift in Sources */,
 				E57E68CA7F4684320C1B1C1E /* NativeHistoryImporter.swift in Sources */,
@@ -624,7 +624,7 @@
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 0.1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.aimemory.app;
 				PRODUCT_NAME = AIMemory;
 				SDKROOT = macosx;
@@ -684,7 +684,7 @@
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 0.1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.aimemory.app;
 				PRODUCT_NAME = AIMemory;
 				SDKROOT = macosx;

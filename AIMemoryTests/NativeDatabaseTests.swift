@@ -36,12 +36,12 @@ final class NativeDatabaseTests: XCTestCase {
 
         var database: NativeDatabase? = try NativeDatabase(url: url)
         let firstVersion = try await database?.currentSchemaVersion()
-        XCTAssertEqual(firstVersion, 1)
+        XCTAssertEqual(firstVersion, NativeDatabase.schemaVersion)
         database = nil
 
         let reopened = try NativeDatabase(url: url)
         let reopenedVersion = try await reopened.currentSchemaVersion()
-        XCTAssertEqual(reopenedVersion, 1)
+        XCTAssertEqual(reopenedVersion, NativeDatabase.schemaVersion)
     }
 
     func testLegacyDatabaseIsBackedUpBeforeMigration() async throws {
@@ -67,7 +67,7 @@ final class NativeDatabaseTests: XCTestCase {
 
         let database = try NativeDatabase(url: url)
         let version = try await database.currentSchemaVersion()
-        XCTAssertEqual(version, 1)
+        XCTAssertEqual(version, NativeDatabase.schemaVersion)
         let backups = try FileManager.default.contentsOfDirectory(
             at: root,
             includingPropertiesForKeys: nil

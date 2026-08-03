@@ -117,10 +117,10 @@ flowchart LR
 
 ### 下载
 
-- **macOS 14+（Apple silicon 与 Intel）**：[下载 AI Memory 0.1.0](https://github.com/douxy1994/AI-Memory/releases/download/v0.1.0/AI-Memory-0.1.0-macOS-universal.dmg)
+- **macOS 14+（Apple silicon 与 Intel）**：[下载 AI Memory 0.1.1](https://github.com/douxy1994/AI-Memory/releases/download/v0.1.1/AI-Memory-0.1.1-macOS-universal.dmg)
 - **Windows 11**：原生客户端仍为 Preview，完成真实 Windows 11 桌面安装与交互验收后提供安装包。
 
-macOS 当前构建使用项目固定的本地代码签名身份，尚未使用 Apple Developer ID 公证。首次打开时如果 macOS 拦截，请在“系统设置 → 隐私与安全性”中确认打开。DMG 与 SHA-256 校验文件会同时发布在 [v0.1.0 Release 页面](https://github.com/douxy1994/AI-Memory/releases/tag/v0.1.0)。
+macOS 当前构建使用项目固定的本地代码签名身份，尚未使用 Apple Developer ID 公证。首次打开时如果 macOS 拦截，请在“系统设置 → 隐私与安全性”中确认打开。DMG 与 SHA-256 校验文件会同时发布在 [v0.1.1 Release 页面](https://github.com/douxy1994/AI-Memory/releases/tag/v0.1.1)。
 
 ## 数据与隐私
 
