@@ -116,14 +116,59 @@ struct RootView: View {
                 )
             Text("AI Memory")
                 .font(Theme.appFont(size: 20, weight: .bold, design: .rounded))
+                .accessibilityElement(children: .combine)
+            if store.availableUpdate != nil {
+                updateButton
+            }
         }
-        .accessibilityElement(children: .combine)
+    }
+
+    /// Shown only when the launch check found a newer release. Stays put until
+    /// the update is installed, so it cannot be missed the way a timed banner
+    /// could. One click runs the whole download → verify → replace → relaunch
+    /// flow; no installer window, no manual drag.
+    private var updateButton: some View {
+        Button {
+            Task { await store.installAvailableUpdate() }
+        } label: {
+            HStack(spacing: 5) {
+                if store.updateInstalling {
+                    ProgressView().controlSize(.small).scaleEffect(0.7)
+                } else {
+                    Image(systemName: "arrow.down.circle.fill")
+                        .font(.system(size: 13, weight: .semibold))
+                }
+                Text(
+                    store.updateInstalling
+                        ? "\(Int(store.updateProgress * 100))%"
+                        : (store.availableUpdate.map { "更新到 \($0.version)" } ?? "更新")
+                )
+                .font(Theme.appFont(size: 11, weight: .semibold))
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(
+                Capsule().fill(Theme.accent.opacity(store.updateInstalling ? 0.12 : 0.16))
+            )
+            .foregroundStyle(Theme.accent)
+        }
+        .buttonStyle(.plain)
+        .disabled(store.updateInstalling)
+        .help(
+            store.updateStage
+                ?? (store.availableUpdate.map {
+                    "下载并安装 AI Memory \($0.version)，安装完成后自动重启"
+                } ?? "")
+        )
+        .transition(.opacity.combined(with: .scale))
+        .animation(.easeInOut(duration: 0.2), value: store.availableUpdate?.version)
+        .animation(.easeInOut(duration: 0.2), value: store.updateInstalling)
     }
 
     private var appVersion: String {
         let value = Bundle.main.object(
             forInfoDictionaryKey: "CFBundleShortVersionString"
-        ) as? String ?? "0.1.1"
+        ) as? String ?? "0.1.2"
         return "v\(value)"
     }
 }

@@ -578,7 +578,7 @@ struct SettingsView: View {
                         .disabled(updateBusy)
                         if let release = availableRelease {
                             if release.assetURL != nil {
-                                Button("下载并打开安装包") {
+                                Button("更新并重启") {
                                     Task { await downloadUpdate(release) }
                                 }
                                 .buttonStyle(.borderedProminent)
@@ -993,7 +993,7 @@ struct SettingsView: View {
             )
             let version = Bundle.main.object(
                 forInfoDictionaryKey: "CFBundleShortVersionString"
-            ) as? String ?? "0.1.1"
+            ) as? String ?? "0.1.2"
             let result = try await updateService.check(
                 feedURL: feed,
                 currentVersion: version
@@ -1052,20 +1052,50 @@ struct SettingsView: View {
         }
     }
 
+    /// Downloads the DMG and installs it over the running bundle, then relaunches.
+    /// Falls back to opening the DMG when this copy is not the writable
+    /// /Applications install (for example when running from the build folder).
     private func downloadUpdate(_ release: NativeUpdateRelease) async {
         await MainActor.run {
             updateBusy = true
-            updateStatus = "正在下载安装包…"
+            updateStatus = "正在下载 \(release.version)…"
         }
         defer { Task { @MainActor in updateBusy = false } }
+
+        let installer = NativeUpdateInstaller.shared
         do {
-            let url = try await updateService.downloadAndOpen(release)
-            await MainActor.run {
-                updateStatus = "安装包已下载并打开：\(url.lastPathComponent)"
+            let dmgURL = try await installer.download(release) { fraction in
+                Task { @MainActor in
+                    updateStatus = "正在下载 \(release.version)… \(Int(fraction * 100))%"
+                }
+            }
+            await MainActor.run { updateStatus = "正在校验签名并安装…" }
+
+            let outcome = try await Task.detached(priority: .userInitiated) {
+                try installer.install(from: dmgURL)
+            }.value
+
+            switch outcome {
+            case .installed(let appURL, let rollbackURL):
+                await MainActor.run {
+                    updateStatus = "已安装 \(release.version)，正在重启…"
+                }
+                // The helper waits for this process to exit, then relaunches and
+                // keeps the previous bundle until the new one proves healthy.
+                try await MainActor.run {
+                    try installer.relaunch(appURL: appURL, rollbackURL: rollbackURL)
+                }
+            case .openedInstaller(let url):
+                await MainActor.run {
+                    updateStatus = """
+                    当前运行的不是 /Applications/AIMemory.app，无法就地覆盖。\
+                    已打开安装包 \(url.lastPathComponent)，请手动拖入「应用程序」。
+                    """
+                }
             }
         } catch {
             await MainActor.run {
-                updateStatus = "下载失败：\(error.localizedDescription)"
+                updateStatus = "更新失败：\(error.localizedDescription)"
             }
         }
     }

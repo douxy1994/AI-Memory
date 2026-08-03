@@ -44,6 +44,14 @@ final class AppStore: ObservableObject {
     /// window is being created for the first time.
     @Published private(set) var aboutUpdateCheckRequest = 0
 
+    /// Set once the launch check finds a newer release. Drives the download
+    /// button next to the brand title, which stays visible until the update is
+    /// installed — unlike a banner, which the user can easily miss.
+    @Published private(set) var availableUpdate: NativeUpdateRelease?
+    @Published private(set) var updateInstalling = false
+    @Published private(set) var updateProgress: Double = 0
+    @Published private(set) var updateStage: String?
+
     /// Cached app settings (locale, font, sync config, etc.). Loaded on
     /// bootstrap and after save. Used by the workbench "立即同步" entry to
     /// decide which sync to run.
@@ -140,6 +148,10 @@ final class AppStore: ObservableObject {
             }
             await loadConversations(for: firstAvailable)
             loading = .ready
+            // Network-only and independent of everything below, so run it
+            // concurrently. Waiting for the whole serial chain delayed the
+            // update button by ~19s on a real profile.
+            Task { await checkForUpdatesAtLaunchIfNeeded() }
             // Background loads (serial to avoid lock contention).
             await autoSelectActiveRepo()
             await loadRepoMemory(repoRoot: activeRepoRoot)
@@ -148,7 +160,6 @@ final class AppStore: ObservableObject {
             if await importChatMemWebDAVIfNeeded() {
                 await loadAppSettings()
             }
-            await checkForUpdatesAtLaunchIfNeeded()
             telemetry.lifecycle("bootstrap done: \(detected.count) sources, \(firstAvailable.label) selected, repo=\(activeRepoRoot)")
         } catch {
             loading = .failed(error.localizedDescription)
@@ -1121,10 +1132,54 @@ final class AppStore: ObservableObject {
                 feedURL: feedURL,
                 currentVersion: currentVersion
             ) {
-                bannerMessage = "发现 AI Memory \(release.version)，请在设置中查看并安装。"
+                availableUpdate = release
+                telemetry.lifecycle("update available: \(release.version)")
             }
         } catch {
             telemetry.lifecycle("automatic update check skipped: \(error.localizedDescription)")
+        }
+    }
+
+    /// Downloads the pending release and installs it over the running bundle,
+    /// then relaunches. Falls back to opening the DMG when this copy is not the
+    /// writable /Applications install.
+    func installAvailableUpdate() async {
+        guard let release = availableUpdate, !updateInstalling else { return }
+        updateInstalling = true
+        updateProgress = 0
+        updateStage = "正在下载 \(release.version)…"
+        defer { updateInstalling = false }
+
+        let installer = NativeUpdateInstaller.shared
+        do {
+            let dmgURL = try await installer.download(release) { [weak self] fraction in
+                Task { @MainActor in
+                    self?.updateProgress = fraction
+                    self?.updateStage = "正在下载 \(release.version)… \(Int(fraction * 100))%"
+                }
+            }
+            updateStage = "正在校验签名并安装…"
+            let outcome = try await Task.detached(priority: .userInitiated) {
+                try installer.install(from: dmgURL)
+            }.value
+
+            switch outcome {
+            case .installed(let appURL, let rollbackURL):
+                updateStage = "已安装 \(release.version)，正在重启…"
+                availableUpdate = nil
+                telemetry.lifecycle("update installed: \(release.version), relaunching")
+                try installer.relaunch(appURL: appURL, rollbackURL: rollbackURL)
+            case .openedInstaller(let url):
+                updateStage = nil
+                bannerError = """
+                当前运行的不是 /Applications/AIMemory.app，无法就地覆盖。\
+                已打开 \(url.lastPathComponent)，请手动拖入「应用程序」。
+                """
+            }
+        } catch {
+            updateStage = nil
+            bannerError = "更新失败：\(error.localizedDescription)"
+            telemetry.lifecycle("update install failed: \(error.localizedDescription)")
         }
     }
 

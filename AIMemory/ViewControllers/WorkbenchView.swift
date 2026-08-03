@@ -316,7 +316,7 @@ struct WorkbenchView: View {
             workbenchPanel("07", "发布准备状态", "发布前检查版本、数据保护和更新通道。") {
                 readinessRow("应用版本", Bundle.main.object(
                     forInfoDictionaryKey: "CFBundleShortVersionString"
-                ) as? String ?? "0.1.1", ok: true)
+                ) as? String ?? "0.1.2", ok: true)
                 readinessRow("独立数据目录", DataPaths.supportDir.path, ok: true)
                 readinessRow(
                     "更新通道",

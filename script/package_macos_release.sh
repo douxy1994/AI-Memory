@@ -12,8 +12,13 @@ PRODUCTS="$DERIVED_DATA/Build/Products/Release"
 BUILT_APP="$PRODUCTS/AIMemory.app"
 DIST="$ROOT/release/AIMemory"
 STAGING="$DIST/staging"
-APP="$STAGING/AI Memory.app"
-VERSION="${AIMEMORY_RELEASE_VERSION:-0.1.1}"
+# Must match the installed bundle name exactly (/Applications/AIMemory.app) and
+# the PRODUCT_NAME the build emits. Shipping "AI Memory.app" made a drag install
+# land beside the existing AIMemory.app instead of replacing it, leaving two
+# copies of the same bundle id. Finder still shows "AI Memory" because
+# CFBundleDisplayName says so.
+APP="$STAGING/AIMemory.app"
+VERSION="${AIMEMORY_RELEASE_VERSION:-0.1.2}"
 DMG="$DIST/AI-Memory-${VERSION}-macOS-universal.dmg"
 CHECKSUM="$DMG.sha256"
 SIGN_IDENTITY="${AIMEMORY_SIGN_IDENTITY:-Pot Local Code Signing}"

@@ -222,7 +222,7 @@ struct AboutView: View {
     private var marketingVersion: String {
         Bundle.main.object(
             forInfoDictionaryKey: "CFBundleShortVersionString"
-        ) as? String ?? "0.1.1"
+        ) as? String ?? "0.1.2"
     }
 
     private var buildVersion: String {
@@ -263,6 +263,34 @@ struct AboutView: View {
         }
     }
 
+    /// Downloads and installs over the running bundle, then relaunches.
+    /// See NativeUpdateInstaller for the atomic swap and rollback behaviour.
+    @MainActor
+    private func installUpdate(_ release: NativeUpdateRelease) async throws {
+        let installer = NativeUpdateInstaller.shared
+        let dmgURL = try await installer.download(release) { fraction in
+            Task { @MainActor in
+                updateStatus =
+                    "正在下载 \(release.version)… \(Int(fraction * 100))%"
+            }
+        }
+        updateStatus = "正在校验签名并安装…"
+        let outcome = try await Task.detached(priority: .userInitiated) {
+            try installer.install(from: dmgURL)
+        }.value
+
+        switch outcome {
+        case .installed(let appURL, let rollbackURL):
+            updateStatus = "已安装 \(release.version)，正在重启…"
+            try installer.relaunch(appURL: appURL, rollbackURL: rollbackURL)
+        case .openedInstaller(let url):
+            updateStatus = """
+            当前运行的不是 /Applications/AIMemory.app，无法就地覆盖。\
+            已打开 \(url.lastPathComponent)，请手动拖入「应用程序」。
+            """
+        }
+    }
+
     private func checkForUpdates(automaticInstall: Bool) async {
         guard !updateBusy else { return }
         updateBusy = true
@@ -287,12 +315,8 @@ struct AboutView: View {
                 updateStatus = "发现新版本 \(release.version)：\(release.title)"
                 githubURL = githubURL ?? Self.projectURL(from: release.pageURL)
                 if automaticInstall {
-                    updateStatus = "发现新版本 \(release.version)，正在下载安装包…"
-                    let installerURL = try await updateService.downloadAndOpen(
-                        release
-                    )
-                    updateStatus =
-                        "版本 \(release.version) 已下载，并已打开 \(installerURL.lastPathComponent)。"
+                    updateStatus = "发现新版本 \(release.version)，正在下载…"
+                    try await installUpdate(release)
                 }
             }
         } catch {

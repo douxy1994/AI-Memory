@@ -65,6 +65,7 @@
 		D4A3C9F2822204651882084A /* NativeWebDAVService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C3935AA96C3E733A2EAF3D /* NativeWebDAVService.swift */; };
 		D65DA4999CEA0ECA883D6A5C /* NativeAdditionalHistoryImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 881959265865914A3F15A143 /* NativeAdditionalHistoryImporter.swift */; };
 		DA1A927F1CAB5033315A7820 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DBE879DF38D1C3DFB3DA34F /* RootView.swift */; };
+		DB9B4791014E4C087C910450 /* NativeUpdateInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 290BB9596B8630E2B46C6975 /* NativeUpdateInstaller.swift */; };
 		DC7FC3B20F8D6ED5147B68BB /* NativeAdditionalHistoryImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 881959265865914A3F15A143 /* NativeAdditionalHistoryImporter.swift */; };
 		DD9D4EF9C5BF3BD5E303A5FD /* ChatMemModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EB1CE2E446F11C09F1AD35D /* ChatMemModels.swift */; };
 		E3A69B1C0595EFF19BE6ED8C /* NativeHistoryImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A98F5FEACFCB3242B28B6977 /* NativeHistoryImporter.swift */; };
@@ -95,6 +96,7 @@
 		17199B980BFDA94E549E2039 /* DataPaths.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataPaths.swift; sourceTree = "<group>"; };
 		1D2FF97E04BBEDC26DF70061 /* AppStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStore.swift; sourceTree = "<group>"; };
 		1ECE416DDFA8A6380650A993 /* NativeDatabaseImporterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeDatabaseImporterTests.swift; sourceTree = "<group>"; };
+		290BB9596B8630E2B46C6975 /* NativeUpdateInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeUpdateInstaller.swift; sourceTree = "<group>"; };
 		2AC0C2EFF08A9322D8278CFC /* WorkbenchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchView.swift; sourceTree = "<group>"; };
 		2FB263909C319B7A6F3F595D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		302C60B7E01BF33BA02FAA02 /* AIMemory.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AIMemory.entitlements; sourceTree = "<group>"; };
@@ -201,6 +203,7 @@
 				468549D5776C5F61D03C688B /* NativeLaunchAtLoginService.swift */,
 				5D1CB84F52DAEBE84012A967 /* NativeLocalSyncService.swift */,
 				5F536502BE78D860C3319AA9 /* NativeMigrationService.swift */,
+				290BB9596B8630E2B46C6975 /* NativeUpdateInstaller.swift */,
 				89D7F5FE674125D0CB9EE1D1 /* NativeUpdateService.swift */,
 				75C3935AA96C3E733A2EAF3D /* NativeWebDAVService.swift */,
 			);
@@ -567,6 +570,7 @@
 				42B038DBA21C41306ECD89E0 /* NativeMigrationService.swift in Sources */,
 				57A8F648E26E004AB616D4F1 /* NativeSettingsStore.swift in Sources */,
 				8966E91B96DD9FDE565FE5F4 /* NativeTrashStore.swift in Sources */,
+				DB9B4791014E4C087C910450 /* NativeUpdateInstaller.swift in Sources */,
 				549E0EF4F27EC5906C09FDF3 /* NativeUpdateService.swift in Sources */,
 				D4A3C9F2822204651882084A /* NativeWebDAVService.swift in Sources */,
 				ECBC8933B1704C20102DB844 /* ReviewView.swift in Sources */,
@@ -624,7 +628,7 @@
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.1.1;
+				MARKETING_VERSION = 0.1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.aimemory.app;
 				PRODUCT_NAME = AIMemory;
 				SDKROOT = macosx;
@@ -684,7 +688,7 @@
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.1.1;
+				MARKETING_VERSION = 0.1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.aimemory.app;
 				PRODUCT_NAME = AIMemory;
 				SDKROOT = macosx;
