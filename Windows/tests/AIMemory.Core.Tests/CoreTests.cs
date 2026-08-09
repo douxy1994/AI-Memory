@@ -2697,6 +2697,7 @@ public sealed class CoreTests : IDisposable
               "html_url":"https://example.test/releases/1.2",
               "assets":[
                 {"name":"ChatMem.msixbundle","browser_download_url":"https://example.test/chatmem.msixbundle"},
+                {"name":"AI-Memory-0.1.3-Windows-x64-Setup.exe","browser_download_url":"https://example.test/aimemory-setup.exe"},
                 {"name":"AIMemory-x64.msix","browser_download_url":"https://example.test/aimemory.msix"},
                 {"name":"AI-Memory.msixbundle","browser_download_url":"https://example.test/aimemory.msixbundle"}
               ]
@@ -2707,7 +2708,7 @@ public sealed class CoreTests : IDisposable
             .CheckAsync("https://example.test/latest", "1.1.9");
         Assert.True(result.IsUpdateAvailable);
         Assert.Equal("1.2.0", result.Release.Version);
-        Assert.Equal("AI-Memory.msixbundle", result.Release.AssetName);
+        Assert.Equal("AI-Memory-0.1.3-Windows-x64-Setup.exe", result.Release.AssetName);
         Assert.Equal(0, UpdateService.CompareVersions("1.2", "1.2.0"));
         Assert.True(UpdateService.CompareVersions("2.0", "1.99") > 0);
     }

@@ -44,12 +44,12 @@ AI Memory 0.1.3 改进本机历史自动接续、跨 Agent 迁移和 macOS 原�
 
 ## Windows 11
 
-- `AI-Memory-0.1.3-Windows-x64.msix`：Windows 11 x64 原生 WinUI 3 客户端；
-- `AI-Memory-0.1.3-Windows-x64.msix.sha256`：MSIX 的 SHA-256 校验文件。
+- `AI-Memory-0.1.3-Windows-x64-Setup.exe`：Windows 11 x64 EXE 安装程序，安装后注册原生 WinUI 3 客户端；
+- `AI-Memory-0.1.3-Windows-x64-Setup.exe.sha256`：EXE 安装程序的 SHA-256 校验文件。
 
-Windows 版同步对齐了启动后台导入、动态迁移目标、Kimi Code 原生会话写入/回滚/恢复、Mica、统一历史页宽度，以及独立“关于”窗口。设置只保留通用、Agent 集成、数据同步与备份三个分类。真实 Windows 11 验收覆盖 95/95 核心测试、x64/ARM64 Release 构建、22 项 MCP 工具、MSIX 单实例和通知区域生命周期、实际 Agent 集成、登录启动开关及 WebDAV 增量同步。
+Windows 版同步对齐了启动后台导入、动态迁移目标、Kimi Code 原生会话写入/回滚/恢复、Mica、统一历史页宽度，以及独立“关于”窗口。设置只保留通用、Agent 集成、数据同步与备份三个分类。真实 Windows 11 验收覆盖 95/95 核心测试、x64/ARM64 Release 构建、22 项 MCP 工具、EXE 安装后的单实例和通知区域生命周期、实际 Agent 集成、登录启动开关及 WebDAV 增量同步。
 
-Windows 资产按照交接验收要求提供 unsigned MSIX。请只从本 Release 下载安装包，并在安装前核对 SHA-256。
+请只从本 Release 下载安装包，并在安装前核对 EXE 的 SHA-256。
 
 ## 数据与隐私
 

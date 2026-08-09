@@ -68,7 +68,7 @@ public sealed class UpdateService
         if (release.AssetUri is null || string.IsNullOrWhiteSpace(release.AssetName))
         {
             throw new InvalidOperationException(
-                "该版本没有可安装的 Windows MSIX、MSIXBundle 或 AppInstaller。");
+                "该版本没有可安装的 Windows EXE 安装程序。");
         }
         Directory.CreateDirectory(destinationDirectory);
         var safeName = Path.GetFileName(release.AssetName);
@@ -115,7 +115,10 @@ public sealed class UpdateService
         if (root.TryGetProperty("assets", out var assets)
             && assets.ValueKind == JsonValueKind.Array)
         {
-            foreach (var extension in new[] { ".msixbundle", ".appinstaller", ".msix" })
+            // The public Windows artifact is the self-contained EXE installer.
+            // Keep the package formats as a backwards-compatible fallback for
+            // older releases that predate the installer.
+            foreach (var extension in new[] { ".exe", ".msixbundle", ".appinstaller", ".msix" })
             {
                 foreach (var asset in assets.EnumerateArray())
                 {
