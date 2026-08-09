@@ -147,12 +147,9 @@ struct RootView: View {
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
-            .background(
-                Capsule().fill(Theme.accent.opacity(store.updateInstalling ? 0.12 : 0.16))
-            )
             .foregroundStyle(Theme.accent)
         }
-        .buttonStyle(.plain)
+        .adaptiveGlassButtonStyle(prominent: true)
         .disabled(store.updateInstalling)
         .help(
             store.updateStage
@@ -206,24 +203,12 @@ struct WorkspaceRouter: View {
                     Image(systemName: "arrowshape.backward.fill")
                         .font(Theme.appFont(size: 20, weight: .bold))
                         .symbolRenderingMode(.monochrome)
-                        .foregroundStyle(.white)
                         .frame(width: 48, height: 48)
                         .contentShape(Circle())
                 }
-                .buttonStyle(FloatingWorkbenchBackButtonStyle())
-                .background(
-                    LinearGradient(
-                        colors: [Theme.accent, Theme.accentStrong],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    in: Circle()
-                )
-                .overlay {
-                    Circle()
-                        .stroke(.white.opacity(0.42), lineWidth: 1)
-                }
-                .shadow(color: Theme.accentStrong.opacity(0.30), radius: 13, y: 6)
+                .adaptiveGlassButtonStyle(prominent: true)
+                .buttonBorderShape(.circle)
+                .shadow(color: Color.black.opacity(0.12), radius: 13, y: 6)
                 .keyboardShortcut("[", modifiers: .command)
                 .help("返回工作台 (⌘[)")
                 .accessibilityLabel("返回工作台")
@@ -237,15 +222,6 @@ struct WorkspaceRouter: View {
     }
 }
 
-private struct FloatingWorkbenchBackButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .opacity(configuration.isPressed ? 0.82 : 1)
-            .scaleEffect(configuration.isPressed ? 0.94 : 1)
-            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
-    }
-}
-
 // MARK: - Banner
 
 private struct BannerView: View {
@@ -256,18 +232,20 @@ private struct BannerView: View {
     var body: some View {
         HStack(spacing: 10) {
             Image(systemName: isError ? "exclamationmark.triangle.fill" : "info.circle.fill")
-            Text(text).font(Theme.appFont(size: 12))
+                .foregroundStyle(Theme.secondaryText)
+            Text(text)
+                .font(Theme.appFont(size: 12, weight: .medium))
+                .foregroundStyle(Theme.primaryText)
             Spacer()
             Button(action: onDismiss) {
                 Image(systemName: "xmark.circle.fill")
             }
             .buttonStyle(.borderless)
+            .foregroundStyle(Theme.secondaryText)
         }
         .padding(.horizontal, 14).padding(.vertical, 10)
-        .foregroundStyle(.white)
-        .background(isError ? Theme.danger : Theme.accent)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-        .shadow(color: Color.black.opacity(0.15), radius: 8, y: 3)
+        .liquidGlassSurface(cornerRadius: 14)
+        .shadow(color: Color.black.opacity(0.12), radius: 14, y: 5)
     }
 }
 

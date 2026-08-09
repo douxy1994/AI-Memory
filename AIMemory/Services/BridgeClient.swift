@@ -56,6 +56,10 @@ final class BridgeClient: ObservableObject {
         await nativeHistory.importAgent(agent)
     }
 
+    func synchronizeInstalledAgentHistory() async throws -> NativeInstalledHistorySyncReport {
+        try await nativeHistory.synchronizeInstalledHistory()
+    }
+
     func autoCaptureConversation(
         agent: AgentKind,
         id: String,

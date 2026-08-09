@@ -134,24 +134,43 @@ final class AppStore: ObservableObject {
 
     // MARK: - Bootstrap
 
-    /// App-launch bootstrap: detect sources, pick the first available agent,
-    /// load its conversations.
+    /// App-launch bootstrap: show the existing local index immediately, then
+    /// import every supported installed source and refresh all conversations.
     func bootstrap() async {
-        loading = .loading("检测本地 agent 来源…")
+        loading = .loading("正在读取本地索引…")
         do {
             let detected = try await client.detectSources()
-            let firstAvailable = detected.first(where: { $0.available })?.agentKind
-                ?? AgentKind.codex
-            await MainActor.run {
-                self.sources = detected.filter { $0.available }
-                self.selectedAgent = firstAvailable
+            let cachedAgents = detected.compactMap { status in
+                status.available ? status.agentKind : nil
             }
-            await loadConversations(for: firstAvailable)
+            sources = detected.filter(\.available)
+            let preferredAgent = cachedAgents.contains(selectedAgent)
+                ? selectedAgent
+                : (cachedAgents.first ?? AgentKind.codex)
+            selectedAgent = preferredAgent
+            await loadConversations(for: preferredAgent)
             loading = .ready
-            // Network-only and independent of everything below, so run it
-            // concurrently. Waiting for the whole serial chain delayed the
-            // update button by ~19s on a real profile.
+            // Network-only and independent of local history. Starting now keeps
+            // the title update affordance from waiting for the full disk scan.
             Task { await checkForUpdatesAtLaunchIfNeeded() }
+
+            // The interface is now usable from the independent local index.
+            // Refresh source histories automatically without requiring either
+            // workbench refresh button.
+            syncInProgress = true
+            syncStatusKind = nil
+            syncStatusMessage = "正在自动同步本机 agent 记录…"
+            let syncReport = try await client.synchronizeInstalledAgentHistory()
+            let installedAgents = applyInstalledHistorySync(syncReport)
+            if !installedAgents.contains(selectedAgent) {
+                selectedAgent = installedAgents.first ?? AgentKind.codex
+            }
+            for agent in installedAgents {
+                conversations[agent] = nil
+                await loadConversations(for: agent)
+            }
+            syncInProgress = false
+            loading = .ready
             // Background loads (serial to avoid lock contention).
             await autoSelectActiveRepo()
             await loadRepoMemory(repoRoot: activeRepoRoot)
@@ -160,8 +179,13 @@ final class AppStore: ObservableObject {
             if await importChatMemWebDAVIfNeeded() {
                 await loadAppSettings()
             }
-            telemetry.lifecycle("bootstrap done: \(detected.count) sources, \(firstAvailable.label) selected, repo=\(activeRepoRoot)")
+            telemetry.lifecycle(
+                "bootstrap done: \(installedAgents.count) installed sources, "
+                    + "\(syncReport.total) conversations indexed, "
+                    + "\(selectedAgent.label) selected, repo=\(activeRepoRoot)"
+            )
         } catch {
+            syncInProgress = false
             loading = .failed(error.localizedDescription)
             bannerError = error.localizedDescription
             telemetry.bridgeError("bootstrap failed: \(error)")
@@ -222,9 +246,26 @@ final class AppStore: ObservableObject {
     }
 
     func reloadCurrentAgent() async {
-        _ = await client.refreshLocalHistory(agent: selectedAgent)
+        guard !syncInProgress else { return }
+        syncInProgress = true
+        defer { syncInProgress = false }
+        syncStatusKind = nil
+        syncStatusMessage = "正在刷新 \(selectedAgent.label) 记录…"
+        let report = await client.refreshLocalHistory(agent: selectedAgent)
         conversations[selectedAgent] = nil
         await loadConversations(for: selectedAgent)
+        let count = report.imported[selectedAgent.rawValue] ?? 0
+        if report.warnings.isEmpty {
+            let message = "已刷新 \(selectedAgent.label)：本次扫描 \(count) 条对话。"
+            syncStatusKind = .success
+            syncStatusMessage = message
+            flash(message)
+        } else {
+            let message = "\(selectedAgent.label) 刷新完成，\(report.warnings.count) 项需检查。"
+            syncStatusKind = .warning
+            syncStatusMessage = message
+            bannerError = message
+        }
     }
 
     // MARK: - Derived views
@@ -1826,11 +1867,47 @@ final class AppStore: ObservableObject {
     /// Loads conversations for every detected available source. Used by the
     /// workbench "load all" action so the cross-agent count is accurate.
     func loadAllAgentConversations() async {
-        _ = try? await client.importAllLocalHistory()
-        for status in sources {
-            guard let kind = status.agentKind, conversations[kind] == nil else { continue }
-            await loadConversations(for: kind)
+        guard !syncInProgress else { return }
+        syncInProgress = true
+        loading = .loading("正在同步全部本机 agent 记录…")
+        defer { syncInProgress = false }
+        do {
+            let syncReport = try await client.synchronizeInstalledAgentHistory()
+            let installedAgents = applyInstalledHistorySync(syncReport)
+            for kind in installedAgents {
+                conversations[kind] = nil
+                await loadConversations(for: kind)
+            }
+            loading = .ready
+        } catch {
+            loading = .failed(error.localizedDescription)
+            bannerError = "同步本机 agent 记录失败：\(error.localizedDescription)"
         }
+    }
+
+    /// Applies the post-import source snapshot and publishes one persistent
+    /// workbench status. Returning typed kinds keeps bootstrap and the manual
+    /// fallback entry point on the exact same behavior path.
+    @discardableResult
+    private func applyInstalledHistorySync(
+        _ report: NativeInstalledHistorySyncReport
+    ) -> [AgentKind] {
+        let installed = report.availableAgents.compactMap(AgentKind.init(rawValue:))
+        sources = installed.map {
+            ConversationSourceStatus(
+                agent: $0.rawValue,
+                label: $0.label,
+                available: true
+            )
+        }
+        if report.warnings.isEmpty {
+            syncStatusKind = .success
+            syncStatusMessage = "启动自动同步完成：\(installed.count) 个本机来源，本次扫描 \(report.total) 条对话。"
+        } else {
+            syncStatusKind = .warning
+            syncStatusMessage = "启动自动同步完成：\(installed.count) 个本机来源，本次扫描 \(report.total) 条对话，\(report.warnings.count) 项需检查。"
+        }
+        return installed
     }
 
     /// Opens the real source conversation behind a run, artifact, or episode.

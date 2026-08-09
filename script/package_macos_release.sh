@@ -18,7 +18,7 @@ STAGING="$DIST/staging"
 # copies of the same bundle id. Finder still shows "AI Memory" because
 # CFBundleDisplayName says so.
 APP="$STAGING/AIMemory.app"
-VERSION="${AIMEMORY_RELEASE_VERSION:-0.1.2}"
+VERSION="${AIMEMORY_RELEASE_VERSION:-0.1.3}"
 DMG="$DIST/AI-Memory-${VERSION}-macOS-universal.dmg"
 CHECKSUM="$DMG.sha256"
 SIGN_IDENTITY="${AIMEMORY_SIGN_IDENTITY:-Pot Local Code Signing}"

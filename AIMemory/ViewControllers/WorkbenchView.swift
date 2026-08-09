@@ -45,7 +45,8 @@ struct WorkbenchView: View {
                     }
                     workbenchIconButton(
                         "刷新当前来源",
-                        icon: "arrow.clockwise"
+                        icon: "arrow.clockwise",
+                        disabled: store.syncInProgress
                     ) {
                         Task { await store.reloadCurrentAgent() }
                     }
@@ -129,7 +130,7 @@ struct WorkbenchView: View {
             }
             .frame(width: 18, height: 18)
         }
-        .buttonStyle(.bordered)
+        .adaptiveGlassButtonStyle()
         .controlSize(.regular)
         .disabled(disabled)
         .help(isBusy ? Text("正在同步…") : Text(LocalizedStringKey(label)))

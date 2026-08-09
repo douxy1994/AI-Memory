@@ -44,10 +44,12 @@ flowchart TB
 - SwiftUI 负责页面、布局和状态展示；
 - AppKit 负责主菜单、状态栏、窗口生命周期和原生文本系统；
 - `AppStore` 是 UI 的主要状态源，避免 SwiftUI/AppKit 维护两份业务状态；
+- 启动先显示独立索引，再自动检测并增量导入当前 Mac 上的全部可读 Agent/CLI 历史，完成后统一刷新来源与列表；
 - SQLite 读写在独立存储对象中执行，大批量同步不长期阻塞主线程；
 - Keychain 存储 WebDAV 密码；
 - ServiceManagement 实现用户可控的登录启动；
 - MCP helper 作为 App Bundle 内独立 stdio 可执行文件运行。
+- macOS 26 及以上由 SwiftUI 系统 `glassEffect` / Glass button style 提供 Liquid Glass，较早系统回退到系统材质而非模拟玻璃。
 
 ## Windows
 
@@ -63,6 +65,7 @@ flowchart TB
 - AI Memory 使用自己的应用目录、Bundle/Package identity 和凭据命名空间；
 - ChatMem 导入只读打开源数据库，校验后才原子替换 AI Memory 副本；
 - Agent 历史读取以只读为默认；
+- 迁移目标由本机检测结果与已验证写入能力求交集，不维护与安装状态脱节的固定菜单；
 - 支持写入的迁移目标必须通过“写入、回读、列表可见”验证；
 - 不安全或不支持写回的来源不会伪装成可迁移目标。
 

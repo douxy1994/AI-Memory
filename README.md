@@ -59,11 +59,13 @@ flowchart LR
 ### 统一历史工作台
 
 - 聚合 Claude Code、Codex、Gemini CLI、Google Antigravity、OpenCode、ZCode、Hermes、Kimi Code 等本地历史；
+- 每次打开应用都会自动检测并增量导入本机已有记录，无需先手动扫描或刷新；
 - 同时覆盖 Factory Droid、Mistral Vibe、Amazon Q Developer、GitHub Copilot CLI、Qwen Code、Goose、Cline、Roo Code、OpenHands、Aider、Crush、Kilo Code 等主流 Agent 与 CLI；
 - 检测 165 种 Agent、通用 AI CLI 与本地模型 CLI；除主流编码 Agent 外，还覆盖 Hugging Face CLI、Microsoft 365 Agents Toolkit、GitHub Agentic Workflows、Neovate、VT Code、Dexto、xAI Grok Build / Grok CLI、nanobot、ZeroClaw、PicoClaw、IronClaw、NullClaw、Moltis、OpenSquilla、Qodo、CodeRabbit、Poolside、Command Code、Ante、Mentat、Claw Code、Coro、Nori、CodeMachine、Open Codex、Groq Code CLI、Devon、g3、Mini-Kode、zot、VibePod、Every Code、Claw Code Agent、Gitagent、OpenDev、QodeX、ClawCodex、Tutti、acpx、cmux、muxd、muxel、Flowmux、MCPJam、Zenflow、Void、Ruflo / Claude Flow、Claurst、agentty、Herdr、Smol Developer、Claude Engineer、Free Code、ForgeCode、AutoCodeRover、Agentless、Codel、openHarness、Octomind、Codex Infinity、San、Waveloom、picocode、QQCode、Keen Code、Smelt、Grinta、Zap、Binharic、Darce、CLAII、NanoClaw、Clawith、claw0、GitClaw、LionClaw、FetchCoder、Crab Code、OpenAgent、DvalinCode、LettaBot、oh-my-openagent、Ollama 与 LM Studio CLI 等工具；
 - 已安装且存在可读数据的来源优先显示，未安装来源不会自动启用；
 - 按电脑、项目和更新时间组织对话，支持搜索、筛选、排序、折叠和批量操作；
 - 收藏重要会话，添加备注、标签和置顶，并生成可复制的继续卡片。
+- 迁移目标按本机实际检测到的 Agent/CLI 动态生成；Kimi Code 与 Claude、Codex、Gemini、OpenCode 支持写入后回读验证，只读格式会明确标记。
 
 ### 可治理的项目记忆
 
@@ -93,6 +95,7 @@ flowchart LR
 - Windows 使用 C#、WinUI 3、Windows App SDK、SQLite、PasswordVault 与 MSIX；
 - 桌面 GUI 保持单实例，重复启动会恢复现有窗口；
 - 设置、关于、更新检查、状态栏/系统托盘和快捷键遵循各自平台习惯。
+- macOS 26 及以上使用系统 Liquid Glass；较早系统自动使用原生材质回退。
 
 ## 双平台
 
@@ -117,10 +120,10 @@ flowchart LR
 
 ### 下载
 
-- **macOS 14+（Apple silicon 与 Intel）**：[下载 AI Memory 0.1.2](https://github.com/douxy1994/AI-Memory/releases/download/v0.1.2/AI-Memory-0.1.2-macOS-universal.dmg)
+- **macOS 14+（Apple silicon 与 Intel）**：[下载 AI Memory 0.1.3](https://github.com/douxy1994/AI-Memory/releases/download/v0.1.3/AI-Memory-0.1.3-macOS-universal.dmg)
 - **Windows 11**：原生客户端仍为 Preview，完成真实 Windows 11 桌面安装与交互验收后提供安装包。
 
-macOS 当前构建使用项目固定的本地代码签名身份，尚未使用 Apple Developer ID 公证。首次打开时如果 macOS 拦截，请在“系统设置 → 隐私与安全性”中确认打开。DMG 与 SHA-256 校验文件会同时发布在 [v0.1.2 Release 页面](https://github.com/douxy1994/AI-Memory/releases/tag/v0.1.2)。
+macOS 当前构建使用项目固定的本地代码签名身份，尚未使用 Apple Developer ID 公证。首次打开时如果 macOS 拦截，请在“系统设置 → 隐私与安全性”中确认打开。DMG 与 SHA-256 校验文件会同时发布在 [v0.1.3 Release 页面](https://github.com/douxy1994/AI-Memory/releases/tag/v0.1.3)。
 
 ## 数据与隐私
 
@@ -137,7 +140,7 @@ AI Memory 默认将数据保存在本机：
 
 ### macOS
 
-要求 Xcode 16 或更新版本、macOS 15+。仓库已包含生成后的 Xcode 工程：
+要求 Xcode 26 或更新版本、macOS 14+。仓库已包含生成后的 Xcode 工程：
 
 ```bash
 xcodebuild \

@@ -117,6 +117,39 @@ final class NativeMigrationServiceTests: XCTestCase {
         ])
     }
 
+    func testCopyWritesKimiSessionAndDynamicIndex() async throws {
+        let fixture = try await Fixture()
+        defer { fixture.remove() }
+        try await fixture.conversations.upsertConversation(
+            source(id: "codex-to-kimi", agent: "codex")
+        )
+
+        let copied = try await fixture.service.migrate(
+            source: "codex",
+            target: "kimi",
+            id: "codex-to-kimi",
+            mode: "copy"
+        )
+
+        XCTAssertTrue(copied.verified)
+        XCTAssertEqual(copied.sourceMessageCount, copied.targetMessageCount)
+        let indexURL = fixture.root.appendingPathComponent(
+            ".kimi-code/session_index.jsonl"
+        )
+        XCTAssertTrue(FileManager.default.fileExists(atPath: indexURL.path))
+        let index = try String(contentsOf: indexURL, encoding: .utf8)
+        XCTAssertTrue(index.contains("\"sessionId\":\"\(copied.newID)\""))
+        let target = try await fixture.conversations.readConversation(
+            agent: "kimi",
+            id: copied.newID
+        )
+        XCTAssertEqual(target.messages.map(\.content), [
+            "keep this first user message",
+            "kept",
+        ])
+        XCTAssertEqual(target.resumeCommand, "kimi --session \(copied.newID)")
+    }
+
     func testUnsupportedTargetFailsBeforeAnyWrite() async throws {
         let fixture = try await Fixture()
         defer { fixture.remove() }

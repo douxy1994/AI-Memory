@@ -56,7 +56,7 @@ struct ReviewView: View {
                     let r = store.activeRepoRoot
                     Task { await store.loadRepoMemory(repoRoot: r) }
                 }
-                .buttonStyle(.bordered)
+                .adaptiveGlassButtonStyle()
             }
             // Quick-pick repos that have pending candidates.
             if !store.reposWithCandidates.isEmpty {
@@ -115,7 +115,7 @@ struct ReviewView: View {
                     Button("全部忽略") {
                         showRejectAllConfirm = true
                     }
-                    .buttonStyle(.bordered)
+                    .adaptiveGlassButtonStyle()
                     .controlSize(.small)
                 }
                 Text("\(store.pendingCandidates.count) 条")
@@ -179,7 +179,7 @@ struct ReviewView: View {
                             Button("查看相关规则") {
                                 store.openMemoryDrawer(tab: .rules)
                             }
-                            .buttonStyle(.bordered)
+                            .adaptiveGlassButtonStyle()
                             .controlSize(.small)
                         }
                     }

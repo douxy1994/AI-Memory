@@ -19,15 +19,19 @@ actor NativeConversationStore {
     static let maxToolInputBytes = 1_048_576
 
     private let databaseURL: URL
+    private let home: URL
     private let decoder = JSONDecoder()
 
-    init(databaseURL: URL = DataPaths.dbURL) {
+    init(
+        databaseURL: URL = DataPaths.dbURL,
+        home: URL = FileManager.default.homeDirectoryForCurrentUser
+    ) {
         self.databaseURL = databaseURL
+        self.home = home
     }
 
     func detectSources() throws -> [ConversationSourceStatus] {
         let counts = try sourceCounts()
-        let home = FileManager.default.homeDirectoryForCurrentUser
         let paths: [AgentKind: [URL]] = [
             .claude: [home.appendingPathComponent(".claude/projects")],
             .codex: [

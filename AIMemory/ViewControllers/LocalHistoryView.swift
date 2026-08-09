@@ -52,7 +52,7 @@ struct LocalHistoryIndexView: View {
                             await store.refreshRepoHealth(repoRoot: repoRoot)
                         }
                     }
-                    .buttonStyle(.bordered)
+                    .adaptiveGlassButtonStyle()
                 }
             }
             .surfaceCard()
@@ -169,7 +169,7 @@ struct LocalHistoryIndexView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 8)
         }
-        .buttonStyle(.bordered)
+        .adaptiveGlassButtonStyle()
         .controlSize(.small)
         .disabled(disabled)
     }

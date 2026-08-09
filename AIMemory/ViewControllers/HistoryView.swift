@@ -30,7 +30,7 @@ struct HistoryView: View {
                     } label: {
                         Label("刷新", systemImage: "arrow.clockwise")
                     }
-                    .buttonStyle(.bordered)
+                    .adaptiveGlassButtonStyle()
                 }
                 .surfaceCard()
 
@@ -263,6 +263,7 @@ struct HistoryView: View {
                 }
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .card()
     }
 
@@ -309,6 +310,7 @@ struct HistoryView: View {
             }()
             if isEmpty { EmptyNote(empty) } else { content() }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .card()
     }
 
@@ -356,6 +358,7 @@ struct HistoryView: View {
                 }
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .card()
     }
 
@@ -438,7 +441,7 @@ struct HandoffDetailSheet: View {
                         } label: {
                             Label("打开来源对话", systemImage: "arrow.right.circle")
                         }
-                        .buttonStyle(.bordered)
+                        .adaptiveGlassButtonStyle()
                     }
                     Spacer()
                     Button {
@@ -448,7 +451,7 @@ struct HandoffDetailSheet: View {
                     } label: {
                         Label("复制交接内容", systemImage: "doc.on.doc")
                     }
-                    .buttonStyle(.bordered)
+                    .adaptiveGlassButtonStyle()
                     if handoff.status != "consumed" {
                         Button("标记为已消费") {
                             Task {
@@ -456,7 +459,7 @@ struct HandoffDetailSheet: View {
                                 dismiss()
                             }
                         }
-                        .buttonStyle(.borderedProminent)
+                        .adaptiveGlassButtonStyle(prominent: true)
                     }
                 }
             }
@@ -758,7 +761,7 @@ private struct FavoriteConversationCard: View {
                     store.toggleFavorite(conversation.id, agent: agent)
                 }
             }
-            .buttonStyle(.bordered)
+            .adaptiveGlassButtonStyle()
             .controlSize(.small)
         }
         .padding(12)
@@ -810,12 +813,12 @@ struct TrashView: View {
                             } label: {
                                 Label("清空", systemImage: "trash")
                             }
-                            .buttonStyle(.bordered)
+                            .adaptiveGlassButtonStyle()
                         }
                         Button(action: {Task { await store.loadTrashed() }}) {
                             Label("刷新", systemImage: "arrow.clockwise")
                         }
-                        .buttonStyle(.bordered)
+                        .adaptiveGlassButtonStyle()
                     }
                 }
                 .surfaceCard()
@@ -888,9 +891,9 @@ struct TrashRow: View {
                 }
                 Spacer()
                 Button("恢复", action: onRestore)
-                    .buttonStyle(.bordered).controlSize(.mini)
+                    .adaptiveGlassButtonStyle().controlSize(.mini)
                 Button("永久删除", action: onDelete)
-                    .buttonStyle(.bordered).controlSize(.mini)
+                    .adaptiveGlassButtonStyle().controlSize(.mini)
             }
             .font(Theme.appFont(size: 10))
             .foregroundStyle(Theme.mutedText)
@@ -986,7 +989,7 @@ struct HelpView: View {
                                 }
                                 store.openWorkspace(card.destination)
                             }
-                            .buttonStyle(.bordered)
+                            .adaptiveGlassButtonStyle()
                             .controlSize(.small)
                         }
                         .frame(maxWidth: .infinity, minHeight: 112, alignment: .leading)

@@ -7,6 +7,48 @@ import SQLite3
 @testable import AIMemory
 
 final class NativeHistoryImporterTests: XCTestCase {
+    func testInstalledHistorySynchronizationIsLaunchSafeAndDetectsAfterImport() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("NativeLaunchSyncTests-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let appDB = root.appendingPathComponent("app/aimemory.db")
+        var database: NativeDatabase? = try NativeDatabase(url: appDB)
+        _ = try await database?.currentSchemaVersion()
+        database = nil
+        let store = NativeConversationStore(databaseURL: appDB, home: root)
+
+        let codexRoot = root.appendingPathComponent(".codex")
+        try FileManager.default.createDirectory(
+            at: codexRoot,
+            withIntermediateDirectories: true
+        )
+        let rollout = codexRoot.appendingPathComponent("launch-sync.jsonl")
+        let lines = [
+            #"{"timestamp":"2026-08-09T01:00:00Z","type":"session_meta","payload":{"id":"codex-1","cwd":"/tmp/launch-sync"}}"#,
+            #"{"timestamp":"2026-08-09T01:01:00Z","type":"event_msg","payload":{"type":"user_message","message":"Auto import me"}}"#,
+            #"{"timestamp":"2026-08-09T01:02:00Z","type":"event_msg","payload":{"type":"agent_message","message":"Imported"}}"#,
+        ]
+        try Data(lines.joined(separator: "\n").utf8).write(to: rollout)
+        try makeCodexDatabase(
+            at: codexRoot.appendingPathComponent("state_5.sqlite"),
+            rollout: rollout
+        )
+
+        let importer = NativeHistoryImporter(store: store, home: root)
+        let firstLaunch = try await importer.synchronizeInstalledHistory()
+        XCTAssertEqual(firstLaunch.imported["codex"], 1)
+        XCTAssertEqual(firstLaunch.availableAgents, ["codex"])
+        let firstConversations = try await store.listConversations(agent: "codex")
+        XCTAssertEqual(firstConversations.map(\.id), ["codex-1"])
+
+        let secondLaunch = try await importer.synchronizeInstalledHistory()
+        XCTAssertEqual(secondLaunch.imported["codex"], 1)
+        XCTAssertEqual(secondLaunch.availableAgents, ["codex"])
+        let secondConversations = try await store.listConversations(agent: "codex")
+        XCTAssertEqual(secondConversations.count, 1)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: rollout.path))
+    }
+
     func testCodexAndClaudeImportUseReadOnlySourceHistories() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent("NativeHistoryImporterTests-\(UUID().uuidString)")

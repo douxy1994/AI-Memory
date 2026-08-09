@@ -110,6 +110,52 @@ extension Color {
 // MARK: - Card / surface style modifiers
 
 extension View {
+    /// Native Liquid Glass on macOS 26+, with an adaptive material fallback on
+    /// older supported systems. Apply after padding/frame modifiers so glass is
+    /// anchored to the complete custom surface, as Apple recommends.
+    @ViewBuilder
+    func liquidGlassSurface(
+        tint: Color? = nil,
+        interactive: Bool = false,
+        cornerRadius: CGFloat = Theme.surfaceCornerRadius
+    ) -> some View {
+        if #available(macOS 26.0, *) {
+            self.glassEffect(
+                .regular.tint(tint).interactive(interactive),
+                in: .rect(cornerRadius: cornerRadius)
+            )
+        } else {
+            self
+                .background(
+                    .regularMaterial,
+                    in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                        .stroke(Theme.border, lineWidth: 1)
+                )
+        }
+    }
+
+    /// Explicitly opts custom-positioned actions into the system glass button
+    /// styles while retaining native bordered controls before macOS 26.
+    @ViewBuilder
+    func adaptiveGlassButtonStyle(prominent: Bool = false) -> some View {
+        if #available(macOS 26.0, *) {
+            if prominent {
+                self.buttonStyle(.glassProminent)
+            } else {
+                self.buttonStyle(.glass)
+            }
+        } else {
+            if prominent {
+                self.buttonStyle(.borderedProminent)
+            } else {
+                self.buttonStyle(.bordered)
+            }
+        }
+    }
+
     /// Ported from `card(padding:)`. Surface fill + 1pt border +
     /// 8pt corner radius + soft drop shadow.
     func card(padding: CGFloat = 14) -> some View {
