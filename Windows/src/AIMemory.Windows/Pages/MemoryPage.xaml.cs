@@ -210,6 +210,41 @@ public sealed partial class MemoryPage : Page
         }
     }
 
+    private async void OpenCandidateSource_Click(
+        object sender,
+        RoutedEventArgs args)
+    {
+        if (_window is null
+            || sender is not FrameworkElement element
+            || element.Tag is not CandidateRow row)
+        {
+            return;
+        }
+        var reference = row.ValueRecord.Evidence
+            .Select(value => value.ConversationId)
+            .FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
+        if (string.IsNullOrWhiteSpace(reference)) return;
+
+        var candidates = HistoryProjectionService.ConversationIdCandidates(
+            reference);
+        var conversations = await _window.Conversations.ListAsync(limit: 5_000);
+        var conversation = conversations.FirstOrDefault(value =>
+            candidates.Contains(value.Id, StringComparer.Ordinal)
+            || candidates.Contains(
+                value.SourceConversationId,
+                StringComparer.Ordinal));
+        if (conversation is null)
+        {
+            Show(
+                LocalizationService.Get("CandidateSourceNotFound"),
+                InfoBarSeverity.Warning);
+            return;
+        }
+        Frame.Navigate(
+            typeof(ConversationPage),
+            new ConversationNavigation(_window, conversation));
+    }
+
     private async void SnoozeCandidate_Click(object sender, RoutedEventArgs args) =>
         await ReviewCandidateAsync(
             sender,
@@ -717,4 +752,10 @@ public sealed class CandidateRow
         string.IsNullOrWhiteSpace(ValueRecord.ConflictSuggestion)
             ? Visibility.Collapsed
             : Visibility.Visible;
+
+    public Visibility SourceVisibility =>
+        ValueRecord.Evidence.Any(value =>
+            !string.IsNullOrWhiteSpace(value.ConversationId))
+            ? Visibility.Visible
+            : Visibility.Collapsed;
 }

@@ -13,7 +13,7 @@ public static class FontPreferenceService
 {
     public static IReadOnlyList<FontPreferenceOption> Options { get; } =
     [
-        new("system", "系统默认", "Segoe UI Variable"),
+        new("system", "系统默认", "Segoe UI Variable Text"),
         new("source-sans", "思源黑体", "Noto Sans CJK SC"),
         new("source-serif", "思源宋体", "Noto Serif CJK SC"),
         new("wenkai", "霞鹜文楷", "LXGW WenKai"),

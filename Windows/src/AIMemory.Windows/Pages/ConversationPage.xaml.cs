@@ -340,11 +340,19 @@ public sealed partial class ConversationPage : Page
         var targets = new AgentCatalog().Detect()
             .Where(value =>
                 value.IsDetected
-                && NativeAgentConversationWriter.WritableTargets.Contains(value.Id)
                 && !value.Id.Equals(
                     _context.Conversation.SourceAgent,
                     StringComparison.OrdinalIgnoreCase))
+            .Select(value => new MigrationTargetOption(
+                value.Id,
+                value.Label,
+                NativeAgentConversationWriter.WritableTargets.Contains(value.Id),
+                NativeAgentConversationWriter.WritableTargets.Contains(value.Id)
+                    ? value.Label
+                    : LocalizationService.Format(
+                        "MigrationTargetReadOnly", value.Label)))
             .ToArray();
+        var writableTargets = targets.Where(value => value.IsWritable).ToArray();
 
         var kind = new RadioButtons
         {
@@ -355,13 +363,23 @@ public sealed partial class ConversationPage : Page
             },
             SelectedIndex = 0,
         };
-        var target = new ComboBox
+        var target = new ListView
         {
             Header = LocalizationService.Get("TargetAgent"),
             ItemsSource = targets,
-            DisplayMemberPath = "Label",
-            SelectedIndex = targets.Length > 0 ? 0 : -1,
+            DisplayMemberPath = "DisplayLabel",
+            SelectionMode = ListViewSelectionMode.Single,
+            SelectedItem = writableTargets.FirstOrDefault(),
+            MaxHeight = 220,
             HorizontalAlignment = HorizontalAlignment.Stretch,
+        };
+        target.ContainerContentChanging += (_, eventArgs) =>
+        {
+            if (eventArgs.Item is MigrationTargetOption option)
+            {
+                eventArgs.ItemContainer.IsEnabled = option.IsWritable;
+                eventArgs.ItemContainer.Opacity = option.IsWritable ? 1 : 0.58;
+            }
         };
         var migrationMode = new RadioButtons
         {
@@ -404,6 +422,12 @@ public sealed partial class ConversationPage : Page
             PrimaryButtonText = LocalizationService.Get("Continue"),
             CloseButtonText = LocalizationService.Get("Cancel"),
             DefaultButton = ContentDialogButton.Primary,
+            IsPrimaryButtonEnabled = writableTargets.Length > 0,
+        };
+        kind.SelectionChanged += (_, _) =>
+        {
+            dialog.IsPrimaryButtonEnabled = kind.SelectedIndex == 1
+                || writableTargets.Length > 0;
         };
         if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
 
@@ -415,7 +439,8 @@ public sealed partial class ConversationPage : Page
                 InfoBarSeverity.Success);
             return;
         }
-        if (target.SelectedItem is not AgentIntegrationStatus selected)
+        if (target.SelectedItem is not MigrationTargetOption selected
+            || !selected.IsWritable)
         {
             Show(
                 targets.Length == 0
@@ -565,6 +590,12 @@ public sealed partial class ConversationPage : Page
         Clipboard.Flush();
     }
 }
+
+file sealed record MigrationTargetOption(
+    string Id,
+    string Label,
+    bool IsWritable,
+    string DisplayLabel);
 
 /// <summary>
 /// Presentation row for a source-backed conversation message. Keeping the

@@ -2,9 +2,9 @@
 
 AI Memory 的 Windows 11 原生版本，使用 C#、WinUI 3 与 Windows App SDK 构建。它与 macOS 版本共享产品行为和数据语义，但不使用跨平台 UI，也不会覆盖 macOS 应用或 ChatMem。
 
-> 当前状态：**Preview**。核心层、主要页面及本机 win-x64/win-arm64 helper 发布产物已验证；当前提交仍需 Windows Runner 完成 WinUI 打包与真实 Windows 11 桌面交互验收。
+> 当前版本：**0.1.3**。Windows 11 x64 MSIX、x64/ARM64 Release 构建、真实桌面生命周期、启动导入、Agent 集成与 WebDAV 增量同步均已在 Windows 11 实机验收。
 
-> macOS `v0.1.3` 的 Windows 功能对齐任务、差异定位和验收证据要求见 [`KIMI_HANDOFF.md`](./KIMI_HANDOFF.md)；可直接交给 Windows 端 Codex 执行。
+> macOS `v0.1.3` 的功能对齐基线和固定验收要求见 [`KIMI_HANDOFF.md`](./KIMI_HANDOFF.md)；本版本已经按该清单完成同步。
 
 ## 原生技术栈
 
@@ -63,10 +63,13 @@ AI Memory 的 Windows 11 原生版本，使用 C#、WinUI 3 与 Windows App SDK 
   安装 AI Memory skill 与受管启动规则。已有配置先备份，部分安装可自动修复，
   并支持对当前已安装且可安全配置的 Agent 批量安装、修复或确认后批量卸载；
 - Claude、Codex、Gemini、Kimi、Hermes、Antigravity、OpenCode 与 ZCode
-  本地历史只读导入；
-- 完整对话可原生复制到 Claude、Codex、Gemini 或 OpenCode，并在写入后
+  本地历史只读导入；启动时只扫描本机已安装且可读的来源，先显示缓存，再后台
+  幂等刷新，不会自动触发 WebDAV 或本地文件夹同步；
+- 迁移目标根据当前安装状态动态生成；完整对话可原生复制到 Claude、Codex、Gemini、
+  OpenCode 或 Kimi Code，并在写入后
   重新导入核对消息数与首条用户消息；“移动”模式会把来源原始历史和完整
-  数据快照放入可恢复回收站，恢复及永久删除均覆盖文件型与 SQLite 型来源；
+  数据快照放入可恢复回收站，恢复及永久删除均覆盖文件型、SQLite 型与 Kimi
+  索引；已安装但格式只读的目标会显示为不可选择，不会报告虚假迁移成功；
 - 总结式迁移可生成带来源证据的继续卡片，不伪装成目标 Agent 的原生历史；
 - 可按仓库筛选的记忆复核、批量忽略、冲突查看、检查点与交接流程；
   候选记忆在批准前会显示置信度、来源证据、待处理的合并建议和冲突提示，
@@ -76,15 +79,31 @@ AI Memory 的 Windows 11 原生版本，使用 C#、WinUI 3 与 Windows App SDK 
 - 打开对话后按来源刷新本地历史，并默认每两分钟更新该对话唯一的自动记忆恢复点；
 - 文件、工作台、窗口与帮助菜单，以及覆盖 ChatMem 导入、关闭窗口、工作台、
   待复核、历史、记忆、同步、来源刷新、设置、关于和检查更新的快捷键；
+- 设置仅保留通用、Agent 集成、数据同步与备份三个分类；更新、升级就绪和运行
+  诊断集中到带软件图标的独立“关于 AI Memory”窗口；主窗口和关于窗口使用
+  Windows 11 Mica，常规成功提示保持中性；
 - 与 macOS 对齐的 22 项原生 MCP 工具，覆盖历史检索、记忆治理、
   检查点、交接、运行产物、Wiki、索引、冲突与实体图。
 
-八类本地历史均通过共享核心层测试；Windows 桌面端的完整安装与交互状态见
-[功能矩阵](../docs/FEATURE_MATRIX.md)。
-本机已验证 win-x64 与 win-arm64 MCP helper 发布产物，Windows CI 工作流也已加入
-x64/ARM64 WinUI 构建、helper 协议冒烟和注册 manifest 的桌面生命周期步骤；当前
-提交尚待新的 Windows Runner 执行这些步骤。桌面端仍保持 Preview，直到完成真实
-Windows 11 安装、启动、窗口和交互验收。
+八类本地历史及 Kimi 写入/回滚/恢复均通过共享核心层测试；完整状态见
+[功能矩阵](../docs/FEATURE_MATRIX.md)。本机最终回归为 95/95 核心测试、37/37
+功能契约、22 项 MCP 工具；x64 与 ARM64 WinUI Release 构建均为 0 警告、0 错误。
+注册 MSIX 后已验证单实例、可见窗口、关闭到通知区域、二次启动恢复、设置三分类、
+独立关于窗口、登录启动开关、6 个实际已安装来源的 47 条会话启动导入，以及真实
+WebDAV 同步（上传 0、下载 0、跳过 733；64/64 响应采样）。
+
+## 下载与安装
+
+从 [v0.1.3 Release](https://github.com/douxy1994/AI-Memory/releases/tag/v0.1.3)
+下载 `AI-Memory-0.1.3-Windows-x64.msix` 和同名 `.sha256`。本版本按照 Windows
+交接验收要求发布 unsigned MSIX；请在允许侧载 unsigned MSIX 的 Windows 11
+开发或受管环境中安装。安装前对照 `.sha256` 校验文件：
+
+   ```powershell
+   Get-FileHash .\AI-Memory-0.1.3-Windows-x64.msix -Algorithm SHA256
+   ```
+
+应用数据保存在 `%LOCALAPPDATA%\AIMemory`，安装或升级不会删除数据库、设置或凭据。
 
 ## 构建
 
@@ -115,17 +134,22 @@ dotnet build .\Windows\src\AIMemory.Windows\AIMemory.Windows.csproj `
 进程、关闭主窗口后进程继续驻留、再次启动不会创建第二个持久进程，并能恢复
 原窗口。测试只清理自己启动的进程；检测到已有 AI Memory 时会直接停止。
 
-验证构建输出（先注册 manifest，避免无包身份的原始 exe 只启动进程而不创建窗口）：
+验证构建输出（展开 unsigned MSIX 得到完整包布局后注册其根清单；构建输出目录里的
+AppxManifest.xml 仍含构建命名空间且缺少 Assets，而 `-DisableDevelopmentMode` 会让
+部署拒绝未签名的松散布局）：
 
 ```powershell
-$manifest = Get-ChildItem `
+$msix = Get-ChildItem `
   .\Windows\src\AIMemory.Windows\bin `
-  -Recurse -Filter AppxManifest.xml |
+  -Recurse -Filter *.msix |
   Where-Object FullName -Match '\\x64\\' |
-  Where-Object FullName -NotMatch '\\obj\\' |
   Sort-Object LastWriteTime -Descending |
   Select-Object -First 1
-Add-AppxPackage -Path $manifest.FullName -Register -DisableDevelopmentMode
+$layout = Join-Path $env:TEMP "AIMemory-msix-layout"
+if (Test-Path -LiteralPath $layout) { Remove-Item $layout -Recurse -Force }
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+[System.IO.Compression.ZipFile]::ExtractToDirectory($msix.FullName, $layout)
+Add-AppxPackage -Path (Join-Path $layout "AppxManifest.xml") -Register
 $package = Get-AppxPackage -Name "com.aimemory.windows"
 try {
   pwsh .\Windows\scripts\smoke-desktop.ps1 `
@@ -135,6 +159,7 @@ try {
 finally {
   Get-AppxPackage -Name "com.aimemory.windows" |
     Remove-AppxPackage -ErrorAction SilentlyContinue
+  Remove-Item $layout -Recurse -Force -ErrorAction SilentlyContinue
 }
 ```
 

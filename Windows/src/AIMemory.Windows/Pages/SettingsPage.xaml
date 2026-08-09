@@ -7,71 +7,120 @@
     x:Class="AIMemory.Windows.Pages.SettingsPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <Grid Padding="32">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="20" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-
-        <StackPanel>
-            <TextBlock x:Uid="SettingsTitle" Text="设置" Style="{StaticResource PageTitleStyle}" />
-            <TextBlock x:Uid="SettingsSubtitle" Text="管理启动、Agent 集成、数据同步与备份以及软件更新。"
-                       Opacity="0.65" />
-        </StackPanel>
-
-        <Grid Grid.Row="2" ColumnSpacing="24">
+    <Grid x:Name="SettingsRoot"
+          Background="{ThemeResource WindowBackgroundBrush}"
+          SizeChanged="SettingsRoot_SizeChanged">
+        <Grid x:Name="SettingsContentGrid"
+              ColumnSpacing="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="16" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="220" />
+                <ColumnDefinition Width="224" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <ListView x:Name="SettingsCategories"
-                      SelectionMode="Single"
-                      SelectionChanged="SettingsCategories_SelectionChanged">
-                <ListViewItem Tag="general">
-                    <StackPanel Orientation="Horizontal" Spacing="10">
-                        <SymbolIcon Symbol="Setting" />
-                        <TextBlock x:Uid="SettingsCategoryGeneral" Text="常规" VerticalAlignment="Center" />
-                    </StackPanel>
-                </ListViewItem>
-                <ListViewItem Tag="agents">
-                    <StackPanel Orientation="Horizontal" Spacing="10">
-                        <SymbolIcon Symbol="World" />
-                        <TextBlock x:Uid="SettingsCategoryAgents" Text="Agent 集成" VerticalAlignment="Center" />
-                    </StackPanel>
-                </ListViewItem>
-                <ListViewItem Tag="sync">
-                    <StackPanel Orientation="Horizontal" Spacing="10">
-                        <SymbolIcon Symbol="Sync" />
-                        <TextBlock x:Uid="SettingsCategorySync" Text="数据同步与备份" VerticalAlignment="Center" />
-                    </StackPanel>
-                </ListViewItem>
-                <ListViewItem Tag="updates">
-                    <StackPanel Orientation="Horizontal" Spacing="10">
-                        <SymbolIcon Symbol="Download" />
-                        <TextBlock x:Uid="SettingsCategoryUpdates" Text="更新与诊断" VerticalAlignment="Center" />
-                    </StackPanel>
-                </ListViewItem>
-            </ListView>
+            <Border x:Name="SettingsCategoryCard"
+                    Grid.RowSpan="3"
+                    Background="{ThemeResource SidebarBackgroundBrush}"
+                    Padding="20,28">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="16" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBlock x:Uid="SettingsTitle"
+                               Text="设置"
+                               FontSize="21"
+                               FontWeight="SemiBold" />
+                    <ComboBox x:Name="SettingsCategoryPicker"
+                              Grid.Row="2"
+                              Visibility="Collapsed"
+                              HorizontalAlignment="Stretch"
+                              SelectionChanged="SettingsCategoryPicker_SelectionChanged">
+                        <ComboBoxItem x:Uid="SettingsPickerGeneral"
+                                      Content="常规"
+                                      Tag="general" />
+                        <ComboBoxItem x:Uid="SettingsPickerAgents"
+                                      Content="Agent 集成"
+                                      Tag="agents" />
+                        <ComboBoxItem x:Uid="SettingsPickerSync"
+                                      Content="数据同步与备份"
+                                      Tag="sync" />
+                    </ComboBox>
+                    <ListView x:Name="SettingsCategories"
+                              Grid.Row="2"
+                              SelectionMode="Single"
+                              Background="Transparent"
+                              BorderThickness="0"
+                              SelectionChanged="SettingsCategories_SelectionChanged">
+                    <ListView.Resources>
+                        <SolidColorBrush x:Key="ListViewItemBackgroundSelected" Color="{ThemeResource AIMemoryGreenSoft}" />
+                        <SolidColorBrush x:Key="ListViewItemBackgroundSelectedPointerOver" Color="{ThemeResource AIMemoryGreenSoft}" />
+                        <SolidColorBrush x:Key="ListViewItemBackgroundSelectedPressed" Color="{ThemeResource AIMemoryGreenSoft}" />
+                        <SolidColorBrush x:Key="ListViewItemSelectionIndicatorBrush" Color="{ThemeResource AIMemoryGreen}" />
+                    </ListView.Resources>
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="Margin" Value="0,1" />
+                            <Setter Property="Padding" Value="12,9" />
+                            <Setter Property="CornerRadius" Value="8" />
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                    <ListViewItem Tag="general">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <SymbolIcon Symbol="Setting" />
+                            <TextBlock x:Uid="SettingsCategoryGeneral" Text="通用" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </ListViewItem>
+                    <ListViewItem Tag="agents">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <SymbolIcon Symbol="World" />
+                            <TextBlock x:Uid="SettingsCategoryAgents" Text="Agent 集成" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </ListViewItem>
+                    <ListViewItem Tag="sync">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <SymbolIcon Symbol="Sync" />
+                            <TextBlock x:Uid="SettingsCategorySync" Text="数据同步与备份" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </ListViewItem>
+                    </ListView>
+                </Grid>
+            </Border>
 
-            <ScrollViewer Grid.Column="1"
+            <ScrollViewer x:Name="SettingsContentScroll"
+                          Grid.RowSpan="3"
+                          Grid.Column="1"
+                          Padding="42,34"
                           HorizontalScrollMode="Disabled"
                           HorizontalScrollBarVisibility="Disabled">
-                <Grid MaxWidth="820" HorizontalAlignment="Stretch">
-                    <StackPanel x:Name="GeneralPanel" Spacing="16">
+                <Grid MaxWidth="920" HorizontalAlignment="Stretch">
+                    <StackPanel x:Name="GeneralPanel"
+                                Spacing="16"
+                                HorizontalAlignment="Stretch">
                         <StackPanel Spacing="4">
-                            <TextBlock x:Uid="SettingsGeneralTitle" Text="常规"
-                                       FontSize="22"
+                            <TextBlock x:Uid="SettingsGeneralTitle" Text="通用"
+                                       FontSize="26"
                                        FontWeight="SemiBold" />
-                            <TextBlock x:Uid="SettingsGeneralSubtitle" Text="控制字体、登录启动、记忆恢复点和自动备份。"
-                                       Opacity="0.65" />
+                            <TextBlock x:Uid="SettingsGeneralSubtitle" Text="调整 AI Memory 的语言、字体与日常使用体验。"
+                                       Style="{ThemeResource PageSubtitleStyle}" />
                         </StackPanel>
-                        <Border Style="{StaticResource CardStyle}">
+                        <Border Style="{ThemeResource CardStyle}">
                             <StackPanel Spacing="12">
-                                <TextBlock x:Uid="SettingsLanguageFontTitle" Text="语言与字体"
-                                           FontSize="17"
-                                           FontWeight="SemiBold" />
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE8D2;"
+                                              FontSize="15"
+                                              Foreground="{ThemeResource AIMemoryGreenBrush}"
+                                              VerticalAlignment="Center" />
+                                    <TextBlock x:Uid="SettingsLanguageFontTitle" Text="语言与字体"
+                                               Style="{ThemeResource SectionTitleStyle}"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
                                 <ComboBox x:Name="LanguageBox"
                                           x:Uid="SettingsLanguage"
                                           Header="界面语言"
@@ -81,7 +130,7 @@
                                            x:Uid="SettingsLanguageRestartHint"
                                            Text="语言更改将在重新启动 AI Memory 后生效。"
                                            TextWrapping="Wrap"
-                                           Opacity="0.6" />
+                                           Foreground="{ThemeResource SubtleTextBrush}" />
                                 <ComboBox x:Name="FontFamilyBox"
                                           x:Uid="SettingsFont"
                                           Header="字体"
@@ -89,188 +138,185 @@
                                           SelectionChanged="FontFamilyBox_SelectionChanged" />
                                 <TextBlock x:Uid="SettingsFontHint" Text="字体会立即应用；所选字体未安装时由 Windows 自动回退到系统字体。"
                                            TextWrapping="Wrap"
-                                           Opacity="0.6" />
+                                           Foreground="{ThemeResource SubtleTextBrush}" />
                             </StackPanel>
                         </Border>
-                        <Border Style="{StaticResource CardStyle}">
-                            <Grid ColumnSpacing="16">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Spacing="4">
-                                    <TextBlock x:Uid="SettingsStartupTitle" Text="登录时自动启动"
-                                               FontSize="16"
-                                               FontWeight="SemiBold" />
-                                    <TextBlock x:Name="StartupDetail"
-                                               x:Uid="SettingsStartupLoading"
-                                               Text="正在读取系统状态…"
-                                               TextWrapping="Wrap"
-                                               Opacity="0.6" />
+                        <Border Style="{ThemeResource CardStyle}">
+                            <StackPanel Spacing="12">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE7E8;"
+                                              FontSize="15"
+                                              Foreground="{ThemeResource AIMemoryGreenBrush}"
+                                              VerticalAlignment="Center" />
+                                    <TextBlock x:Uid="SettingsStartupSectionTitle" Text="启动与窗口"
+                                               Style="{ThemeResource SectionTitleStyle}"
+                                               VerticalAlignment="Center" />
                                 </StackPanel>
-                                <StackPanel Grid.Column="1"
-                                            Spacing="8"
-                                            VerticalAlignment="Center">
-                                    <ToggleSwitch x:Name="StartupToggle"
-                                                  HorizontalAlignment="Right"
-                                                  Toggled="StartupToggle_Toggled" />
-                                    <Button x:Name="OpenStartupSettingsButton"
-                                            x:Uid="SettingsOpenStartupSettings"
-                                            Content="打开启动应用设置"
-                                            Visibility="Collapsed"
-                                            Click="OpenStartupSettings_Click" />
-                                </StackPanel>
-                            </Grid>
-                        </Border>
-                        <Border Style="{StaticResource CardStyle}">
-                            <StackPanel Spacing="14">
-                                <TextBlock x:Uid="SettingsAutoBackupTitle" Text="自动恢复与备份"
-                                           FontSize="17"
-                                           FontWeight="SemiBold" />
                                 <Grid ColumnSpacing="16">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Spacing="4">
-                                        <TextBlock x:Uid="SettingsAutoCaptureTitle" Text="自动保留记忆恢复点"
+                                        <TextBlock x:Uid="SettingsStartupTitle" Text="登录时自动启动"
                                                    FontWeight="SemiBold" />
-                                        <TextBlock x:Uid="SettingsAutoCaptureHint" Text="打开对话后刷新对应 Agent 来源，并持续更新该对话唯一的自动检查点。"
+                                        <TextBlock x:Name="StartupDetail"
+                                                   x:Uid="SettingsStartupLoading"
+                                                   Text="正在读取系统状态…"
                                                    TextWrapping="Wrap"
-                                                   Opacity="0.6" />
+                                                   Foreground="{ThemeResource SubtleTextBrush}" />
                                     </StackPanel>
-                                    <ToggleSwitch x:Name="AutoCaptureToggle"
-                                                  Grid.Column="1"
-                                                  VerticalAlignment="Center" />
-                                </Grid>
-                                <Grid ColumnSpacing="16">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <StackPanel Spacing="4">
-                                        <TextBlock x:Uid="SettingsAutoBackupToggleTitle" Text="定时备份数据库与设置"
-                                                   FontWeight="SemiBold" />
-                                        <TextBlock x:Uid="SettingsAutoBackupHint" Text="没有变化时不会生成重复恢复点；未变化的文件使用 NTFS 硬链接复用。"
-                                                   TextWrapping="Wrap"
-                                                   Opacity="0.6" />
+                                    <StackPanel Grid.Column="1"
+                                                Spacing="8"
+                                                VerticalAlignment="Center">
+                                        <ToggleSwitch x:Name="StartupToggle"
+                                                      HorizontalAlignment="Right"
+                                                      AutomationProperties.Name="登录时自动启动"
+                                                      Toggled="StartupToggle_Toggled" />
+                                        <Button x:Name="OpenStartupSettingsButton"
+                                                x:Uid="SettingsOpenStartupSettings"
+                                                Content="打开启动应用设置"
+                                                Style="{ThemeResource GhostPillButtonStyle}"
+                                                Visibility="Collapsed"
+                                                Click="OpenStartupSettings_Click" />
                                     </StackPanel>
-                                    <ToggleSwitch x:Name="AutoBackupToggle"
-                                                  Grid.Column="1"
-                                                  VerticalAlignment="Center" />
                                 </Grid>
-                                <NumberBox x:Name="AutoBackupIntervalBox"
-                                           x:Uid="SettingsBackupInterval"
-                                           Header="备份间隔（分钟）"
-                                           Minimum="5"
-                                           Maximum="1440"
-                                           SmallChange="5"
-                                           SpinButtonPlacementMode="Inline" />
-                                <Button x:Uid="SettingsSaveAutoBackup" Content="保存自动备份设置"
-                                        HorizontalAlignment="Right"
-                                        Click="SaveGeneralSettings_Click" />
                             </StackPanel>
                         </Border>
                     </StackPanel>
 
                     <StackPanel x:Name="AgentsPanel"
                                 Spacing="16"
+                                HorizontalAlignment="Stretch"
                                 Visibility="Collapsed">
-                        <Grid ColumnSpacing="12">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Spacing="4">
-                                <TextBlock x:Uid="SettingsAgentsTitle" Text="Agent 集成"
-                                           FontSize="22"
-                                           FontWeight="SemiBold" />
-                                <TextBlock x:Uid="SettingsAgentsSubtitle" Text="已安装项目优先显示；未安装项目保持关闭。"
-                                           TextWrapping="Wrap"
-                                           Opacity="0.65" />
-                            </StackPanel>
-                            <CommandBar x:Name="AgentCommandBar"
-                                        Grid.Column="1"
-                                        Background="Transparent"
-                                        HorizontalAlignment="Right"
-                                        DefaultLabelPosition="Right"
-                                        IsDynamicOverflowEnabled="True">
-                                <AppBarButton x:Uid="SettingsInstallAllAgents"
-                                              Icon="Download"
-                                              Label="全部安装"
-                                              Click="InstallAllAgents_Click" />
-                                <AppBarButton x:Uid="SettingsUninstallAllAgents"
-                                              Icon="Remove"
-                                              Label="全部卸载"
-                                              Click="UninstallAllAgents_Click" />
-                                <AppBarButton x:Uid="SettingsDetectAgents"
-                                              Icon="Refresh"
-                                              Label="重新检测"
-                                              Click="DetectAgents_Click" />
-                            </CommandBar>
-                        </Grid>
-                        <Border Style="{StaticResource CardStyle}">
-                            <ItemsControl x:Name="AgentList">
+                        <StackPanel Spacing="4">
+                            <TextBlock x:Uid="SettingsAgentsTitle" Text="Agent 集成"
+                                       FontSize="26"
+                                       FontWeight="SemiBold" />
+                            <TextBlock x:Uid="SettingsAgentsSubtitle" Text="管理 AI Memory 与本机 AI Agent 的连接。"
+                                       TextWrapping="Wrap"
+                                       Style="{ThemeResource PageSubtitleStyle}" />
+                        </StackPanel>
+                        <Border Style="{ThemeResource CardStyle}">
+                            <StackPanel Spacing="10">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE950;"
+                                              FontSize="15"
+                                              Foreground="{ThemeResource AIMemoryGreenBrush}"
+                                              VerticalAlignment="Center" />
+                                    <TextBlock x:Uid="SettingsAgentsSectionTitle" Text="Agent 集成"
+                                               Style="{ThemeResource SectionTitleStyle}"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                                <Grid ColumnSpacing="12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock x:Uid="SettingsAgentsSectionHint" Text="把 AI Memory 的 MCP 服务和 skill 写入各 agent 配置。安装前会自动备份现有配置。"
+                                               TextWrapping="Wrap"
+                                               Foreground="{ThemeResource SubtleTextBrush}"
+                                               VerticalAlignment="Center" />
+                                    <ContentControl x:Name="AgentCommandBar" Grid.Column="1">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <Button x:Uid="SettingsInstallAllAgents" Content="全部安装"
+                                                    Style="{ThemeResource PrimaryPillButtonStyle}"
+                                                    Padding="12,5" Click="InstallAllAgents_Click" />
+                                            <Button x:Uid="SettingsUninstallAllAgents" Content="全部卸载"
+                                                    Style="{ThemeResource GhostPillButtonStyle}"
+                                                    Padding="12,5" Click="UninstallAllAgents_Click" />
+                                            <Button x:Uid="SettingsDetectAgents" Content="重新检测"
+                                                    Style="{ThemeResource GhostPillButtonStyle}"
+                                                    Padding="12,5" Click="DetectAgents_Click" />
+                                        </StackPanel>
+                                    </ContentControl>
+                                </Grid>
+                                <ItemsControl x:Name="AgentList">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Grid Padding="0,9" ColumnSpacing="12">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="Auto" />
-                                                <ColumnDefinition Width="Auto" />
-                                            </Grid.ColumnDefinitions>
-                                            <StackPanel Spacing="3">
-                                                <TextBlock Text="{Binding Label}"
-                                                           FontWeight="SemiBold" />
-                                                <TextBlock Text="{Binding Detail}"
-                                                           TextWrapping="Wrap"
-                                                           Opacity="0.6" />
-                                            </StackPanel>
-                                            <TextBlock Grid.Column="1"
-                                                       Text="{Binding State}"
-                                                       VerticalAlignment="Center" />
-                                            <Button Grid.Column="2"
-                                                    Content="{Binding ActionLabel}"
-                                                    IsEnabled="{Binding CanToggle}"
-                                                    VerticalAlignment="Center"
-                                                    Tag="{Binding}"
-                                                    Click="ToggleAgent_Click" />
-                                        </Grid>
+                                        <Border Background="{ThemeResource AIMemoryGreenSoftBrush}"
+                                                CornerRadius="8"
+                                                Padding="12,8"
+                                                Margin="0,4">
+                                            <Grid ColumnSpacing="10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding DetectionMark}"
+                                                           Foreground="{ThemeResource AIMemoryGreenBrush}"
+                                                           VerticalAlignment="Top"
+                                                           Margin="0,1,0,0" />
+                                                <StackPanel Grid.Column="1" Spacing="3">
+                                                    <TextBlock Text="{Binding Label}"
+                                                               FontWeight="SemiBold" />
+                                                    <TextBlock Text="{Binding Detail}"
+                                                               TextWrapping="Wrap"
+                                                               Foreground="{ThemeResource SubtleTextBrush}" />
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="2"
+                                                           Text="{Binding State}"
+                                                           FontSize="12"
+                                                           Foreground="{ThemeResource SubtleTextBrush}"
+                                                           HorizontalAlignment="Right"
+                                                           VerticalAlignment="Center" />
+                                                <Button Grid.Column="3"
+                                                        Content="{Binding ActionLabel}"
+                                                        IsEnabled="{Binding CanToggle}"
+                                                        Style="{ThemeResource GhostPillButtonStyle}"
+                                                        FontSize="12"
+                                                        Padding="10,4"
+                                                        VerticalAlignment="Center"
+                                                        Tag="{Binding}"
+                                                        Click="ToggleAgent_Click" />
+                                            </Grid>
+                                        </Border>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                                </ItemsControl>
+                            </StackPanel>
                         </Border>
                     </StackPanel>
 
                     <StackPanel x:Name="SyncPanel"
                                 Spacing="16"
+                                HorizontalAlignment="Stretch"
                                 Visibility="Collapsed">
                         <StackPanel Spacing="4">
                             <TextBlock x:Uid="SettingsSyncTitle" Text="数据同步与备份"
-                                       FontSize="22"
+                                       FontSize="26"
                                        FontWeight="SemiBold" />
                             <TextBlock x:Uid="SettingsSyncSubtitle" Text="集中管理本地目录、WebDAV、历史导入和恢复点。"
                                        TextWrapping="Wrap"
-                                       Opacity="0.65" />
+                                       Style="{ThemeResource PageSubtitleStyle}" />
                         </StackPanel>
 
                         <StackPanel x:Name="SyncProgressPanel"
                                     Spacing="6"
                                     Visibility="Collapsed">
-                            <ProgressBar IsIndeterminate="True" />
+                            <ProgressBar IsIndeterminate="True"
+                                         Foreground="{ThemeResource AIMemoryGreenBrush}" />
                             <TextBlock x:Name="SyncProgressText"
                                        TextWrapping="Wrap"
-                                       Opacity="0.7" />
+                                       Foreground="{ThemeResource SubtleTextBrush}" />
                         </StackPanel>
 
-                        <Border Style="{StaticResource CardStyle}">
+                        <Border Style="{ThemeResource CardStyle}">
                             <StackPanel Spacing="14">
-                                <TextBlock x:Uid="SettingsLocalSyncTitle" Text="本地同步目录"
-                                           FontSize="17"
-                                           FontWeight="SemiBold" />
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE8B7;"
+                                              FontSize="15"
+                                              Foreground="{ThemeResource AIMemoryGreenBrush}"
+                                              VerticalAlignment="Center" />
+                                    <TextBlock x:Uid="SettingsLocalSyncTitle" Text="本地同步目录"
+                                               Style="{ThemeResource SectionTitleStyle}"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
                                 <TextBlock x:Uid="SettingsLocalSyncHint" Text="适用于 OneDrive、Dropbox、Google Drive 等共享目录；只传输变化的对话文件。"
                                            TextWrapping="Wrap"
-                                           Opacity="0.6" />
+                                           Foreground="{ThemeResource SubtleTextBrush}" />
                                 <TextBox x:Name="SyncFolderBox"
                                          x:Uid="SettingsLocalSyncFolder"
                                          PlaceholderText="例如 D:\OneDrive\AI Memory" />
@@ -297,11 +343,17 @@
                             </StackPanel>
                         </Border>
 
-                        <Border Style="{StaticResource CardStyle}">
+                        <Border Style="{ThemeResource CardStyle}">
                             <StackPanel Spacing="14">
-                                <TextBlock x:Uid="SettingsWebDavTitle" Text="WebDAV"
-                                           FontSize="17"
-                                           FontWeight="SemiBold" />
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE753;"
+                                              FontSize="15"
+                                              Foreground="{ThemeResource AIMemoryGreenBrush}"
+                                              VerticalAlignment="Center" />
+                                    <TextBlock x:Uid="SettingsWebDavTitle" Text="WebDAV"
+                                               Style="{ThemeResource SectionTitleStyle}"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
                                 <Grid ColumnSpacing="12">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="120" />
@@ -348,18 +400,92 @@
                             </StackPanel>
                         </Border>
 
-                        <Border Style="{StaticResource CardStyle}">
+                        <Border Style="{ThemeResource CardStyle}">
                             <StackPanel Spacing="14">
-                                <TextBlock x:Uid="SettingsRecoveryTitle" Text="数据与恢复"
-                                           FontSize="17"
-                                           FontWeight="SemiBold" />
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE74E;"
+                                              FontSize="15"
+                                              Foreground="{ThemeResource AIMemoryGreenBrush}"
+                                              VerticalAlignment="Center" />
+                                    <TextBlock x:Uid="SettingsAutoBackupTitle" Text="自动备份"
+                                               Style="{ThemeResource SectionTitleStyle}"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                                <Grid ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Spacing="4">
+                                        <TextBlock x:Uid="SettingsAutoCaptureTitle" Text="自动保留记忆恢复点"
+                                                   FontWeight="SemiBold" />
+                                        <TextBlock x:Uid="SettingsAutoCaptureHint" Text="打开对话后刷新对应 Agent 来源，并持续更新该对话唯一的自动检查点。"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource SubtleTextBrush}" />
+                                    </StackPanel>
+                                    <ToggleSwitch x:Name="AutoCaptureToggle"
+                                                  Grid.Column="1"
+                                                  VerticalAlignment="Center" />
+                                </Grid>
+                                <Grid ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Spacing="4">
+                                        <TextBlock x:Uid="SettingsAutoBackupToggleTitle" Text="定时备份数据库与设置"
+                                                   FontWeight="SemiBold" />
+                                        <TextBlock x:Uid="SettingsAutoBackupHint" Text="没有变化时不会生成重复恢复点；未变化的文件使用 NTFS 硬链接复用。"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource SubtleTextBrush}" />
+                                    </StackPanel>
+                                    <ToggleSwitch x:Name="AutoBackupToggle"
+                                                  Grid.Column="1"
+                                                  VerticalAlignment="Center" />
+                                </Grid>
+                                <NumberBox x:Name="AutoBackupIntervalBox"
+                                           x:Uid="SettingsBackupInterval"
+                                           Header="备份间隔（分钟）"
+                                           Minimum="5"
+                                           Maximum="1440"
+                                           SmallChange="5"
+                                           SpinButtonPlacementMode="Inline" />
+                                <Button x:Uid="SettingsSaveAutoBackup" Content="保存自动备份设置"
+                                        Style="{ThemeResource PrimaryPillButtonStyle}"
+                                        HorizontalAlignment="Right"
+                                        Click="SaveGeneralSettings_Click" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{ThemeResource CardStyle}">
+                            <StackPanel Spacing="14">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE74E;"
+                                              FontSize="15"
+                                              Foreground="{ThemeResource AIMemoryGreenBrush}"
+                                              VerticalAlignment="Center" />
+                                    <TextBlock x:Uid="SettingsRecoveryTitle" Text="数据与恢复"
+                                               Style="{ThemeResource SectionTitleStyle}"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                                <TextBlock x:Name="DatabasePathText"
+                                           TextWrapping="Wrap"
+                                           Foreground="{ThemeResource SubtleTextBrush}"
+                                           FontFamily="Cascadia Mono"
+                                           IsTextSelectionEnabled="True" />
+                                <TextBlock x:Name="SettingsPathText"
+                                           TextWrapping="Wrap"
+                                           Foreground="{ThemeResource SubtleTextBrush}"
+                                           FontFamily="Cascadia Mono"
+                                           IsTextSelectionEnabled="True" />
                                 <TextBlock x:Name="DataPathText"
                                            TextWrapping="Wrap"
-                                           Opacity="0.65"
+                                           Foreground="{ThemeResource SubtleTextBrush}"
+                                           FontFamily="Cascadia Mono"
                                            IsTextSelectionEnabled="True" />
                                 <TextBlock x:Name="ChatMemSourceText"
                                            TextWrapping="Wrap"
-                                           Opacity="0.65"
+                                           Foreground="{ThemeResource SubtleTextBrush}"
                                            IsTextSelectionEnabled="True" />
                                 <CommandBar Background="Transparent"
                                             HorizontalAlignment="Stretch"
@@ -390,152 +516,6 @@
                         </Border>
                     </StackPanel>
 
-                    <StackPanel x:Name="UpdatesPanel"
-                                Spacing="16"
-                                Visibility="Collapsed">
-                        <StackPanel Spacing="4">
-                            <TextBlock x:Uid="SettingsUpdatesTitle" Text="更新与诊断"
-                                       FontSize="22"
-                                       FontWeight="SemiBold" />
-                            <TextBlock x:Uid="SettingsUpdatesSubtitle" Text="配置自动检查更新，并查看当前本机运行状态。"
-                                       TextWrapping="Wrap"
-                                       Opacity="0.65" />
-                        </StackPanel>
-
-                        <Border Style="{StaticResource CardStyle}">
-                            <StackPanel Spacing="14">
-                                <TextBlock x:Uid="SettingsSoftwareUpdateTitle" Text="软件更新"
-                                           FontSize="17"
-                                           FontWeight="SemiBold" />
-                                <Grid ColumnSpacing="16">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <StackPanel Spacing="4">
-                                        <TextBlock x:Uid="SettingsAutoUpdateTitle" Text="自动检查更新"
-                                                   FontWeight="SemiBold" />
-                                        <TextBlock x:Uid="SettingsAutoUpdateHint" Text="从 AI Memory 的 GitHub Releases 获取正式版本。"
-                                                   TextWrapping="Wrap"
-                                                   Opacity="0.6" />
-                                    </StackPanel>
-                                    <ToggleSwitch x:Name="AutoUpdateToggle"
-                                                  Grid.Column="1"
-                                                  VerticalAlignment="Center" />
-                                </Grid>
-                                <TextBox x:Name="UpdateFeedBox"
-                                         Header="GitHub Releases API"
-                                         PlaceholderText="https://api.github.com/repos/owner/repository/releases/latest" />
-                                <CommandBar Background="Transparent"
-                                            HorizontalAlignment="Right"
-                                            DefaultLabelPosition="Right">
-                                    <AppBarButton x:Uid="SettingsSaveUpdate"
-                                                  Icon="Save"
-                                                  Label="保存更新设置"
-                                                  Click="SaveUpdateSettings_Click" />
-                                    <AppBarButton x:Uid="SettingsCheckUpdateAbout"
-                                                  Icon="Refresh"
-                                                  Label="在关于中检查更新"
-                                                  Click="CheckUpdates_Click" />
-                                </CommandBar>
-                                <TextBlock x:Name="UpdateStatusText"
-                                           x:Uid="SettingsUpdateStatus"
-                                           Text="更新检查与安装统一在“关于 AI Memory”窗口中完成。"
-                                           TextWrapping="Wrap"
-                                           Opacity="0.65" />
-                            </StackPanel>
-                        </Border>
-
-                        <Border Style="{StaticResource CardStyle}">
-                            <StackPanel Spacing="14">
-                                <TextBlock x:Uid="SettingsReadinessTitle"
-                                           Text="升级就绪检查"
-                                           FontSize="17"
-                                           FontWeight="SemiBold" />
-                                <TextBlock x:Uid="SettingsReadinessHint"
-                                           Text="验证设置文件、WebDAV 配置、凭据和数据库，提前发现会阻断升级的问题。"
-                                           TextWrapping="Wrap"
-                                           Opacity="0.6" />
-                                <StackPanel Orientation="Horizontal"
-                                            Spacing="10">
-                                    <AppBarButton x:Name="RunReadinessButton"
-                                                  x:Uid="SettingsRunReadiness"
-                                                  Icon="Accept"
-                                                  Label="运行升级就绪检查"
-                                                  Click="RunReadiness_Click" />
-                                    <ProgressRing x:Name="ReadinessProgress"
-                                                  Width="20"
-                                                  Height="20"
-                                                  IsActive="False"
-                                                  Visibility="Collapsed"
-                                                  VerticalAlignment="Center" />
-                                    <TextBlock x:Name="ReadinessSummary"
-                                               Visibility="Collapsed"
-                                               TextWrapping="Wrap"
-                                               FontWeight="SemiBold"
-                                               VerticalAlignment="Center" />
-                                </StackPanel>
-                                <ItemsControl x:Name="ReadinessList">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Grid Padding="0,7"
-                                                  ColumnSpacing="10">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="24" />
-                                                    <ColumnDefinition Width="*" />
-                                                </Grid.ColumnDefinitions>
-                                                <TextBlock Text="{Binding StatusGlyph}"
-                                                           FontSize="16"
-                                                           FontWeight="SemiBold"
-                                                           HorizontalAlignment="Center" />
-                                                <StackPanel Grid.Column="1"
-                                                            Spacing="2">
-                                                    <TextBlock Text="{Binding Label}"
-                                                               FontWeight="SemiBold" />
-                                                    <TextBlock Text="{Binding Detail}"
-                                                               TextWrapping="Wrap"
-                                                               Opacity="0.65" />
-                                                </StackPanel>
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-                        </Border>
-
-                        <Border Style="{StaticResource CardStyle}">
-                            <StackPanel Spacing="14">
-                                <TextBlock x:Uid="SettingsDiagnosticsTitle" Text="运行诊断"
-                                           FontSize="17"
-                                           FontWeight="SemiBold" />
-                                <TextBlock x:Uid="SettingsDiagnosticsHint" Text="以下内容来自当前数据库与本机环境，可用于核对版本、数据和 Agent 状态。"
-                                           TextWrapping="Wrap"
-                                           Opacity="0.6" />
-                                <TextBox x:Name="DiagnosticsBox"
-                                         IsReadOnly="True"
-                                         AcceptsReturn="True"
-                                         TextWrapping="Wrap"
-                                         MinHeight="180"
-                                         FontFamily="Cascadia Mono" />
-                                <CommandBar Background="Transparent"
-                                            HorizontalAlignment="Right"
-                                            DefaultLabelPosition="Right">
-                                    <AppBarButton x:Uid="SettingsRefreshDiagnostics"
-                                                  Icon="Refresh"
-                                                  Label="刷新诊断"
-                                                  Click="RefreshDiagnostics_Click" />
-                                    <AppBarButton x:Uid="SettingsCopyDiagnostics"
-                                                  Icon="Copy"
-                                                  Label="复制诊断"
-                                                  Click="CopyDiagnostics_Click" />
-                                    <AppBarButton x:Uid="SettingsOpenDataFolder"
-                                                  Icon="Folder"
-                                                  Label="打开数据目录"
-                                                  Click="OpenDataDirectory_Click" />
-                                </CommandBar>
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
                 </Grid>
             </ScrollViewer>
         </Grid>

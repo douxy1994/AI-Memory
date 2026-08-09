@@ -12,8 +12,12 @@ const parity = JSON.parse(fs.readFileSync(parityPath, "utf8"));
 const source = (files, patterns) => ({ files, patterns });
 const contracts = {
   "native-ui": source(
-    ["Windows/src/AIMemory.Windows/AIMemory.Windows.csproj"],
-    [/<UseWinUI>true<\/UseWinUI>/, /Microsoft\.WindowsAppSDK/],
+    [
+      "Windows/src/AIMemory.Windows/AIMemory.Windows.csproj",
+      "Windows/src/AIMemory.Windows/MainWindow.xaml.cs",
+      "Windows/src/AIMemory.Windows/AboutWindow.xaml.cs",
+    ],
+    [/<UseWinUI>true<\/UseWinUI>/, /Microsoft\.WindowsAppSDK/, /MicaBackdrop/],
   ),
   "single-instance": source(
     ["Windows/src/AIMemory.Windows/Program.cs"],
@@ -63,7 +67,7 @@ const contracts = {
       "Windows/src/AIMemory.Windows/Pages/HistoryPage.xaml",
       "Windows/src/AIMemory.Windows/Pages/HistoryPage.xaml.cs",
     ],
-    [/HistoryPage/, /Search/, /ConversationListProjectionService/],
+    [/HistoryPage/, /Search/, /ConversationListProjectionService/, /HorizontalContentAlignment="Stretch"/],
   ),
   "conversation-reader": source(
     [
@@ -133,12 +137,20 @@ const contracts = {
     [/LayoutSchemaVersion/, /AtomicWriteAsync/, /SemanticHash/],
   ),
   "native-source-history-import": source(
-    ["Windows/src/AIMemory.Core/Services/NativeHistoryImportService.cs"],
-    [/ImportAllAsync/, /ImportCodexAsync/, /ImportClaudeAsync/],
+    [
+      "Windows/src/AIMemory.Core/Services/NativeHistoryImportService.cs",
+      "Windows/src/AIMemory.Windows/App.xaml.cs",
+      "Windows/src/AIMemory.Windows/MainWindow.xaml.cs",
+    ],
+    [/ReadableSources/, /ImportAllAsync/, /SynchronizeInstalledAgentHistoryAfterLaunchAsync/],
   ),
   "native-conversation-migration": source(
-    ["Windows/src/AIMemory.Core/Services/ConversationMigrationService.cs"],
-    [/MigrateAsync/, /RestoreSourceArchiveAsync/, /ConversationMigrationResult/],
+    [
+      "Windows/src/AIMemory.Core/Services/ConversationMigrationService.cs",
+      "Windows/src/AIMemory.Core/Services/NativeAgentConversationWriter.cs",
+      "Windows/src/AIMemory.Windows/Pages/ConversationPage.xaml.cs",
+    ],
+    [/MigrateAsync/, /WriteKimiAsync/, /MigrationTargetReadOnly/],
   ),
   "memory-review-editing": source(
     [
@@ -205,9 +217,32 @@ const contracts = {
   "upgrade-readiness": source(
     [
       "Windows/src/AIMemory.Core/Services/UpgradeReadinessService.cs",
-      "Windows/src/AIMemory.Windows/Pages/SettingsPage.xaml.cs",
+      "Windows/src/AIMemory.Windows/AboutWindow.xaml",
+      "Windows/src/AIMemory.Windows/AboutWindow.xaml.cs",
     ],
     [/UpgradeReadinessReport/, /quick_check/, /RunReadinessButton/],
+  ),
+  "x64-arm64-builds": source(
+    [
+      ".github/workflows/build.yml",
+      "Windows/scripts/verify.ps1",
+    ],
+    [/-p:Platform=x64/, /-p:Platform=ARM64/, /GenerateAppxPackageOnBuild=true/],
+  ),
+  "mcp-runtime-smoke": source(
+    [
+      "Windows/src/AIMemory.Mcp/Program.cs",
+      ".github/workflows/build.yml",
+    ],
+    [/ToolDefinitions/, /aimemory-mcp\.exe/, /2025-03-26/],
+  ),
+  "desktop-lifecycle-smoke": source(
+    [
+      "Windows/scripts/smoke-desktop.ps1",
+      "Windows/src/AIMemory.Windows/Program.cs",
+      "Windows/src/AIMemory.Windows/App.xaml.cs",
+    ],
+    [/shell:AppsFolder/, /launch\.complete/, /AppInstance/],
   ),
 };
 
@@ -240,11 +275,36 @@ for (const feature of implemented) {
   readContract(feature.id, contract);
 }
 
-const expectedPending = new Set([
-  "x64-arm64-builds",
-  "mcp-runtime-smoke",
-  "desktop-lifecycle-smoke",
-]);
+const settingsXaml = fs.readFileSync(
+  path.join(root, "Windows/src/AIMemory.Windows/Pages/SettingsPage.xaml"),
+  "utf8",
+);
+for (const removedPanel of ["AboutPanel", "AdvancedPanel", 'Tag="about"', 'Tag="advanced"']) {
+  if (settingsXaml.includes(removedPanel)) {
+    throw new Error(`Settings still contains the removed panel marker: ${removedPanel}`);
+  }
+}
+
+const versionFiles = [
+  "Windows/src/AIMemory.Core/AIMemory.Core.csproj",
+  "Windows/src/AIMemory.Mcp/AIMemory.Mcp.csproj",
+  "Windows/src/AIMemory.Windows/AIMemory.Windows.csproj",
+  "Windows/src/AIMemory.Windows/Package.appxmanifest",
+  "Windows/src/AIMemory.Mcp/Program.cs",
+];
+const versionSource = versionFiles.map((relative) =>
+  fs.readFileSync(path.join(root, relative), "utf8")
+).join("\n");
+for (const marker of ["0.1.3", "0.1.3.0"]) {
+  if (!versionSource.includes(marker)) {
+    throw new Error(`Windows version marker is missing: ${marker}`);
+  }
+}
+if (/0\.1\.(0|1|2)(?:\.0)?/.test(versionSource)) {
+  throw new Error("A stale pre-0.1.3 Windows product version remains.");
+}
+
+const expectedPending = new Set([]);
 const actualPending = new Set(pending.map((feature) => feature.id));
 if (actualPending.size !== expectedPending.size
     || [...expectedPending].some((id) => !actualPending.has(id))) {

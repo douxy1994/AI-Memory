@@ -332,6 +332,7 @@ public sealed class CoreTests : IDisposable
     [InlineData("codex")]
     [InlineData("gemini")]
     [InlineData("opencode")]
+    [InlineData("kimi")]
     public async Task NativeConversationCopyWritesAndReimportsTargetStore(
         string target)
     {
@@ -411,6 +412,159 @@ public sealed class CoreTests : IDisposable
         Assert.Equal(
             "README.md",
             Assert.Single(migrated.FileChanges).Path);
+        if (target == "kimi")
+        {
+            var indexPath = Path.Combine(home, ".kimi-code", "session_index.jsonl");
+            var entries = (await File.ReadAllLinesAsync(indexPath))
+                .Where(line => line.Contains(result.NewId, StringComparison.Ordinal))
+                .ToArray();
+            Assert.Single(entries);
+            Assert.Contains("sessionDir", entries[0]);
+            Assert.Equal(
+                $"kimi --session {result.NewId}",
+                migrated.ResumeCommand);
+        }
+    }
+
+    [Fact]
+    public async Task KimiWriteRollsBackSessionWhenIndexCannotBeUpdated()
+    {
+        var home = Path.Combine(_root, "kimi-index-failure");
+        var indexAsDirectory = Path.Combine(
+            home, ".kimi-code", "session_index.jsonl");
+        Directory.CreateDirectory(indexAsDirectory);
+        var writer = new NativeAgentConversationWriter(home);
+        var fixture = new WebDavConversationDetail(
+            "source",
+            "claude",
+            @"C:\repo",
+            "2026-08-09T01:00:00Z",
+            "2026-08-09T01:01:00Z",
+            "Kimi rollback",
+            null,
+            null,
+            [
+                new WebDavMessage(
+                    "user", "2026-08-09T01:00:00Z", "user",
+                    "Keep this source", [], []),
+            ],
+            []);
+
+        var exception = await Assert.ThrowsAnyAsync<Exception>(
+            () => writer.WriteAsync(fixture, "kimi"));
+        Assert.True(exception is IOException or UnauthorizedAccessException);
+
+        var sessions = Path.Combine(home, ".kimi-code", "sessions");
+        Assert.False(Directory.Exists(sessions)
+                     && Directory.EnumerateFiles(
+                         sessions, "state.json", SearchOption.AllDirectories).Any());
+    }
+
+    [Fact]
+    public async Task KimiCutRestoreAndPermanentDeleteKeepIndexConsistent()
+    {
+        var home = Path.Combine(_root, "kimi-cut-roundtrip");
+        var database = new AIMemoryDatabase(Path.Combine(home, "aimemory.db"));
+        await database.InitializeAsync();
+        var repository = new ConversationRepository(database);
+        var writer = new NativeAgentConversationWriter(
+            home, Path.Combine(home, "trash", "raw"));
+        var seed = new WebDavConversationDetail(
+            "seed-kimi",
+            "claude",
+            @"C:\repo",
+            "2026-08-09T01:00:00Z",
+            "2026-08-09T01:01:00Z",
+            "Kimi cut fixture",
+            null,
+            null,
+            [
+                new WebDavMessage(
+                    "kimi-user", "2026-08-09T01:00:00Z", "user",
+                    "Kimi cut question", [], []),
+                new WebDavMessage(
+                    "kimi-assistant", "2026-08-09T01:01:00Z", "assistant",
+                    "Kimi cut answer", [], []),
+            ],
+            []);
+        var written = await writer.WriteAsync(seed, "kimi");
+        await new NativeHistoryImportService(repository, home).ImportAllAsync();
+        var statePath = written.StoragePath;
+        var sessionDirectory = Path.GetDirectoryName(statePath)!;
+        var indexPath = Path.Combine(home, ".kimi-code", "session_index.jsonl");
+        var trash = new TrashService(
+            database, Path.Combine(home, "trash"), null, writer);
+
+        var result = await new ConversationMigrationService(
+                repository, home, writer)
+            .MigrateAsync("kimi", "gemini", written.Id, "cut", trash);
+
+        Assert.True(result.CutDeletedSource);
+        Assert.False(Directory.Exists(sessionDirectory));
+        Assert.DoesNotContain(
+            written.Id,
+            await File.ReadAllTextAsync(indexPath),
+            StringComparison.Ordinal);
+        var restoreRecord = Assert.Single(await trash.ListAsync());
+        await trash.RestoreAsync(restoreRecord);
+        Assert.True(Directory.Exists(sessionDirectory));
+        Assert.Equal(
+            1,
+            (await File.ReadAllLinesAsync(indexPath)).Count(line =>
+                line.Contains(written.Id, StringComparison.Ordinal)));
+
+        var restored = await repository.ExportAsync(written.Id);
+        var summary = await repository.FindAsync(written.Id);
+        Assert.NotNull(summary);
+        var archive = await writer.ArchiveSourceAsync(restored);
+        var deleteRecord = await trash.TrashAsync(
+            summary!, 14, archive, detailOverride: restored);
+        await trash.DeleteAsync(deleteRecord);
+        Assert.False(Directory.Exists(archive.BackupPath));
+        Assert.DoesNotContain(
+            written.Id,
+            await File.ReadAllTextAsync(indexPath),
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task WebDavUpsertPreservesDuplicateFileChangesWithoutKeyCollision()
+    {
+        var database = new AIMemoryDatabase(
+            Path.Combine(_root, "duplicate-file-changes.db"));
+        await database.InitializeAsync();
+        var repository = new ConversationRepository(database);
+        var duplicate = new WebDavFileChange(
+            "Program.cs",
+            "modified",
+            "2026-08-09T01:02:03Z",
+            "assistant-1");
+
+        await repository.UpsertAsync(new WebDavConversationDetail(
+            "duplicate-file-change-conversation",
+            "codex",
+            @"C:\repo",
+            "2026-08-09T01:00:00Z",
+            "2026-08-09T01:02:03Z",
+            "Duplicate file-change fixture",
+            null,
+            null,
+            [
+                new WebDavMessage(
+                    "assistant-1",
+                    "2026-08-09T01:02:03Z",
+                    "assistant",
+                    "Updated the file twice",
+                    [],
+                    []),
+            ],
+            [duplicate, duplicate]));
+
+        var restored = await repository.ExportAsync(
+            "duplicate-file-change-conversation");
+        Assert.Equal(2, restored.FileChanges.Count);
+        Assert.All(restored.FileChanges, change =>
+            Assert.Equal("Program.cs", change.Path));
     }
 
     [Fact]
@@ -927,14 +1081,14 @@ public sealed class CoreTests : IDisposable
     }
 
     [Theory]
-    [InlineData("system", "system", "Segoe UI Variable")]
-    [InlineData("Segoe UI Variable", "system", "Segoe UI Variable")]
+    [InlineData("system", "system", "Segoe UI Variable Text")]
+    [InlineData("Segoe UI Variable", "system", "Segoe UI Variable Text")]
     [InlineData("sourceSans", "source-sans", "Noto Sans CJK SC")]
     [InlineData("source-sans", "source-sans", "Noto Sans CJK SC")]
     [InlineData("sourceSerif", "source-serif", "Noto Serif CJK SC")]
     [InlineData("Noto Serif CJK SC", "source-serif", "Noto Serif CJK SC")]
     [InlineData("wenkai", "wenkai", "LXGW WenKai")]
-    [InlineData("unknown-font", "system", "Segoe UI Variable")]
+    [InlineData("unknown-font", "system", "Segoe UI Variable Text")]
     public void FontPreferencesNormalizeMacAndLegacyWindowsValues(
         string input,
         string expectedId,
@@ -1252,6 +1406,7 @@ public sealed class CoreTests : IDisposable
         File.WriteAllText(Path.Combine(bin, "grok-cli.cmd"), "");
         File.WriteAllText(Path.Combine(bin, "nanoclaw.exe"), "");
         File.WriteAllText(Path.Combine(bin, "gitclaw.cmd"), "");
+        File.WriteAllText(Path.Combine(bin, "claude.ps1"), "");
         var statuses = new AgentCatalog(
             _root,
             [bin],
@@ -1298,9 +1453,12 @@ public sealed class CoreTests : IDisposable
         var firstMissing = statuses
             .Select((status, index) => (status, index))
             .First(value => !value.status.IsDetected).index;
-        Assert.Equal(9, firstMissing);
-        Assert.Equal(["opencode", "goose", "vibe", "grok-build", "qoder", "mimo-code", "aichat", "nanoclaw", "gitclaw"], statuses
+        Assert.Equal(10, firstMissing);
+        Assert.Equal(["claude", "opencode", "goose", "vibe", "grok-build", "qoder", "mimo-code", "aichat", "nanoclaw", "gitclaw"], statuses
             .Take(firstMissing).Select(value => value.Id).ToArray());
+        Assert.Contains(
+            statuses[0].DetectionPaths,
+            value => value.EndsWith("claude.ps1", StringComparison.OrdinalIgnoreCase));
         Assert.All(statuses.Take(firstMissing), value => Assert.True(value.IsDetected));
         Assert.All(statuses.Skip(firstMissing), value =>
         {
@@ -1909,6 +2067,46 @@ public sealed class CoreTests : IDisposable
     }
 
     [Fact]
+    public async Task NativeHistoryImportUsesDetectedReadersAndIsIdempotent()
+    {
+        var home = Path.Combine(_root, "detected-native-readers");
+        var claudeDirectory = Path.Combine(
+            home, ".claude", "projects", "C--repo");
+        Directory.CreateDirectory(claudeDirectory);
+        await File.WriteAllLinesAsync(
+            Path.Combine(claudeDirectory, "detected.jsonl"),
+            [
+                """{"type":"user","uuid":"user","timestamp":"2026-08-09T01:00:00Z","sessionId":"detected","cwd":"C:\\repo","message":{"role":"user","content":"Detected history"}}""",
+            ]);
+        var codexRoot = Path.Combine(home, ".codex");
+        Directory.CreateDirectory(codexRoot);
+        await File.WriteAllTextAsync(
+            Path.Combine(codexRoot, "state_5.sqlite"),
+            "not a sqlite database");
+        var database = new AIMemoryDatabase(Path.Combine(home, "aimemory.db"));
+        await database.InitializeAsync();
+        var repository = new ConversationRepository(database);
+        var catalog = new AgentCatalog(
+            home,
+            pathDirectories: [],
+            installationRoots: [home]);
+        var importer = new NativeHistoryImportService(
+            repository, home, catalog);
+
+        var first = await importer.ImportAllAsync();
+        var second = await importer.ImportAllAsync();
+
+        Assert.Equal(1, first.Imported["claude"]);
+        Assert.Contains(first.Warnings, warning => warning.StartsWith(
+            "Codex", StringComparison.Ordinal));
+        Assert.Equal(
+            new[] { "codex", "claude" },
+            first.Imported.Keys.ToArray());
+        Assert.Equal(1, second.Imported["claude"]);
+        Assert.Equal(1, await repository.CountAsync());
+    }
+
+    [Fact]
     public async Task NativeHistoryImportCopiesAllEightSourcesReadOnly()
     {
         var home = Path.Combine(_root, "home");
@@ -2224,7 +2422,7 @@ public sealed class CoreTests : IDisposable
                   'candidate-1','repo','rule','Use tests','Run tests',
                   'Prevents regressions',0.9,'test','pending_review',$now,NULL);
                 INSERT INTO evidence_refs VALUES(
-                  'evidence-1','candidate','candidate-1',NULL,NULL,NULL,NULL,
+                  'evidence-1','candidate','candidate-1','conversation-1','message-1',NULL,NULL,
                   'A previous release regressed without tests.',$now);
                 INSERT INTO memory_merge_proposals VALUES(
                   'proposal-1','repo','candidate-1','existing-memory',
@@ -2243,6 +2441,8 @@ public sealed class CoreTests : IDisposable
         Assert.Equal(
             ["A previous release regressed without tests."],
             pending.EvidenceRefs);
+        Assert.Equal("conversation-1", Assert.Single(pending.Evidence).ConversationId);
+        Assert.Equal("message-1", Assert.Single(pending.Evidence).MessageId);
         Assert.Contains("Unified test rule", pending.MergeSuggestion);
         Assert.Equal("The commands differ.", pending.ConflictSuggestion);
         await service.ApproveCandidateAsync(

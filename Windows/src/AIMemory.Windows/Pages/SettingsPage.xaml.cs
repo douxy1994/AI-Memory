@@ -11,7 +11,6 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using Microsoft.Windows.Storage.Pickers;
 using Windows.ApplicationModel;
-using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 using Windows.System;
 
@@ -26,6 +25,8 @@ public sealed partial class SettingsPage : Page
     private readonly AgentIntegrationService _agentIntegrations = new();
     private readonly CloudReadinessService _cloudReadiness = new();
     private bool _loading;
+    private bool _updatingStartup;
+    private bool _categorySelectionChanging;
 
     public SettingsPage() => InitializeComponent();
 
@@ -44,8 +45,6 @@ public sealed partial class SettingsPage : Page
             RemotePathBox.Text = _settings.Sync.RemotePath;
             UsernameBox.Text = _settings.Sync.Username;
             SyncFolderBox.Text = _settings.Sync.SyncFolder;
-            AutoUpdateToggle.IsOn = _settings.AutoCheckUpdates;
-            UpdateFeedBox.Text = _settings.UpdateFeedUrl;
             AutoCaptureToggle.IsOn = _settings.AutoCaptureMemory;
             AutoBackupToggle.IsOn = _settings.AutoBackupEnabled;
             AutoBackupIntervalBox.Value =
@@ -92,6 +91,12 @@ public sealed partial class SettingsPage : Page
             }
             await ReloadStartupAsync();
             ReloadAgents();
+            DatabasePathText.Text = LocalizationService.Format(
+                "DatabaseFilePath",
+                DataPaths.DatabasePath);
+            SettingsPathText.Text = LocalizationService.Format(
+                "SettingsFilePath",
+                DataPaths.SettingsPath);
             DataPathText.Text = LocalizationService.Format(
                 "DataDirectoryPath",
                 DataPaths.SupportDirectory);
@@ -102,7 +107,6 @@ public sealed partial class SettingsPage : Page
                 : LocalizationService.Format(
                     "ChatMemSourceDetected",
                     chatMemSource);
-            await RefreshDiagnosticsAsync();
             SelectCategory(navigation?.Category ?? "general");
         }
         finally
@@ -115,10 +119,49 @@ public sealed partial class SettingsPage : Page
         object sender,
         SelectionChangedEventArgs args)
     {
+        if (_categorySelectionChanging) return;
         if (SettingsCategories.SelectedItem is ListViewItem item)
         {
-            ShowCategory(item.Tag as string ?? "general");
+            ApplyCategorySelection(item.Tag as string ?? "general");
         }
+    }
+
+    private void SettingsCategoryPicker_SelectionChanged(
+        object sender,
+        SelectionChangedEventArgs args)
+    {
+        if (_categorySelectionChanging) return;
+        if (SettingsCategoryPicker.SelectedItem is ComboBoxItem item)
+        {
+            ApplyCategorySelection(item.Tag as string ?? "general");
+        }
+    }
+
+    private void SettingsRoot_SizeChanged(
+        object sender,
+        SizeChangedEventArgs args)
+    {
+        var compact = args.NewSize.Width < 950;
+        SettingsRoot.Padding = new Thickness(0);
+        SettingsContentGrid.ColumnSpacing = 0;
+        SettingsContentScroll.Padding = compact
+            ? new Thickness(18, 20, 18, 20)
+            : new Thickness(42, 34, 42, 34);
+        SettingsCategories.Visibility = compact
+            ? Visibility.Collapsed
+            : Visibility.Visible;
+        SettingsCategoryPicker.Visibility = compact
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+
+        Grid.SetRow(SettingsCategoryCard, 0);
+        Grid.SetColumn(SettingsCategoryCard, 0);
+        Grid.SetColumnSpan(SettingsCategoryCard, compact ? 2 : 1);
+        Grid.SetRowSpan(SettingsCategoryCard, compact ? 1 : 3);
+        Grid.SetRow(SettingsContentScroll, compact ? 2 : 0);
+        Grid.SetColumn(SettingsContentScroll, compact ? 0 : 1);
+        Grid.SetColumnSpan(SettingsContentScroll, compact ? 2 : 1);
+        Grid.SetRowSpan(SettingsContentScroll, compact ? 1 : 3);
     }
 
     private void ShowCategory(string category)
@@ -130,9 +173,6 @@ public sealed partial class SettingsPage : Page
             ? Visibility.Visible
             : Visibility.Collapsed;
         SyncPanel.Visibility = category == "sync"
-            ? Visibility.Visible
-            : Visibility.Collapsed;
-        UpdatesPanel.Visibility = category == "updates"
             ? Visibility.Visible
             : Visibility.Collapsed;
     }
@@ -149,46 +189,97 @@ public sealed partial class SettingsPage : Page
             .OfType<ListViewItem>()
             .FirstOrDefault();
         if (item is null) return;
-        SettingsCategories.SelectedItem = item;
-        ShowCategory(item.Tag as string ?? "general");
+        ApplyCategorySelection(item.Tag as string ?? "general");
+    }
+
+    private void ApplyCategorySelection(string category)
+    {
+        _categorySelectionChanging = true;
+        try
+        {
+            SettingsCategories.SelectedItem = SettingsCategories.Items
+                .OfType<ListViewItem>()
+                .FirstOrDefault(value => string.Equals(
+                    value.Tag as string,
+                    category,
+                    StringComparison.Ordinal));
+            SettingsCategoryPicker.SelectedItem = SettingsCategoryPicker.Items
+                .OfType<ComboBoxItem>()
+                .FirstOrDefault(value => string.Equals(
+                    value.Tag as string,
+                    category,
+                    StringComparison.Ordinal));
+            ShowCategory(category);
+        }
+        finally
+        {
+            _categorySelectionChanging = false;
+        }
     }
 
     private async Task ReloadStartupAsync()
     {
-        var state = await _startup.GetStateAsync();
-        StartupToggle.IsOn = state == StartupTaskState.Enabled;
-        StartupDetail.Text = state switch
+        _updatingStartup = true;
+        try
         {
-            StartupTaskState.Enabled =>
-                LocalizationService.Get("StartupEnabled"),
-            StartupTaskState.DisabledByUser =>
-                LocalizationService.Get("StartupDisabledByUser"),
-            StartupTaskState.DisabledByPolicy =>
-                LocalizationService.Get("StartupDisabledByPolicy"),
-            _ => LocalizationService.Get("StartupDisabled"),
-        };
-        StartupToggle.IsEnabled = state is not (
-            StartupTaskState.DisabledByPolicy
-            or StartupTaskState.DisabledByUser);
-        OpenStartupSettingsButton.Visibility =
-            state == StartupTaskState.DisabledByUser
-                ? Visibility.Visible
-                : Visibility.Collapsed;
+            var state = await _startup.GetStateAsync();
+            StartupToggle.IsOn = state == StartupTaskState.Enabled;
+            StartupDetail.Text = state switch
+            {
+                StartupTaskState.Enabled =>
+                    LocalizationService.Get("StartupEnabled"),
+                StartupTaskState.DisabledByUser =>
+                    LocalizationService.Get("StartupDisabledByUser"),
+                StartupTaskState.DisabledByPolicy =>
+                    LocalizationService.Get("StartupDisabledByPolicy"),
+                _ => LocalizationService.Get("StartupDisabled"),
+            };
+            StartupToggle.IsEnabled = state is not (
+                StartupTaskState.DisabledByPolicy
+                or StartupTaskState.DisabledByUser);
+            OpenStartupSettingsButton.Visibility =
+                state == StartupTaskState.DisabledByUser
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
+        }
+        catch (Exception exception)
+        {
+            StartupToggle.IsOn = false;
+            StartupToggle.IsEnabled = false;
+            StartupDetail.Text = LocalizationService.Format(
+                "StartupSettingFailed",
+                exception.Message);
+            OpenStartupSettingsButton.Visibility = Visibility.Visible;
+        }
+        finally
+        {
+            _updatingStartup = false;
+        }
     }
 
     private async void StartupToggle_Toggled(object sender, RoutedEventArgs args)
     {
-        if (_loading) return;
+        if (_loading || _updatingStartup) return;
         try
         {
-            await _startup.SetEnabledAsync(StartupToggle.IsOn);
+            var requested = StartupToggle.IsOn;
+            var state = await _startup.SetEnabledAsync(requested);
             await ReloadStartupAsync();
+            if (requested && state != StartupTaskState.Enabled)
+            {
+                throw new InvalidOperationException(
+                    LocalizationService.Get(
+                        state == StartupTaskState.DisabledByUser
+                            ? "StartupDisabledByUser"
+                            : "StartupDisabledByPolicy"));
+            }
             Show(
                 LocalizationService.Get("StartupSettingUpdated"),
                 InfoBarSeverity.Success);
         }
         catch (Exception exception)
         {
+            await ReloadStartupAsync();
             Show(
                 LocalizationService.Format(
                     "StartupSettingFailed",
@@ -372,9 +463,9 @@ public sealed partial class SettingsPage : Page
                         _agentIntegrations.SetEnabled(target, enabled);
                         updated += 1;
                     }
-                    catch
+                    catch (Exception exception)
                     {
-                        failures.Add(target.Label);
+                        failures.Add($"{target.Label}: {exception.Message}");
                     }
                 }
                 return (updated, failures);
@@ -505,11 +596,19 @@ public sealed partial class SettingsPage : Page
         try
         {
             var service = new WebDavService(_window.Conversations);
-            var result = await service.SyncAsync(
-                WebDavService.BuildCollectionUri(_settings.Sync),
-                UsernameBox.Text.Trim(),
-                PasswordBox.Password,
-                new Progress<SyncProgress>(ApplySyncProgress));
+            var collection = WebDavService.BuildCollectionUri(_settings.Sync);
+            var username = UsernameBox.Text.Trim();
+            var password = PasswordBox.Password;
+            var progress = new Progress<SyncProgress>(ApplySyncProgress);
+            // SQLite export and semantic hashing are CPU-heavy for a real
+            // multi-agent history. Start the complete operation on the thread
+            // pool so WinUI remains clickable while progress is marshalled
+            // back to this page.
+            var result = await Task.Run(() => service.SyncAsync(
+                collection,
+                username,
+                password,
+                progress));
             Show(
                 LocalizationService.Format(
                     "SyncCompleted",
@@ -634,8 +733,6 @@ public sealed partial class SettingsPage : Page
         RemotePathBox.Text = _settings.Sync.RemotePath;
         UsernameBox.Text = _settings.Sync.Username;
         SyncFolderBox.Text = _settings.Sync.SyncFolder;
-        AutoUpdateToggle.IsOn = _settings.AutoCheckUpdates;
-        UpdateFeedBox.Text = _settings.UpdateFeedUrl;
         AutoCaptureToggle.IsOn = _settings.AutoCaptureMemory;
         AutoBackupToggle.IsOn = _settings.AutoBackupEnabled;
         AutoBackupIntervalBox.Value =
@@ -748,10 +845,12 @@ public sealed partial class SettingsPage : Page
         BeginSyncProgress(LocalizationService.Get("SyncProgressPreparing"));
         try
         {
-            var result = await new LocalFolderSyncService(_window.Conversations)
-                .SyncAsync(
-                    SyncFolderBox.Text.Trim(),
-                    progress: new Progress<SyncProgress>(ApplySyncProgress));
+            var service = new LocalFolderSyncService(_window.Conversations);
+            var folder = SyncFolderBox.Text.Trim();
+            var progress = new Progress<SyncProgress>(ApplySyncProgress);
+            var result = await Task.Run(() => service.SyncAsync(
+                folder,
+                progress: progress));
             Show(
                 LocalizationService.Format(
                     "LocalSyncCompleted",
@@ -855,155 +954,6 @@ public sealed partial class SettingsPage : Page
         }
     }
 
-    private async void SaveUpdateSettings_Click(
-        object sender,
-        RoutedEventArgs args)
-    {
-        if (_window is null) return;
-        _settings.AutoCheckUpdates = AutoUpdateToggle.IsOn;
-        _settings.UpdateFeedUrl = UpdateFeedBox.Text.Trim();
-        try
-        {
-            await _window.Settings.SaveAsync(_settings);
-            Show(
-                LocalizationService.Get("UpdateSettingsSaved"),
-                InfoBarSeverity.Success);
-        }
-        catch (Exception exception)
-        {
-            Show(
-                LocalizationService.Format(
-                    "UpdateSettingsSaveFailed",
-                    exception.Message),
-                InfoBarSeverity.Error);
-        }
-    }
-
-    private async void CheckUpdates_Click(object sender, RoutedEventArgs args)
-    {
-        if (_window is null) return;
-        _settings.AutoCheckUpdates = AutoUpdateToggle.IsOn;
-        _settings.UpdateFeedUrl = UpdateFeedBox.Text.Trim();
-        try
-        {
-            await _window.Settings.SaveAsync(_settings);
-            UpdateStatusText.Text =
-                LocalizationService.Get("OpenedAboutCheckingUpdates");
-            _window.OpenAboutAndCheckForUpdates();
-        }
-        catch (Exception exception)
-        {
-            UpdateStatusText.Text = LocalizationService.Format(
-                "UpdateSettingsSaveFailed",
-                exception.Message);
-            Show(UpdateStatusText.Text, InfoBarSeverity.Error);
-        }
-    }
-
-    private async void RefreshDiagnostics_Click(
-        object sender,
-        RoutedEventArgs args) =>
-        await RefreshDiagnosticsAsync();
-
-    private async void RunReadiness_Click(
-        object sender,
-        RoutedEventArgs args)
-    {
-        if (_window is null) return;
-        RunReadinessButton.IsEnabled = false;
-        ReadinessProgress.IsActive = true;
-        ReadinessProgress.Visibility = Visibility.Visible;
-        try
-        {
-            var report = await new UpgradeReadinessService(
-                _window.Database,
-                _window.Settings,
-                DataPaths.SettingsPath).CheckAsync(username =>
-            {
-                var stored = _credentials.Load();
-                return stored is not null
-                    && string.Equals(
-                        stored.Value.Username,
-                        username,
-                        StringComparison.Ordinal)
-                    && !string.IsNullOrEmpty(stored.Value.Password);
-            });
-            ReadinessList.ItemsSource = report.Checks
-                .Select(value =>
-                    new LocalizedUpgradeReadinessCheck(value))
-                .ToArray();
-            ReadinessSummary.Text = report.Status switch
-            {
-                "error" => LocalizationService.Format(
-                    "UpgradeReadinessErrors",
-                    report.ErrorCount),
-                "warning" => LocalizationService.Format(
-                    "UpgradeReadinessWarnings",
-                    report.WarningCount),
-                _ => LocalizationService.Get(
-                    "UpgradeReadinessPassed"),
-            };
-            ReadinessSummary.Visibility = Visibility.Visible;
-            Show(
-                ReadinessSummary.Text,
-                report.Status switch
-                {
-                    "error" => InfoBarSeverity.Error,
-                    "warning" => InfoBarSeverity.Warning,
-                    _ => InfoBarSeverity.Success,
-                });
-        }
-        catch (Exception exception)
-        {
-            ReadinessSummary.Text = LocalizationService.Format(
-                "UpgradeReadinessFailed",
-                exception.Message);
-            ReadinessSummary.Visibility = Visibility.Visible;
-            Show(ReadinessSummary.Text, InfoBarSeverity.Error);
-        }
-        finally
-        {
-            RunReadinessButton.IsEnabled = true;
-            ReadinessProgress.IsActive = false;
-            ReadinessProgress.Visibility = Visibility.Collapsed;
-        }
-    }
-
-    private async Task RefreshDiagnosticsAsync()
-    {
-        if (_window is null) return;
-        try
-        {
-            var report = await new DiagnosticsService(_window.Database)
-                .CollectAsync(CurrentVersion());
-            DiagnosticsBox.Text = report.ToDisplayText();
-        }
-        catch (Exception exception)
-        {
-            DiagnosticsBox.Text = LocalizationService.Format(
-                "DiagnosticsReadFailed",
-                exception.Message);
-        }
-    }
-
-    private void CopyDiagnostics_Click(object sender, RoutedEventArgs args)
-    {
-        var package = new DataPackage();
-        package.SetText(DiagnosticsBox.Text ?? "");
-        Clipboard.SetContent(package);
-        Clipboard.Flush();
-        Show(
-            LocalizationService.Get("DiagnosticsCopied"),
-            InfoBarSeverity.Success);
-    }
-
-    private async void OpenDataDirectory_Click(
-        object sender,
-        RoutedEventArgs args)
-        => await OpenDirectoryAsync(
-            DataPaths.SupportDirectory,
-            LocalizationService.Get("DataDirectory"));
-
     private async void OpenBackupDirectory_Click(
         object sender,
         RoutedEventArgs args)
@@ -1034,20 +984,6 @@ public sealed partial class SettingsPage : Page
                     label,
                     exception.Message),
                 InfoBarSeverity.Error);
-        }
-    }
-
-    private static string CurrentVersion()
-    {
-        try
-        {
-            var version = Package.Current.Id.Version;
-            return $"{version.Major}.{version.Minor}.{version.Build}";
-        }
-        catch
-        {
-            return typeof(SettingsPage).Assembly.GetName().Version?
-                .ToString(3) ?? "0.1.0";
         }
     }
 

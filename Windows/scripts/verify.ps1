@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 #
 $ErrorActionPreference = "Stop"
+$PSNativeCommandUseErrorActionPreference = $true
 $root = Split-Path -Parent $PSScriptRoot
 Push-Location $root
 try {
@@ -21,8 +22,9 @@ try {
         --configuration Release --no-restore -p:Platform=x64
 
     $helper = Get-ChildItem `
-        .\src\AIMemory.Windows\bin\Release `
+        .\src\AIMemory.Windows\bin `
         -Recurse -Filter aimemory-mcp.exe |
+        Where-Object FullName -Match '\\x64\\' |
         Select-Object -First 1
     if (-not $helper) {
         throw "Packaged aimemory-mcp.exe was not found."

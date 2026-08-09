@@ -40,7 +40,12 @@ function collectSourceFiles(relativeDirectory) {
 
   const entries = fs.readdirSync(directory, { withFileTypes: true });
   return entries.flatMap((entry) => {
-    if (entry.name === "bin" || entry.name === "obj") return [];
+    if ([
+      "bin",
+      "obj",
+      "AppPackages",
+      "BundleArtifacts",
+    ].includes(entry.name)) return [];
     const relativePath = path.join(relativeDirectory, entry.name);
     if (entry.isDirectory()) return collectSourceFiles(relativePath);
     return sourceExtensions.has(path.extname(entry.name))

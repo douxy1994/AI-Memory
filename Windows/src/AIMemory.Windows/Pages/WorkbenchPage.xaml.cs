@@ -29,7 +29,7 @@ public sealed partial class WorkbenchPage : Page
         await ReloadAsync();
     }
 
-    private async Task ReloadAsync()
+    public async Task ReloadAsync()
     {
         if (_window is null) return;
         _allConversations = await _window.Conversations.ListAsync(limit: 5_000);
@@ -166,6 +166,9 @@ public sealed partial class WorkbenchPage : Page
                     StringComparison.OrdinalIgnoreCase))
                 .ToArray();
         CurrentSourceCount.Text = filtered.Count.ToString();
+        HeroConversationCount.Text = LocalizationService.Format(
+            "ConversationCount",
+            filtered.Count);
         var recent = filtered.Take(8).ToArray();
         RecentConversationList.ItemsSource = recent;
         NoRecentText.Visibility = recent.Length == 0
@@ -180,7 +183,6 @@ public sealed partial class WorkbenchPage : Page
             .Take(8)
             .ToArray();
         ProjectList.ItemsSource = projects;
-        ManageMachineGroupsButton.IsEnabled = projects.Length > 0;
         NoProjectsText.Visibility = projects.Length == 0
             ? Visibility.Visible
             : Visibility.Collapsed;
@@ -273,11 +275,13 @@ public sealed partial class WorkbenchPage : Page
     private void History_Click(object sender, RoutedEventArgs args) =>
         Frame.Navigate(typeof(HistoryPage), _window);
 
-    private async void ManageMachineGroups_Click(
-        object sender,
-        RoutedEventArgs args)
+    public async Task OpenMachineGroupManagerAsync()
     {
         if (_window is null) return;
+        if (_allConversations.Count == 0)
+        {
+            await ReloadAsync();
+        }
         var groups = _machineGrouping.Build(_allConversations, _settings);
         if (groups.Count == 0)
         {
@@ -488,7 +492,7 @@ public sealed partial class WorkbenchPage : Page
         catch
         {
             return typeof(WorkbenchPage).Assembly.GetName().Version?
-                .ToString(3) ?? "0.1.0";
+                .ToString(3) ?? "0.1.3";
         }
     }
 }

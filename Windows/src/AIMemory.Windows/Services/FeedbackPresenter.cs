@@ -29,7 +29,11 @@ public static class FeedbackPresenter
 
         bar.Title = title ?? "";
         bar.Message = message;
-        bar.Severity = severity;
+        // Routine success uses the neutral system material. Warnings and
+        // errors keep their semantic colors and icons for accessibility.
+        bar.Severity = severity == InfoBarSeverity.Success
+            ? InfoBarSeverity.Informational
+            : severity;
         bar.IsOpen = true;
 
         if (severity != InfoBarSeverity.Success) return;

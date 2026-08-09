@@ -16,6 +16,11 @@ public sealed class WebDavService(
     ConversationRepository? conversations = null,
     HttpClient? httpClient = null)
 {
+    private sealed record LocalConversationPayload(
+        string Hash,
+        string SemanticDigest,
+        string UpdatedAt);
+
     private readonly HttpClient _client = httpClient ?? new HttpClient
     {
         Timeout = TimeSpan.FromSeconds(30),
@@ -70,8 +75,7 @@ public sealed class WebDavService(
 
         var local = new Dictionary<
             (string Agent, string Id),
-            (WebDavConversationDetail Detail, byte[] Data, string Hash,
-             string SemanticDigest)>();
+            LocalConversationPayload>();
         foreach (var summary in await conversations.ListAsync(
                      limit: 5_000,
                      cancellationToken: cancellationToken))
@@ -79,8 +83,10 @@ public sealed class WebDavService(
             var detail = await conversations.ExportAsync(
                 summary.Id, cancellationToken);
             var data = JsonSerializer.SerializeToUtf8Bytes(detail, JsonOptions);
-            local[(detail.SourceAgent, detail.Id)] =
-                (detail, data, Hash(data), SemanticDigest(detail));
+            local[(detail.SourceAgent, detail.Id)] = new LocalConversationPayload(
+                Hash(data),
+                SemanticDigest(detail),
+                detail.UpdatedAt);
         }
 
         var keys = local.Keys.Union(remote.Keys)
@@ -95,22 +101,22 @@ public sealed class WebDavService(
 
         foreach (var key in keys)
         {
-            local.TryGetValue(key, out var localValue);
+            var hasLocal = local.TryGetValue(key, out var localValue);
             remote.TryGetValue(key, out var remoteValue);
-            if (localValue.Detail is not null && remoteValue is null)
+            if (hasLocal && remoteValue is null)
             {
                 merged[key] = await UploadAsync(
-                    conversationRoot, key, localValue,
+                    conversationRoot, key,
                     ensuredAgents, username, password, cancellationToken);
                 uploaded++;
             }
-            else if (localValue.Detail is null && remoteValue is not null)
+            else if (!hasLocal && remoteValue is not null)
             {
                 merged[key] = await DownloadAsync(
                     root, remoteValue, username, password, cancellationToken);
                 downloaded++;
             }
-            else if (localValue.Detail is not null && remoteValue is not null)
+            else if (hasLocal && remoteValue is not null)
             {
                 var remoteSemanticDigest = IsCurrentSemanticDigest(
                     remoteValue.SemanticDigest)
@@ -118,7 +124,7 @@ public sealed class WebDavService(
                     : null;
                 if (string.Equals(
                         remoteSemanticDigest,
-                        localValue.SemanticDigest,
+                        localValue!.SemanticDigest,
                         StringComparison.Ordinal))
                 {
                     // The versioned semantic digest is shared by Foundation
@@ -130,7 +136,7 @@ public sealed class WebDavService(
                 }
                 else if (string.Equals(
                         remoteValue.Sha256,
-                        localValue.Hash,
+                        localValue!.Hash,
                         StringComparison.OrdinalIgnoreCase))
                 {
                     // A legacy byte hash is already conclusive. Keep its
@@ -149,14 +155,14 @@ public sealed class WebDavService(
                         root, remoteValue, username, password, cancellationToken);
                     if (string.Equals(
                             payload.Entry.SemanticDigest,
-                            localValue.SemanticDigest,
+                            localValue!.SemanticDigest,
                             StringComparison.Ordinal))
                     {
                         merged[key] = payload.Entry;
                         skipped++;
                     }
                     else if (ParseDate(remoteValue.UpdatedAt)
-                             > ParseDate(localValue.Detail.UpdatedAt))
+                             > ParseDate(localValue!.UpdatedAt))
                     {
                         await conversations.UpsertAsync(payload.Detail, cancellationToken);
                         merged[key] = payload.Entry;
@@ -165,13 +171,13 @@ public sealed class WebDavService(
                     else
                     {
                         merged[key] = await UploadAsync(
-                            conversationRoot, key, localValue,
+                            conversationRoot, key,
                             ensuredAgents, username, password, cancellationToken);
                         uploaded++;
                     }
                 }
                 else if (ParseDate(remoteValue.UpdatedAt)
-                         > ParseDate(localValue.Detail.UpdatedAt))
+                         > ParseDate(localValue!.UpdatedAt))
                 {
                     merged[key] = await DownloadAsync(
                         root, remoteValue, username, password, cancellationToken);
@@ -183,7 +189,7 @@ public sealed class WebDavService(
                     // conflict, not a serializer difference: retain the prior
                     // local-wins policy.
                     merged[key] = await UploadAsync(
-                        conversationRoot, key, localValue,
+                        conversationRoot, key,
                         ensuredAgents, username, password, cancellationToken);
                     uploaded++;
                 }
@@ -309,13 +315,14 @@ public sealed class WebDavService(
     private async Task<WebDavManifestEntry> UploadAsync(
         Uri conversationRoot,
         (string Agent, string Id) key,
-        (WebDavConversationDetail Detail, byte[] Data, string Hash,
-         string SemanticDigest) payload,
         ISet<string> ensuredAgents,
         string? username,
         string? password,
         CancellationToken cancellationToken)
     {
+        var detail = await conversations!.ExportAsync(
+            key.Id, cancellationToken);
+        var data = JsonSerializer.SerializeToUtf8Bytes(detail, JsonOptions);
         var agentRoot = new Uri(conversationRoot, Uri.EscapeDataString(key.Agent) + "/");
         if (ensuredAgents.Add(key.Agent))
         {
@@ -325,14 +332,14 @@ public sealed class WebDavService(
         var fileName = Base64Url(key.Id) + ".json";
         await PutAsync(
             new Uri(agentRoot, fileName),
-            payload.Data,
+            data,
             username, password, cancellationToken);
         return new WebDavManifestEntry(
             key.Agent, key.Id,
             $"conversations/{key.Agent}/{fileName}",
-            payload.Detail.UpdatedAt,
-            payload.Hash,
-            payload.SemanticDigest);
+            detail.UpdatedAt,
+            Hash(data),
+            SemanticDigest(detail));
     }
 
     private async Task<WebDavManifestEntry> DownloadAsync(

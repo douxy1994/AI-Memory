@@ -27,6 +27,7 @@
   <data name="StartupDisabled" xml:space="preserve"><value>Disabled</value></data>
   <data name="StartupSettingUpdated" xml:space="preserve"><value>Startup setting updated.</value></data>
   <data name="StartupSettingFailed" xml:space="preserve"><value>Could not update the startup setting: {0}</value></data>
+  <data name="StartupRegistryUnavailable" xml:space="preserve"><value>Could not open the current user startup registry key.</value></data>
   <data name="StartupSettingsLaunchRejected" xml:space="preserve"><value>Windows declined to open Startup Apps settings.</value></data>
   <data name="StartupSettingsLaunchFailed" xml:space="preserve"><value>Could not open Startup Apps settings: {0}</value></data>
   <data name="AutomaticBackupEnabled" xml:space="preserve"><value>Automatic backup is enabled and checks for changes every {0} minutes.</value></data>
@@ -313,9 +314,9 @@
   <data name="SettingsCategoryGeneral.Text" xml:space="preserve"><value>General</value></data>
   <data name="SettingsCategoryAgents.Text" xml:space="preserve"><value>Agent Integrations</value></data>
   <data name="SettingsCategorySync.Text" xml:space="preserve"><value>Data Sync &amp; Backup</value></data>
-  <data name="SettingsCategoryUpdates.Text" xml:space="preserve"><value>Updates &amp; Diagnostics</value></data>
+  <data name="SettingsCategoryAbout.Text" xml:space="preserve"><value>About</value></data>
   <data name="SettingsGeneralTitle.Text" xml:space="preserve"><value>General</value></data>
-  <data name="SettingsGeneralSubtitle.Text" xml:space="preserve"><value>Control fonts, login startup, memory recovery points, and automatic backups.</value></data>
+  <data name="SettingsGeneralSubtitle.Text" xml:space="preserve"><value>Adjust AI Memory language, typography, and everyday behavior.</value></data>
   <data name="SettingsLanguageFontTitle.Text" xml:space="preserve"><value>Language &amp; Font</value></data>
   <data name="SettingsLanguage.Header" xml:space="preserve"><value>Display language</value></data>
   <data name="SettingsLanguageRestartHint.Text" xml:space="preserve"><value>Restart AI Memory to apply language changes.</value></data>
@@ -332,11 +333,13 @@
   <data name="SettingsBackupInterval.Header" xml:space="preserve"><value>Backup interval (minutes)</value></data>
   <data name="SettingsSaveAutoBackup.Content" xml:space="preserve"><value>Save Automatic Backup</value></data>
   <data name="SettingsAgentsTitle.Text" xml:space="preserve"><value>Agent Integrations</value></data>
-  <data name="SettingsAgentsSubtitle.Text" xml:space="preserve"><value>Installed products appear first. Missing products remain disabled.</value></data>
+  <data name="SettingsAgentsSectionTitle.Text" xml:space="preserve"><value>Agent Integrations</value></data>
+  <data name="SettingsAgentsSectionHint.Text" xml:space="preserve"><value>Write the AI Memory MCP service and skill into each agent configuration. Existing configurations are backed up first.</value></data>
+  <data name="SettingsStartupSectionTitle.Text" xml:space="preserve"><value>Startup and windows</value></data>
+  <data name="SettingsAgentsSubtitle.Text" xml:space="preserve"><value>Manage connections between AI Memory and local AI agents.</value></data>
   <data name="SettingsDetectAgents.Content" xml:space="preserve"><value>Detect Again</value></data>
-  <data name="SettingsInstallAllAgents.Label" xml:space="preserve"><value>Install All</value></data>
-  <data name="SettingsUninstallAllAgents.Label" xml:space="preserve"><value>Uninstall All</value></data>
-  <data name="SettingsDetectAgents.Label" xml:space="preserve"><value>Detect Again</value></data>
+  <data name="SettingsInstallAllAgents.Content" xml:space="preserve"><value>Install All</value></data>
+  <data name="SettingsUninstallAllAgents.Content" xml:space="preserve"><value>Uninstall All</value></data>
   <data name="SettingsSyncTitle.Text" xml:space="preserve"><value>Data Sync &amp; Backup</value></data>
   <data name="SettingsSyncSubtitle.Text" xml:space="preserve"><value>Manage local folders, WebDAV, history import, and recovery points in one place.</value></data>
   <data name="SettingsLocalSyncTitle.Text" xml:space="preserve"><value>Local Sync Folder</value></data>
@@ -366,7 +369,7 @@
   <data name="SettingsAutoUpdateTitle.Text" xml:space="preserve"><value>Automatically check for updates</value></data>
   <data name="SettingsAutoUpdateHint.Text" xml:space="preserve"><value>Get stable releases from the AI Memory GitHub repository.</value></data>
   <data name="SettingsSaveUpdate.Label" xml:space="preserve"><value>Save Update Settings</value></data>
-  <data name="SettingsCheckUpdateAbout.Label" xml:space="preserve"><value>Check in About</value></data>
+  <data name="SettingsCheckUpdateAbout.Label" xml:space="preserve"><value>Check for updates</value></data>
   <data name="SettingsUpdateStatus.Text" xml:space="preserve"><value>Update checking and installation are handled in the About AI Memory window.</value></data>
   <data name="SettingsReadinessTitle.Text" xml:space="preserve"><value>Upgrade Readiness Check</value></data>
   <data name="SettingsReadinessHint.Text" xml:space="preserve"><value>Validate the settings file, WebDAV configuration, credentials, and database to find issues that could block an upgrade.</value></data>
@@ -378,6 +381,7 @@
   <data name="SettingsOpenDataFolder.Label" xml:space="preserve"><value>Open Data Folder</value></data>
   <data name="WorkbenchTitle.Text" xml:space="preserve"><value>Continue Working</value></data>
   <data name="WorkbenchSubtitle.Text" xml:space="preserve"><value>Recent progress, project groups, resume commands, and next steps in one workbench.</value></data>
+  <data name="WorkbenchHeroConversationCount.Text" xml:space="preserve"><value>0 conversations</value></data>
   <data name="WorkbenchSync.Label" xml:space="preserve"><value>Sync Now</value></data>
   <data name="WorkbenchRefresh.Label" xml:space="preserve"><value>Refresh Sources</value></data>
   <data name="WorkbenchHistory.Label" xml:space="preserve"><value>History</value></data>
@@ -620,4 +624,70 @@
   <data name="ConversationRoleAssistant" xml:space="preserve"><value>Assistant</value></data>
   <data name="ConversationRoleSystem" xml:space="preserve"><value>System</value></data>
   <data name="ConversationToolCallsCount" xml:space="preserve"><value>Tool calls ({0})</value></data>
+  <data name="SidebarProjects.Text" xml:space="preserve"><value>Projects</value></data>
+  <data name="SidebarNavSettings.Content" xml:space="preserve"><value>Settings</value></data>
+  <data name="SettingsCategoryAdvanced.Text" xml:space="preserve"><value>Advanced</value></data>
+  <data name="SettingsPickerGeneral.Content" xml:space="preserve"><value>General</value></data>
+  <data name="SettingsPickerAgents.Content" xml:space="preserve"><value>Agent integrations</value></data>
+  <data name="SettingsPickerSync.Content" xml:space="preserve"><value>Data sync and backup</value></data>
+  <data name="SettingsPickerAbout.Content" xml:space="preserve"><value>About</value></data>
+  <data name="SettingsPickerAdvanced.Content" xml:space="preserve"><value>Advanced</value></data>
+  <data name="SettingsAdvancedTitle.Text" xml:space="preserve"><value>Advanced</value></data>
+  <data name="SettingsAdvancedSubtitle.Text" xml:space="preserve"><value>Review data isolation and use actions that require additional care.</value></data>
+  <data name="SettingsAdvancedDataTitle.Text" xml:space="preserve"><value>Local data and isolation</value></data>
+  <data name="SettingsAdvancedDataHint.Text" xml:space="preserve"><value>AI Memory and ChatMem keep separate data, settings, and credential locations.</value></data>
+  <data name="SettingsAdvancedDangerTitle.Text" xml:space="preserve"><value>Destructive actions</value></data>
+  <data name="SettingsAdvancedDangerHint.Text" xml:space="preserve"><value>Deletion and cleanup are performed in Trash and require confirmation before data changes.</value></data>
+  <data name="SettingsAdvancedOpenTrash.Content" xml:space="preserve"><value>Open Trash</value></data>
+  <data name="DatabaseFilePath" xml:space="preserve"><value>Database: {0}</value></data>
+  <data name="SettingsFilePath" xml:space="preserve"><value>Settings file: {0}</value></data>
+  <data name="HistoryLocalIndexTab.Header" xml:space="preserve"><value>Local Index</value></data>
+  <data name="HistoryLocalIndexTitle.Text" xml:space="preserve"><value>Local history index</value></data>
+  <data name="HistoryLocalIndexHint.Text" xml:space="preserve"><value>Scan local Agent history, inspect index health, and maintain repository projections.</value></data>
+  <data name="HistoryLocalIndexRepoRoot.Header" xml:space="preserve"><value>Repository root</value></data>
+  <data name="HistoryLocalIndexUseCurrent.Content" xml:space="preserve"><value>Use current project</value></data>
+  <data name="HistoryLocalIndexStatusTitle.Text" xml:space="preserve"><value>Index status</value></data>
+  <data name="HistoryLocalIndexScanned.Text" xml:space="preserve"><value>Scanned conversations</value></data>
+  <data name="HistoryLocalIndexLinked.Text" xml:space="preserve"><value>Indexed conversations</value></data>
+  <data name="HistoryLocalIndexCandidates.Text" xml:space="preserve"><value>Candidate rules</value></data>
+  <data name="HistoryLocalIndexMemories.Text" xml:space="preserve"><value>Approved memories</value></data>
+  <data name="HistoryLocalIndexActionsTitle.Text" xml:space="preserve"><value>Actions</value></data>
+  <data name="HistoryLocalIndexScan.Label" xml:space="preserve"><value>Scan</value></data>
+  <data name="HistoryLocalIndexImportAll.Label" xml:space="preserve"><value>Import all</value></data>
+  <data name="HistoryLocalIndexMergeAlias.Label" xml:space="preserve"><value>Merge alias</value></data>
+  <data name="HistoryLocalIndexRebuildWiki.Label" xml:space="preserve"><value>Rebuild Wiki</value></data>
+  <data name="HistoryLocalIndexRebuildSearch.Label" xml:space="preserve"><value>Rebuild index</value></data>
+  <data name="LocalIndexDocumentCount" xml:space="preserve"><value>Search documents: {0}</value></data>
+  <data name="LocalIndexNoCurrentProject" xml:space="preserve"><value>No current project is available.</value></data>
+  <data name="LocalIndexScanCompleted" xml:space="preserve"><value>Scan completed: {0}.</value></data>
+  <data name="LocalIndexOperationFailed" xml:space="preserve"><value>Local index operation failed: {0}</value></data>
+  <data name="LocalIndexAliasPath" xml:space="preserve"><value>Previous repository or project root</value></data>
+  <data name="LocalIndexMergeAliasTitle" xml:space="preserve"><value>Merge repository alias</value></data>
+  <data name="Merge" xml:space="preserve"><value>Merge</value></data>
+  <data name="LocalIndexAliasMerged" xml:space="preserve"><value>The repository alias was merged.</value></data>
+  <data name="LocalIndexWikiRebuilt" xml:space="preserve"><value>Wiki rebuilt: {0} pages.</value></data>
+  <data name="LocalIndexSearchRebuilt" xml:space="preserve"><value>Local index rebuilt: {0} documents and {1} vectors.</value></data>
+  <data name="LocalIndexRepositoryRequired" xml:space="preserve"><value>Select or enter a repository root first.</value></data>
+  <data name="MemoryOpenCandidateSource.Content" xml:space="preserve"><value>Open source conversation</value></data>
+  <data name="CandidateSourceNotFound" xml:space="preserve"><value>The source conversation is not currently in the local index.</value></data>
+  <data name="ArrangeChatsFirst" xml:space="preserve"><value>Chats First</value></data>
+  <data name="FilterProjects" xml:space="preserve"><value>Filter Projects</value></data>
+  <data name="AllProjectsSelected" xml:space="preserve"><value>All Projects ✓</value></data>
+  <data name="ShowAllProjects" xml:space="preserve"><value>Show All Projects</value></data>
+  <data name="SidebarBeginSelection" xml:space="preserve"><value>Select Conversations</value></data>
+  <data name="SidebarCancelSelection" xml:space="preserve"><value>Cancel Selection</value></data>
+  <data name="SidebarTrashSelected" xml:space="preserve"><value>Move Selected Conversations to Trash</value></data>
+  <data name="SidebarCollapseAll" xml:space="preserve"><value>Collapse All Projects</value></data>
+  <data name="SidebarExpandAll" xml:space="preserve"><value>Expand All Projects</value></data>
+  <data name="SidebarOrganize" xml:space="preserve"><value>Organize (Arrange / Sort)</value></data>
+  <data name="Arrange" xml:space="preserve"><value>Arrange</value></data>
+  <data name="Sort" xml:space="preserve"><value>Sort</value></data>
+  <data name="MigrationTargetReadOnly" xml:space="preserve"><value>{0} · read-only format</value></data>
+  <data name="SourcesStartupCompleted" xml:space="preserve"><value>Automatically detected {0} local sources and scanned {1} conversations.</value></data>
+  <data name="SourcesStartupCompletedWithWarnings" xml:space="preserve"><value>Automatically detected {0} local sources and scanned {1} conversations; {2} sources reported warnings.</value></data>
+  <data name="AboutSaveUpdateButton.Content" xml:space="preserve"><value>Save Update Settings</value></data>
+  <data name="AboutRunReadinessButton.Content" xml:space="preserve"><value>Run Upgrade Readiness Check</value></data>
+  <data name="AboutRefreshDiagnosticsButton.Content" xml:space="preserve"><value>Refresh Diagnostics</value></data>
+  <data name="AboutCopyDiagnosticsButton.Content" xml:space="preserve"><value>Copy Diagnostics</value></data>
+  <data name="AboutOpenDataFolderButton.Content" xml:space="preserve"><value>Open Data Folder</value></data>
 </root>
