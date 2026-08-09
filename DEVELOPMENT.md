@@ -98,7 +98,7 @@ pwsh ./Windows/scripts/verify.ps1
 
 ## 发布
 
-macOS `v0.1.0` 已发布 universal DMG 与 SHA-256 校验文件。它使用项目固定的本地代码签名身份，未使用 Apple Developer ID 公证；发布说明必须如实标明首次打开的系统确认步骤。
+macOS `v0.1.2` 已发布 universal DMG 与 SHA-256 校验文件。它使用项目固定的本地代码签名身份，未使用 Apple Developer ID 公证；发布说明必须如实标明首次打开的系统确认步骤。
 
 后续发布流程至少包含：
 

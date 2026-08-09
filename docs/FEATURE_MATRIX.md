@@ -16,7 +16,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 | 收藏与可恢复回收站 | 已实现 | 已实现核心：收藏编辑、单条及批量可恢复移入、恢复、永久删除与清空 |
 | Claude/Codex/Gemini 历史 | 已实现 | 已实现核心 |
 | Kimi/Hermes/Antigravity/OpenCode/ZCode 历史 | 已实现 | 已实现核心 |
-| 原生完整对话迁移与总结式继续卡片 | 已实现 | 已实现核心：Claude/Codex/Gemini/OpenCode 写入后回读验证；移动、恢复及永久删除覆盖文件与 SQLite 来源 |
+| 启动时自动导入已安装 Agent/CLI 历史 | 已实现：检测、导入与列表刷新自动完成，手动刷新仅作回退 | 已实现核心 |
+| 原生完整对话迁移与总结式继续卡片 | 已实现：目标按本机来源动态生成；Claude/Codex/Gemini/OpenCode/Kimi Code 写入后回读验证；只读格式明确标记 | 已实现核心：Claude/Codex/Gemini/OpenCode 写入后回读验证；移动、恢复及永久删除覆盖文件与 SQLite 来源 |
 | 165 种 Agent/CLI 安装检测 | 已实现集成目录 | 已实现检测目录 |
 | Agent MCP、skill 与启动规则集成 | 已实现 | 已实现：16 种安全 MCP 配置，其中 11 种同时安装 skill/受管规则；支持批量安装、修复和确认后批量卸载 |
 | 候选记忆复核与冲突查看 | 已实现 | 已实现核心 |
@@ -29,10 +30,11 @@ SPDX-License-Identifier: AGPL-3.0-only
 | 增量备份与恢复 | 已实现 | 已实现核心 |
 | ChatMem 数据与 WebDAV 配置导入 | 已实现 | 已实现：数据库可自动探测或原生文件选择；只读 SQLite 在线快照包含 WAL 变更，导入前备份，临时副本迁移及完整性校验后再替换；启动时幂等迁移 WebDAV 端点和旧凭据，不覆盖不同的现有配置 |
 | 系统凭据存储 | Keychain | Credential Locker |
-| 登录时启动 | 已实现 | 已实现：支持 Windows 用户禁用状态与启动应用设置恢复入口 |
+| 登录时启动 | 已实现：ServiceManagement 状态同步，需系统批准时直达“登录项”设置 | 已实现：支持 Windows 用户禁用状态与启动应用设置恢复入口 |
 | 简体中文 / English 界面 | 已实现 | 已实现：MRT Core 原生资源，可跟随系统或独立选择 |
 | GitHub 更新检查 | 已实现 | 已实现核心 |
-| 升级就绪与运行诊断 | 已实现 | 已实现：设置、WebDAV、Credential Locker、数据库结构及完整性检查 |
-| 签名公开安装包 | 已发布：v0.1.0 universal DMG、本地固定签名与 SHA-256；尚未 Apple Developer ID 公证 | 暂未发布 |
+| 升级就绪与运行诊断 | 已实现：与更新入口合并到“关于”页 | 已实现：设置、WebDAV、Credential Locker、数据库结构及完整性检查 |
+| Liquid Glass | 已实现：macOS 26+ 系统玻璃，较早系统使用原生材质回退；覆盖工作台及二级页面动作 | 不适用 |
+| 签名公开安装包 | 已发布：v0.1.3 universal DMG、本地固定签名与 SHA-256；尚未 Apple Developer ID 公证 | 暂未发布 |
 
 Windows 标记为 Preview 的原因是 WinUI 桌面端源码、核心测试和跨架构 helper 产物已完成，但当前提交仍需在真实 Windows 11 桌面会话完成 MSIX 安装与交互验证。

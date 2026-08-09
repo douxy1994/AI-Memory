@@ -36,7 +36,7 @@ struct ConversationDetailView: View {
                     Button("读取详情") {
                         store.selectConversation(summary.id)
                     }
-                    .buttonStyle(.bordered)
+                    .adaptiveGlassButtonStyle()
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Theme.appBackground)
@@ -136,7 +136,7 @@ struct ConversationDetailView: View {
             Label(LocalizedStringKey(label), systemImage: icon)
                 .font(Theme.appFont(size: 11))
         }
-        .buttonStyle(.bordered)
+        .adaptiveGlassButtonStyle()
         .controlSize(.small)
         .fixedSize()
     }
@@ -504,6 +504,16 @@ struct MigrateSheet: View {
     @State private var kind: String = "full"
     @Environment(\.dismiss) private var dismiss
 
+    private var installedTargets: [AgentKind] {
+        store.sources.compactMap(\.agentKind).filter { $0 != sourceAgent }
+    }
+
+    private var writableInstalledTargets: [AgentKind] {
+        installedTargets.filter {
+            NativeAgentConversationWriter.writableTargets.contains($0)
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text("迁移对话").font(Theme.appFont(size: 15, weight: .semibold))
@@ -524,14 +534,20 @@ struct MigrateSheet: View {
                     }.labelsHidden().disabled(true)
                     Image(systemName: "arrow.right").foregroundStyle(Theme.accent)
                     Picker("目标", selection: $target) {
-                        ForEach(
-                            AgentKind.allCases.filter {
-                                $0 != sourceAgent && $0.supportsNativeMigrationTarget
-                            }
-                        ) { agent in
-                            Text(agent.label).tag(agent)
+                        ForEach(installedTargets) { agent in
+                            Text(
+                                agent.supportsNativeMigrationTarget
+                                    ? agent.label : "\(agent.label)（当前格式只读）"
+                            )
+                            .tag(agent)
+                            .disabled(!agent.supportsNativeMigrationTarget)
                         }
                     }
+                }
+                if writableInstalledTargets.isEmpty {
+                    Text("本机尚未检测到可安全写入的其它 Agent。")
+                        .font(Theme.appFont(size: 10))
+                        .foregroundStyle(Theme.mutedText)
                 }
                 Picker("迁移方式", selection: $mode) {
                     Text("复制（保留源）").tag("copy")
@@ -568,18 +584,26 @@ struct MigrateSheet: View {
                         }
                     }
                 }
-                .buttonStyle(.borderedProminent)
-                .disabled(store.selectedConversation == nil)
+                .adaptiveGlassButtonStyle(prominent: true)
+                .disabled(
+                    store.selectedConversation == nil
+                        || (kind == "full" && !writableInstalledTargets.contains(target))
+                )
             }
         }
         .padding(20)
         .frame(width: 470)
         .onAppear {
-            if target == sourceAgent {
-                target = AgentKind.allCases.first {
-                    $0 != sourceAgent && $0.supportsNativeMigrationTarget
-                } ?? .codex
-            }
+            selectFirstInstalledTargetIfNeeded()
         }
+        .onChange(of: store.sources) { _, _ in
+            selectFirstInstalledTargetIfNeeded()
+        }
+    }
+
+    private func selectFirstInstalledTargetIfNeeded() {
+        guard !writableInstalledTargets.contains(target),
+              let first = writableInstalledTargets.first else { return }
+        target = first
     }
 }

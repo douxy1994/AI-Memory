@@ -35,6 +35,7 @@ targets:
       - path: AIMemory/Persistence/NativeConversationStore.swift
       - path: AIMemory/Services/NativeHistoryImporter.swift
       - path: AIMemory/Services/NativeAdditionalHistoryImporter.swift
+      - path: AIMemory/Services/NativeAgentIntegrationStore.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.aimemory.mcp
@@ -87,7 +88,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.aimemory.app
         PRODUCT_NAME: AIMemory
-        MARKETING_VERSION: "0.1.0"
+        MARKETING_VERSION: "0.1.2"
         CURRENT_PROJECT_VERSION: "1"
         INFOPLIST_FILE: AIMemory/Info.plist
         CODE_SIGN_ENTITLEMENTS: AIMemory/AIMemory.entitlements

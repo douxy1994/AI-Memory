@@ -105,7 +105,7 @@ private actor NativeMCPServer {
                 result = [
                     "protocolVersion": "2025-03-26",
                     "capabilities": ["tools": [:]],
-                    "serverInfo": ["name": "aimemory", "version": "0.1.0"],
+                    "serverInfo": ["name": "aimemory", "version": "0.1.2"],
                 ]
             case "ping":
                 result = [:]

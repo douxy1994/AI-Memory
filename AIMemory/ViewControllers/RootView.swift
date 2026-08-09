@@ -116,14 +116,56 @@ struct RootView: View {
                 )
             Text("AI Memory")
                 .font(Theme.appFont(size: 20, weight: .bold, design: .rounded))
+                .accessibilityElement(children: .combine)
+            if store.availableUpdate != nil {
+                updateButton
+            }
         }
-        .accessibilityElement(children: .combine)
+    }
+
+    /// Shown only when the launch check found a newer release. Stays put until
+    /// the update is installed, so it cannot be missed the way a timed banner
+    /// could. One click runs the whole download → verify → replace → relaunch
+    /// flow; no installer window, no manual drag.
+    private var updateButton: some View {
+        Button {
+            Task { await store.installAvailableUpdate() }
+        } label: {
+            HStack(spacing: 5) {
+                if store.updateInstalling {
+                    ProgressView().controlSize(.small).scaleEffect(0.7)
+                } else {
+                    Image(systemName: "arrow.down.circle.fill")
+                        .font(.system(size: 13, weight: .semibold))
+                }
+                Text(
+                    store.updateInstalling
+                        ? "\(Int(store.updateProgress * 100))%"
+                        : (store.availableUpdate.map { "更新到 \($0.version)" } ?? "更新")
+                )
+                .font(Theme.appFont(size: 11, weight: .semibold))
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .foregroundStyle(Theme.accent)
+        }
+        .adaptiveGlassButtonStyle(prominent: true)
+        .disabled(store.updateInstalling)
+        .help(
+            store.updateStage
+                ?? (store.availableUpdate.map {
+                    "下载并安装 AI Memory \($0.version)，安装完成后自动重启"
+                } ?? "")
+        )
+        .transition(.opacity.combined(with: .scale))
+        .animation(.easeInOut(duration: 0.2), value: store.availableUpdate?.version)
+        .animation(.easeInOut(duration: 0.2), value: store.updateInstalling)
     }
 
     private var appVersion: String {
         let value = Bundle.main.object(
             forInfoDictionaryKey: "CFBundleShortVersionString"
-        ) as? String ?? "0.1.0"
+        ) as? String ?? "0.1.2"
         return "v\(value)"
     }
 }
@@ -161,24 +203,12 @@ struct WorkspaceRouter: View {
                     Image(systemName: "arrowshape.backward.fill")
                         .font(Theme.appFont(size: 20, weight: .bold))
                         .symbolRenderingMode(.monochrome)
-                        .foregroundStyle(.white)
                         .frame(width: 48, height: 48)
                         .contentShape(Circle())
                 }
-                .buttonStyle(FloatingWorkbenchBackButtonStyle())
-                .background(
-                    LinearGradient(
-                        colors: [Theme.accent, Theme.accentStrong],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    in: Circle()
-                )
-                .overlay {
-                    Circle()
-                        .stroke(.white.opacity(0.42), lineWidth: 1)
-                }
-                .shadow(color: Theme.accentStrong.opacity(0.30), radius: 13, y: 6)
+                .adaptiveGlassButtonStyle(prominent: true)
+                .buttonBorderShape(.circle)
+                .shadow(color: Color.black.opacity(0.12), radius: 13, y: 6)
                 .keyboardShortcut("[", modifiers: .command)
                 .help("返回工作台 (⌘[)")
                 .accessibilityLabel("返回工作台")
@@ -192,15 +222,6 @@ struct WorkspaceRouter: View {
     }
 }
 
-private struct FloatingWorkbenchBackButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .opacity(configuration.isPressed ? 0.82 : 1)
-            .scaleEffect(configuration.isPressed ? 0.94 : 1)
-            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
-    }
-}
-
 // MARK: - Banner
 
 private struct BannerView: View {
@@ -211,18 +232,20 @@ private struct BannerView: View {
     var body: some View {
         HStack(spacing: 10) {
             Image(systemName: isError ? "exclamationmark.triangle.fill" : "info.circle.fill")
-            Text(text).font(Theme.appFont(size: 12))
+                .foregroundStyle(Theme.secondaryText)
+            Text(text)
+                .font(Theme.appFont(size: 12, weight: .medium))
+                .foregroundStyle(Theme.primaryText)
             Spacer()
             Button(action: onDismiss) {
                 Image(systemName: "xmark.circle.fill")
             }
             .buttonStyle(.borderless)
+            .foregroundStyle(Theme.secondaryText)
         }
         .padding(.horizontal, 14).padding(.vertical, 10)
-        .foregroundStyle(.white)
-        .background(isError ? Theme.danger : Theme.accent)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-        .shadow(color: Color.black.opacity(0.15), radius: 8, y: 3)
+        .liquidGlassSurface(cornerRadius: 14)
+        .shadow(color: Color.black.opacity(0.12), radius: 14, y: 5)
     }
 }
 

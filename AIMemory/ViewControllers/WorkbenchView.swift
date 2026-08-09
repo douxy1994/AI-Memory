@@ -45,7 +45,8 @@ struct WorkbenchView: View {
                     }
                     workbenchIconButton(
                         "刷新当前来源",
-                        icon: "arrow.clockwise"
+                        icon: "arrow.clockwise",
+                        disabled: store.syncInProgress
                     ) {
                         Task { await store.reloadCurrentAgent() }
                     }
@@ -129,7 +130,7 @@ struct WorkbenchView: View {
             }
             .frame(width: 18, height: 18)
         }
-        .buttonStyle(.bordered)
+        .adaptiveGlassButtonStyle()
         .controlSize(.regular)
         .disabled(disabled)
         .help(isBusy ? Text("正在同步…") : Text(LocalizedStringKey(label)))
@@ -316,7 +317,7 @@ struct WorkbenchView: View {
             workbenchPanel("07", "发布准备状态", "发布前检查版本、数据保护和更新通道。") {
                 readinessRow("应用版本", Bundle.main.object(
                     forInfoDictionaryKey: "CFBundleShortVersionString"
-                ) as? String ?? "0.1.0", ok: true)
+                ) as? String ?? "0.1.2", ok: true)
                 readinessRow("独立数据目录", DataPaths.supportDir.path, ok: true)
                 readinessRow(
                     "更新通道",

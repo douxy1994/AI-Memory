@@ -18,12 +18,13 @@ enum AgentKind: String, CaseIterable, Identifiable, Codable {
 
     var id: String { rawValue }
 
-    /// ChatMem can safely write these four documented native stores.
-    /// The other detected agents remain available for read/search/export.
+    /// Native stores that AI Memory can write and immediately re-import for
+    /// migration verification. The UI intersects this capability with the
+    /// sources detected on the current Mac instead of presenting a fixed list.
     var supportsNativeMigrationTarget: Bool {
         switch self {
-        case .claude, .codex, .gemini, .opencode: true
-        case .antigravity, .zcode, .hermes, .kimi: false
+        case .claude, .codex, .gemini, .opencode, .kimi: true
+        case .antigravity, .zcode, .hermes: false
         }
     }
 

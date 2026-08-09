@@ -49,11 +49,26 @@ struct NativeLaunchAtLoginService {
 
     func setEnabled(_ enabled: Bool) throws -> LaunchAtLoginState {
         if enabled {
-            if service.status != .enabled {
+            switch service.status {
+            case .enabled, .requiresApproval:
+                // A pending service is already registered. Registering it again
+                // returns kSMErrorAlreadyRegistered and makes the switch appear
+                // broken; approval must continue in System Settings instead.
+                break
+            case .notRegistered, .notFound:
+                try service.register()
+            @unknown default:
                 try service.register()
             }
-        } else if service.status != .notRegistered {
-            try service.unregister()
+        } else {
+            switch service.status {
+            case .enabled, .requiresApproval:
+                try service.unregister()
+            case .notRegistered, .notFound:
+                break
+            @unknown default:
+                break
+            }
         }
         return state
     }

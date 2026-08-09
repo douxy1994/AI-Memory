@@ -430,14 +430,21 @@ public sealed class ConversationRepository(AIMemoryDatabase database)
         while (await reader.ReadAsync(cancellationToken))
         {
             JsonElement input;
+            var rawInput = reader.GetString(3);
             try
             {
-                using var document = JsonDocument.Parse(reader.GetString(3));
+                using var document = JsonDocument.Parse(rawInput);
                 input = document.RootElement.Clone();
             }
             catch (JsonException)
             {
-                input = JsonSerializer.SerializeToElement<object?>(null);
+                // Never drop the payload. Discarding it as null used to delete
+                // legacy rows that are not valid JSON, and once such a row
+                // synced back to macOS the tool input was gone for good.
+                // Preserve it as a JSON string instead, matching the macOS
+                // fallback in NativeConversationStore.jsonObject(from:).
+                // See docs/TOOL_CALL_JSON_BLOAT.md.
+                input = JsonSerializer.SerializeToElement(rawInput);
             }
             var messageId = reader.GetString(0);
             if (!result.TryGetValue(messageId, out var tools))

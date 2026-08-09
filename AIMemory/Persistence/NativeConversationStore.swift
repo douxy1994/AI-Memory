@@ -11,16 +11,27 @@ import CryptoKit
 /// This is the native replacement for the bridge's conversation read path.
 /// It never opens ChatMem's database or an agent's history for writing.
 actor NativeConversationStore {
+    /// Upper bound for a single `tool_calls.input_json` value.
+    ///
+    /// Real tool inputs are a few kilobytes. Anything past 1 MB indicates
+    /// recursive escaping or an oversized payload, both of which must never be
+    /// persisted. See docs/TOOL_CALL_JSON_BLOAT.md.
+    static let maxToolInputBytes = 1_048_576
+
     private let databaseURL: URL
+    private let home: URL
     private let decoder = JSONDecoder()
 
-    init(databaseURL: URL = DataPaths.dbURL) {
+    init(
+        databaseURL: URL = DataPaths.dbURL,
+        home: URL = FileManager.default.homeDirectoryForCurrentUser
+    ) {
         self.databaseURL = databaseURL
+        self.home = home
     }
 
     func detectSources() throws -> [ConversationSourceStatus] {
         let counts = try sourceCounts()
-        let home = FileManager.default.homeDirectoryForCurrentUser
         let paths: [AgentKind: [URL]] = [
             .claude: [home.appendingPathComponent(".claude/projects")],
             .codex: [
@@ -1202,8 +1213,19 @@ actor NativeConversationStore {
                 )
             )
             for tool in message.toolCalls {
-                let input = (try? encoder.encode(tool.input))
+                var input = (try? encoder.encode(tool.input))
                     .flatMap { String(data: $0, encoding: .utf8) } ?? "null"
+                // Defence in depth: a tool input this large is never legitimate.
+                // It means either runaway escaping or an oversized payload, and
+                // letting it into the table is what previously grew the database
+                // to 19 GB. Truncate with a diagnosable marker instead.
+                if input.utf8.count > Self.maxToolInputBytes {
+                    input = Self.jsonString([
+                        "_truncated": true,
+                        "_original_bytes": input.utf8.count,
+                        "_preview": String(input.prefix(2_000)),
+                    ])
+                }
                 statements.append(
                     (
                         """
@@ -1802,11 +1824,26 @@ actor NativeConversationStore {
         }
     }
 
+    /// Decodes stored JSON text back into a Foundation value.
+    ///
+    /// `.fragmentsAllowed` is mandatory. Tool inputs are very often top-level
+    /// JSON strings — `exec` and `node_repl` style tools take a code blob, not
+    /// an object — and without the option `JSONSerialization` rejects every one
+    /// of them. The old code fell back to returning the raw text *including its
+    /// surrounding quotes*, which the writer below then encoded a second time.
+    /// Each read/write round trip therefore doubled the escaping until single
+    /// rows reached hundreds of megabytes. See docs/TOOL_CALL_JSON_BLOAT.md.
     private static func jsonObject(from text: String) -> Any {
-        guard let data = text.data(using: .utf8),
-              let value = try? JSONSerialization.jsonObject(with: data)
-        else { return text }
-        return value
+        guard let data = text.data(using: .utf8) else { return NSNull() }
+        if let value = try? JSONSerialization.jsonObject(
+            with: data,
+            options: [.fragmentsAllowed]
+        ) {
+            return value
+        }
+        // Genuinely non-JSON legacy rows: hand back the text as a plain value so
+        // it round-trips as a single encoded layer instead of accumulating one.
+        return text
     }
 
     private static func jsonString(_ value: Any) -> String {

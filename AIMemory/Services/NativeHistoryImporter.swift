@@ -63,6 +63,23 @@ actor NativeHistoryImporter {
         return NativeHistoryImportReport(imported: imported, warnings: warnings)
     }
 
+    /// Re-index every supported local history store, then detect the sources
+    /// that are actually present. This is the single launch-time entry point:
+    /// callers never need to perform a separate manual scan before loading UI
+    /// data, and repeated launches remain safe because every importer upserts
+    /// stable source conversation identifiers.
+    func synchronizeInstalledHistory() async throws -> NativeInstalledHistorySyncReport {
+        let report = await importAll()
+        let availableAgents = try await store.detectSources()
+            .filter(\.available)
+            .map(\.agent)
+        return NativeInstalledHistorySyncReport(
+            imported: report.imported,
+            warnings: report.warnings,
+            availableAgents: availableAgents
+        )
+    }
+
     func importAgent(_ agent: AgentKind) async -> NativeHistoryImportReport {
         var imported: [String: Int] = [:]
         var warnings: [String] = []
@@ -865,6 +882,16 @@ struct NativeHistoryImportReport: Sendable {
         self.warnings = warnings
         self.requestedRepoRoot = requestedRepoRoot
     }
+
+    var total: Int { imported.values.reduce(0, +) }
+}
+
+/// Typed result of the automatic launch scan. Strings keep the actor boundary
+/// independent of SwiftUI model isolation while preserving AgentKind ordering.
+struct NativeInstalledHistorySyncReport: Sendable {
+    let imported: [String: Int]
+    let warnings: [String]
+    let availableAgents: [String]
 
     var total: Int { imported.values.reduce(0, +) }
 }

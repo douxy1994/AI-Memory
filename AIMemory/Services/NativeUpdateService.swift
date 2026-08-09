@@ -2,7 +2,6 @@
 // Copyright © 2026 douxy1994
 // SPDX-License-Identifier: AGPL-3.0-only
 //
-import AppKit
 import Foundation
 
 struct NativeUpdateRelease: Sendable, Equatable {
@@ -12,6 +11,9 @@ struct NativeUpdateRelease: Sendable, Equatable {
     let pageURL: URL
     let assetURL: URL?
     let assetName: String?
+    /// Byte size reported by the feed; 0 when unknown. Used to show download
+    /// progress before the server sends Content-Length.
+    var assetSize: Int64 = 0
 }
 
 enum NativeUpdateCheckResult: Sendable, Equatable {
@@ -43,14 +45,9 @@ enum NativeUpdateError: LocalizedError {
 /// is embedded; release metadata and install assets are handled by URLSession.
 actor NativeUpdateService {
     private let session: URLSession
-    private let fileManager: FileManager
 
-    init(
-        session: URLSession = .shared,
-        fileManager: FileManager = .default
-    ) {
+    init(session: URLSession = .shared) {
         self.session = session
-        self.fileManager = fileManager
     }
 
     func check(
@@ -67,35 +64,6 @@ actor NativeUpdateService {
         return Self.isVersion(release.version, newerThan: currentVersion)
             ? .available(release)
             : .current(release)
-    }
-
-    func downloadAndOpen(_ release: NativeUpdateRelease) async throws -> URL {
-        guard let assetURL = release.assetURL,
-              let assetName = release.assetName else {
-            throw NativeUpdateError.noInstallAsset
-        }
-        let (temporary, response) = try await session.download(from: assetURL)
-        if let http = response as? HTTPURLResponse,
-           !(200...299).contains(http.statusCode) {
-            throw NativeUpdateError.invalidResponse(http.statusCode)
-        }
-        let root = FileManager.default.urls(
-            for: .cachesDirectory,
-            in: .userDomainMask
-        )[0].appendingPathComponent("com.aimemory.app/Updates", isDirectory: true)
-        try fileManager.createDirectory(at: root, withIntermediateDirectories: true)
-        let safeName = URL(fileURLWithPath: assetName).lastPathComponent
-        let stem = URL(fileURLWithPath: safeName)
-            .deletingPathExtension().lastPathComponent
-        let ext = URL(fileURLWithPath: safeName).pathExtension
-        let destination = root.appendingPathComponent(
-            "\(stem)-\(Int(Date().timeIntervalSince1970)).\(ext)"
-        )
-        try fileManager.moveItem(at: temporary, to: destination)
-        await MainActor.run {
-            NSWorkspace.shared.open(destination)
-        }
-        return destination
     }
 
     static func decodeRelease(_ data: Data) throws -> NativeUpdateRelease {
@@ -130,13 +98,15 @@ actor NativeUpdateService {
         let assetName = preferred?["name"] as? String
         let assetURL = (preferred?["browser_download_url"] as? String)
             .flatMap(URL.init(string:))
+        let assetSize = (preferred?["size"] as? NSNumber)?.int64Value ?? 0
         return NativeUpdateRelease(
             version: normalizedVersion(rawVersion),
             title: (object["name"] as? String) ?? rawVersion,
             notes: (object["body"] as? String) ?? "",
             pageURL: page,
             assetURL: assetURL,
-            assetName: assetName
+            assetName: assetName,
+            assetSize: assetSize
         )
     }
 

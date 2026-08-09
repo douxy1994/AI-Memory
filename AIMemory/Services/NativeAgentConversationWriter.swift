@@ -43,7 +43,9 @@ enum NativeAgentConversationWriterError: LocalizedError {
 /// stores are undocumented or read-only are rejected instead of reporting a
 /// false migration success.
 actor NativeAgentConversationWriter {
-    static let writableTargets: [AgentKind] = [.claude, .codex, .gemini, .opencode]
+    static let writableTargets: [AgentKind] = [
+        .claude, .codex, .gemini, .opencode, .kimi,
+    ]
 
     private let home: URL
     private let fileManager: FileManager
@@ -71,7 +73,9 @@ actor NativeAgentConversationWriter {
             return try writeGemini(conversation)
         case .opencode:
             return try writeOpenCode(conversation)
-        case .antigravity, .zcode, .hermes, .kimi:
+        case .kimi:
+            return try writeKimi(conversation)
+        case .antigravity, .zcode, .hermes:
             throw NativeAgentConversationWriterError.unsupportedTarget(target)
         }
     }
@@ -86,7 +90,14 @@ actor NativeAgentConversationWriter {
             try deleteCodexThread(id: result.id, moveFileToTrash: false)
         case .opencode:
             try deleteOpenCodeSession(id: result.id)
-        case .antigravity, .zcode, .hermes, .kimi:
+        case .kimi:
+            let stateURL = URL(fileURLWithPath: result.storagePath)
+            let sessionURL = stateURL.deletingLastPathComponent()
+            if fileManager.fileExists(atPath: sessionURL.path) {
+                try fileManager.removeItem(at: sessionURL)
+            }
+            try removeKimiSessionIndexEntry(id: result.id)
+        case .antigravity, .zcode, .hermes:
             return
         }
     }
@@ -101,7 +112,7 @@ actor NativeAgentConversationWriter {
             )
         }
         switch agent {
-        case .claude, .gemini, .antigravity, .zcode, .kimi:
+        case .claude, .gemini, .antigravity, .zcode:
             guard let storagePath = conversation.storagePath, !storagePath.isEmpty else {
                 throw NativeAgentConversationWriterError.invalidStore(
                     "\(agent.label) 会话缺少原始存储路径。"
@@ -113,6 +124,29 @@ actor NativeAgentConversationWriter {
             }
             var resultingURL: NSURL?
             try fileManager.trashItem(at: url, resultingItemURL: &resultingURL)
+        case .kimi:
+            guard let storagePath = conversation.storagePath, !storagePath.isEmpty else {
+                throw NativeAgentConversationWriterError.invalidStore(
+                    "\(agent.label) 会话缺少原始存储路径。"
+                )
+            }
+            let sessionURL = URL(fileURLWithPath: storagePath).deletingLastPathComponent()
+            guard fileManager.fileExists(atPath: sessionURL.path) else {
+                throw NativeAgentConversationWriterError.missingStore(sessionURL.path)
+            }
+            let indexEntry = kimiSessionIndexEntry(
+                id: conversation.id,
+                sessionURL: sessionURL,
+                workDirectory: normalizedProjectDirectory(conversation.projectDir)
+            )
+            try removeKimiSessionIndexEntry(id: conversation.id)
+            do {
+                var resultingURL: NSURL?
+                try fileManager.trashItem(at: sessionURL, resultingItemURL: &resultingURL)
+            } catch {
+                try? appendKimiSessionIndexEntry(indexEntry)
+                throw error
+            }
         case .codex:
             try deleteCodexThread(id: conversation.id, moveFileToTrash: true)
         case .opencode:
@@ -143,9 +177,9 @@ actor NativeAgentConversationWriter {
                 storagePath: try openCodeDatabaseURL().path,
                 resumeCommand: conversation.resumeCommand
             )
-        case .claude, .codex, .gemini:
+        case .claude, .codex, .gemini, .kimi:
             return try write(conversation, to: agent)
-        case .antigravity, .zcode, .hermes, .kimi:
+        case .antigravity, .zcode, .hermes:
             throw NativeAgentConversationWriterError.unsupportedTarget(agent)
         }
     }
@@ -341,6 +375,176 @@ actor NativeAgentConversationWriter {
             storagePath: destination.path,
             resumeCommand: nil
         )
+    }
+
+    // MARK: - Kimi Code
+
+    private func writeKimi(_ conversation: ConversationDetail) throws -> NativeAgentWriteResult {
+        let sessionID = "session_\(UUID().uuidString.lowercased())"
+        let cwd = normalizedProjectDirectory(conversation.projectDir)
+        let digest = SHA256.hash(data: Data(cwd.utf8))
+            .map { String(format: "%02x", $0) }
+            .joined()
+        let leaf = URL(fileURLWithPath: cwd).lastPathComponent.lowercased()
+        let safeLeaf = leaf.unicodeScalars.map { scalar -> Character in
+            CharacterSet.alphanumerics.contains(scalar)
+                ? Character(String(scalar)) : "_"
+        }
+        let workspace = "wd_\(String(safeLeaf).isEmpty ? "workspace" : String(safeLeaf))_\(digest.prefix(12))"
+        let sessionURL = home
+            .appendingPathComponent(".kimi-code/sessions", isDirectory: true)
+            .appendingPathComponent(workspace, isDirectory: true)
+            .appendingPathComponent(sessionID, isDirectory: true)
+        let agentURL = sessionURL
+            .appendingPathComponent("agents", isDirectory: true)
+            .appendingPathComponent("main", isDirectory: true)
+        try fileManager.createDirectory(at: agentURL, withIntermediateDirectories: true)
+
+        let firstUser = conversation.messages.first {
+            $0.role.lowercased() == "user"
+        }?.content ?? ""
+        let stateURL = sessionURL.appendingPathComponent("state.json")
+        let state: [String: Any] = [
+            "createdAt": conversation.createdAt,
+            "updatedAt": conversation.updatedAt,
+            "title": Self.title(conversation, firstUser: firstUser),
+            "isCustomTitle": false,
+            "lastPrompt": firstUser,
+            "workDir": cwd,
+            "agents": [
+                "main": [
+                    "homedir": agentURL.path,
+                    "type": "main",
+                    "parentAgentId": NSNull(),
+                ],
+            ],
+            "custom": [:] as [String: Any],
+        ]
+
+        var events: [[String: Any]] = []
+        for (index, message) in conversation.messages.enumerated() {
+            let time = Self.milliseconds(message.timestamp)
+            if message.role.lowercased() == "user" {
+                events.append([
+                    "type": "turn.prompt",
+                    "input": [["type": "text", "text": message.content]],
+                    "origin": ["kind": "user"],
+                    "time": time,
+                ])
+                continue
+            }
+
+            let turnID = String(index)
+            let step = index + 1
+            let stepUUID = UUID().uuidString.lowercased()
+            if !message.content.isEmpty {
+                events.append([
+                    "type": "context.append_loop_event",
+                    "event": [
+                        "type": "content.part",
+                        "uuid": UUID().uuidString.lowercased(),
+                        "turnId": turnID,
+                        "step": step,
+                        "stepUuid": stepUUID,
+                        "part": ["type": "text", "text": message.content],
+                    ],
+                    "time": time,
+                ])
+            }
+            for tool in message.toolCalls {
+                let callID = tool.id.isEmpty
+                    ? "tool_\(UUID().uuidString.replacingOccurrences(of: "-", with: ""))"
+                    : tool.id
+                events.append([
+                    "type": "context.append_loop_event",
+                    "event": [
+                        "type": "tool.call",
+                        "uuid": UUID().uuidString.lowercased(),
+                        "turnId": turnID,
+                        "step": step,
+                        "stepUuid": stepUUID,
+                        "toolCallId": callID,
+                        "name": tool.name,
+                        "args": Self.foundationValue(tool.input),
+                    ],
+                    "time": time,
+                ])
+                events.append([
+                    "type": "context.append_loop_event",
+                    "event": [
+                        "type": "tool.result",
+                        "toolCallId": callID,
+                        "result": [
+                            "output": tool.output ?? "",
+                            "isError": tool.status.lowercased() == "error",
+                        ],
+                    ],
+                    "time": time,
+                ])
+            }
+        }
+
+        do {
+            try Self.writeJSONObject(state, to: stateURL)
+            try Self.writeJSONLines(events, to: agentURL.appendingPathComponent("wire.jsonl"))
+            try appendKimiSessionIndexEntry(kimiSessionIndexEntry(
+                id: sessionID,
+                sessionURL: sessionURL,
+                workDirectory: cwd
+            ))
+        } catch {
+            try? fileManager.removeItem(at: sessionURL)
+            try? removeKimiSessionIndexEntry(id: sessionID)
+            throw error
+        }
+        return NativeAgentWriteResult(
+            id: sessionID,
+            storagePath: stateURL.path,
+            resumeCommand: "kimi --session \(sessionID)"
+        )
+    }
+
+    private func kimiSessionIndexEntry(
+        id: String,
+        sessionURL: URL,
+        workDirectory: String
+    ) -> [String: Any] {
+        [
+            "sessionId": id,
+            "sessionDir": sessionURL.path,
+            "workDir": workDirectory,
+        ]
+    }
+
+    private func appendKimiSessionIndexEntry(_ entry: [String: Any]) throws {
+        let indexURL = home.appendingPathComponent(".kimi-code/session_index.jsonl")
+        try fileManager.createDirectory(
+            at: indexURL.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        let line = try Self.jsonString(entry) + "\n"
+        if !fileManager.fileExists(atPath: indexURL.path) {
+            try Data(line.utf8).write(to: indexURL, options: [.atomic])
+            return
+        }
+        let handle = try FileHandle(forWritingTo: indexURL)
+        defer { try? handle.close() }
+        try handle.seekToEnd()
+        try handle.write(contentsOf: Data(line.utf8))
+    }
+
+    private func removeKimiSessionIndexEntry(id: String) throws {
+        let indexURL = home.appendingPathComponent(".kimi-code/session_index.jsonl")
+        guard fileManager.fileExists(atPath: indexURL.path) else { return }
+        let text = try String(contentsOf: indexURL, encoding: .utf8)
+        let kept = text.split(whereSeparator: \.isNewline).filter { line in
+            guard let data = String(line).data(using: .utf8),
+                  let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+            else { return true }
+            return object["sessionId"] as? String != id
+        }
+        let body = kept.isEmpty ? "" : kept.map(String.init).joined(separator: "\n") + "\n"
+        try Data(body.utf8).write(to: indexURL, options: [.atomic])
     }
 
     // MARK: - Codex

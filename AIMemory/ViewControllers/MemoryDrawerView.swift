@@ -27,7 +27,9 @@ struct MemoryDrawerView: View {
                             .font(Theme.appFont(size: 16))
                             .foregroundStyle(Theme.mutedText)
                     }
-                    .buttonStyle(.borderless)
+                    .adaptiveGlassButtonStyle()
+                    .buttonBorderShape(.circle)
+                    .controlSize(.small)
                 }
                 HStack(spacing: 6) {
                     Image(systemName: "folder").font(Theme.appFont(size: 9))
@@ -178,20 +180,20 @@ struct CandidateCard: View {
             if candidate.isActionable {
                 HStack(spacing: 6) {
                     Button("批准") { showApproveConfirm = true }
-                        .buttonStyle(.borderedProminent)
+                        .adaptiveGlassButtonStyle(prominent: true)
                         .controlSize(.mini)
                     Button("编辑后批准") { showEditor = true }
-                        .buttonStyle(.bordered)
+                        .adaptiveGlassButtonStyle()
                         .controlSize(.mini)
                     Button("拒绝") {
                         Task { await store.rejectCandidate(candidate) }
                     }
-                    .buttonStyle(.bordered)
+                    .adaptiveGlassButtonStyle()
                     .controlSize(.mini)
                     Button("暂缓") {
                         Task { await store.snoozeCandidate(candidate) }
                     }
-                    .buttonStyle(.bordered)
+                    .adaptiveGlassButtonStyle()
                     .controlSize(.mini)
                     Spacer()
                 }
@@ -279,7 +281,7 @@ private struct CandidateEditorSheet: View {
                         usageHint.trimmingCharacters(in: .whitespacesAndNewlines)
                     )
                 }
-                .buttonStyle(.borderedProminent)
+                .adaptiveGlassButtonStyle(prominent: true)
                 .keyboardShortcut(.defaultAction)
                 .disabled(
                     title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -358,11 +360,11 @@ struct ApprovedMemoryCard: View {
                 Button("确认仍有效") {
                     Task { await store.reverifyMemory(memory) }
                 }
-                .buttonStyle(.bordered).controlSize(.mini)
+                .adaptiveGlassButtonStyle().controlSize(.mini)
                 Button("停用规则") {
                     showRetireConfirm = true
                 }
-                .buttonStyle(.bordered).controlSize(.mini)
+                .adaptiveGlassButtonStyle().controlSize(.mini)
                 Spacer()
             }
             Button(expanded ? "收起" : "展开") { expanded.toggle() }
@@ -554,7 +556,9 @@ struct HandoffRow: View {
             } label: {
                 Image(systemName: "info.circle")
             }
-            .buttonStyle(.borderless)
+            .adaptiveGlassButtonStyle()
+            .buttonBorderShape(.circle)
+            .controlSize(.mini)
             .help("查看交接详情")
             if hd.status != "consumed" {
                 Button {
@@ -562,7 +566,9 @@ struct HandoffRow: View {
                 } label: {
                     Image(systemName: "checkmark.circle")
                 }
-                .buttonStyle(.borderless)
+                .adaptiveGlassButtonStyle()
+                .buttonBorderShape(.circle)
+                .controlSize(.mini)
                 .help("标记为已消费")
             }
         }

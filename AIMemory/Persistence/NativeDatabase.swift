@@ -28,7 +28,7 @@ enum NativeDatabaseError: LocalizedError {
 /// imported database can be migrated in place after it has first been copied
 /// into AI Memory's independent Application Support directory.
 actor NativeDatabase {
-    static let schemaVersion = 1
+    static let schemaVersion = 2
 
     let url: URL
     nonisolated(unsafe) private var connection: OpaquePointer?
@@ -194,11 +194,151 @@ actor NativeDatabase {
                     PRAGMA user_version = 1;
                     """)
             }
+            if version < 2 {
+                try unwrapBloatedToolInputs(connection)
+                try execute(connection, """
+                    INSERT OR IGNORE INTO schema_migrations(version, applied_at)
+                    VALUES (2, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'));
+                    PRAGMA user_version = 2;
+                    """)
+            }
             try execute(connection, "COMMIT;")
         } catch {
             try? execute(connection, "ROLLBACK;")
             throw error
         }
+    }
+
+    /// Collapses accumulated JSON string layers down to a single encoded layer.
+    ///
+    /// Returns `nil` when the value needs no rewrite — either it decodes to an
+    /// object/array (depth 0) or it is already a single encoded layer (depth 1).
+    /// This makes the migration idempotent and safe to run over a whole table.
+    static func unwrapNestedJSONText(_ text: String) -> String? {
+        var current = text
+        var depth = 0
+        while depth < 200 {
+            guard let data = current.data(using: .utf8),
+                  let value = try? JSONSerialization.jsonObject(
+                    with: data,
+                    options: [.fragmentsAllowed]
+                  ),
+                  let inner = value as? String
+            else { break }
+            current = inner
+            depth += 1
+        }
+        guard depth >= 2 else { return nil }
+        guard let data = try? JSONSerialization.data(
+                withJSONObject: current,
+                options: [.fragmentsAllowed]
+              ),
+              let encoded = String(data: data, encoding: .utf8)
+        else { return nil }
+        return encoded
+    }
+
+    /// Repairs `tool_calls.input_json` rows damaged by recursive JSON escaping.
+    ///
+    /// Databases written before schema 2 re-encoded tool inputs on every
+    /// read/write round trip, doubling the escaping each time; observed rows
+    /// reached 364 MB while their real payload was a few hundred bytes. The
+    /// rewrite is idempotent, so correct rows are left untouched.
+    /// See docs/TOOL_CALL_JSON_BLOAT.md.
+    private static func unwrapBloatedToolInputs(_ connection: OpaquePointer) throws {
+        guard try tableExists(connection, name: "tool_calls") else { return }
+
+        var identifiers: [String] = []
+        var selectAll: OpaquePointer?
+        guard sqlite3_prepare_v2(
+            connection,
+            "SELECT tool_call_id FROM tool_calls;",
+            -1,
+            &selectAll,
+            nil
+        ) == SQLITE_OK, let selectAll else {
+            throw NativeDatabaseError.statementFailed(
+                String(cString: sqlite3_errmsg(connection))
+            )
+        }
+        while sqlite3_step(selectAll) == SQLITE_ROW {
+            guard let value = sqlite3_column_text(selectAll, 0) else { continue }
+            identifiers.append(String(cString: value))
+        }
+        sqlite3_finalize(selectAll)
+        guard !identifiers.isEmpty else { return }
+
+        var readStatement: OpaquePointer?
+        guard sqlite3_prepare_v2(
+            connection,
+            "SELECT input_json FROM tool_calls WHERE tool_call_id = ?;",
+            -1,
+            &readStatement,
+            nil
+        ) == SQLITE_OK, let readStatement else {
+            throw NativeDatabaseError.statementFailed(
+                String(cString: sqlite3_errmsg(connection))
+            )
+        }
+        defer { sqlite3_finalize(readStatement) }
+
+        var writeStatement: OpaquePointer?
+        guard sqlite3_prepare_v2(
+            connection,
+            "UPDATE tool_calls SET input_json = ? WHERE tool_call_id = ?;",
+            -1,
+            &writeStatement,
+            nil
+        ) == SQLITE_OK, let writeStatement else {
+            throw NativeDatabaseError.statementFailed(
+                String(cString: sqlite3_errmsg(connection))
+            )
+        }
+        defer { sqlite3_finalize(writeStatement) }
+
+        // One row at a time: a damaged value can be hundreds of megabytes and
+        // must not be held alongside the rest of the table.
+        for identifier in identifiers {
+            try autoreleasepool {
+                sqlite3_reset(readStatement)
+                sqlite3_clear_bindings(readStatement)
+                sqlite3_bind_text(readStatement, 1, identifier, -1, SQLITE_TRANSIENT_DB)
+                guard sqlite3_step(readStatement) == SQLITE_ROW,
+                      let raw = sqlite3_column_text(readStatement, 0) else { return }
+                guard let unwrapped = unwrapNestedJSONText(String(cString: raw)) else {
+                    return
+                }
+
+                sqlite3_reset(writeStatement)
+                sqlite3_clear_bindings(writeStatement)
+                sqlite3_bind_text(writeStatement, 1, unwrapped, -1, SQLITE_TRANSIENT_DB)
+                sqlite3_bind_text(writeStatement, 2, identifier, -1, SQLITE_TRANSIENT_DB)
+                guard sqlite3_step(writeStatement) == SQLITE_DONE else {
+                    throw NativeDatabaseError.statementFailed(
+                        String(cString: sqlite3_errmsg(connection))
+                    )
+                }
+            }
+        }
+    }
+
+    private static func tableExists(
+        _ connection: OpaquePointer,
+        name: String
+    ) throws -> Bool {
+        var statement: OpaquePointer?
+        let sql = """
+        SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ? LIMIT 1;
+        """
+        guard sqlite3_prepare_v2(connection, sql, -1, &statement, nil) == SQLITE_OK,
+              let statement else {
+            throw NativeDatabaseError.statementFailed(
+                String(cString: sqlite3_errmsg(connection))
+            )
+        }
+        defer { sqlite3_finalize(statement) }
+        sqlite3_bind_text(statement, 1, name, -1, SQLITE_TRANSIENT_DB)
+        return sqlite3_step(statement) == SQLITE_ROW
     }
 
     private static func execute(_ connection: OpaquePointer, _ sql: String) throws {
@@ -600,3 +740,8 @@ actor NativeDatabase {
     );
     """
 }
+
+private let SQLITE_TRANSIENT_DB = unsafeBitCast(
+    -1,
+    to: sqlite3_destructor_type.self
+)

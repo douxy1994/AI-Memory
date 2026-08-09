@@ -9,7 +9,6 @@ private enum SettingsCategory: String, CaseIterable, Identifiable {
     case general
     case integrations
     case data
-    case updates
     case advanced
 
     var id: String { rawValue }
@@ -19,7 +18,6 @@ private enum SettingsCategory: String, CaseIterable, Identifiable {
         case .general: "通用"
         case .integrations: "Agent 集成"
         case .data: "数据同步与备份"
-        case .updates: "更新与诊断"
         case .advanced: "高级"
         }
     }
@@ -29,7 +27,6 @@ private enum SettingsCategory: String, CaseIterable, Identifiable {
         case .general: "调整 AI Memory 的语言、字体与日常使用体验。"
         case .integrations: "管理 AI Memory 与本机 AI Agent 的连接。"
         case .data: "连接同步服务、查看数据位置、导入既有数据并管理恢复点。"
-        case .updates: "检查应用更新与当前环境的升级就绪状态。"
         case .advanced: "查看隔离信息并处理需要谨慎操作的功能。"
         }
     }
@@ -39,7 +36,6 @@ private enum SettingsCategory: String, CaseIterable, Identifiable {
         case .general: "slider.horizontal.3"
         case .integrations: "cpu"
         case .data: "arrow.triangle.2.circlepath"
-        case .updates: "arrow.down.circle"
         case .advanced: "gearshape.2"
         }
     }
@@ -67,16 +63,9 @@ struct SettingsView: View {
     @State private var webdavSyncing = false
     @State private var webdavFeedback: WebDAVSyncFeedback?
     @State private var syncFolder = ""
-    @State private var updateFeedURL = ""
-    @State private var updateStatus = "尚未检查"
-    @State private var readinessReport: UpgradeReadinessReport?
-    @State private var readinessBusy = false
-    @State private var availableRelease: NativeUpdateRelease?
-    @State private var updateBusy = false
     @State private var launchAtLoginState: LaunchAtLoginState = .disabled
     @State private var launchAtLoginBusy = false
     @State private var selectedCategory: SettingsCategory = .general
-    private let updateService = NativeUpdateService()
     private let launchAtLoginService = NativeLaunchAtLoginService()
 
     var body: some View {
@@ -127,7 +116,7 @@ struct SettingsView: View {
                         Button("导入…") {
                             NotificationCenter.default.post(name: .requestImportFromChatMem, object: nil)
                         }
-                        .buttonStyle(.borderedProminent)
+                        .adaptiveGlassButtonStyle(prominent: true)
                         .disabled(DataPaths.chatMemDBURL == nil)
                     }
                 }
@@ -191,13 +180,14 @@ struct SettingsView: View {
                         )
                         .labelsHidden()
                         .toggleStyle(.switch)
-                        .disabled(launchAtLoginBusy || launchAtLoginState == .unavailable)
+                        .disabled(launchAtLoginBusy)
                     }
-                    if launchAtLoginState == .requiresApproval {
+                    if launchAtLoginState == .requiresApproval
+                        || launchAtLoginState == .unavailable {
                         Button("打开登录项系统设置") {
                             launchAtLoginService.openSystemSettings()
                         }
-                        .buttonStyle(.bordered)
+                        .adaptiveGlassButtonStyle()
                         .controlSize(.small)
                     }
                 }
@@ -213,19 +203,19 @@ struct SettingsView: View {
                         Button("全部安装") {
                             Task { await installAllIntegrations() }
                         }
-                        .buttonStyle(.borderedProminent)
+                        .adaptiveGlassButtonStyle(prominent: true)
                         .controlSize(.small)
                         .disabled(integrationBusy != nil)
                         Button("全部卸载") {
                             showUninstallAllConfirm = true
                         }
-                        .buttonStyle(.bordered)
+                        .adaptiveGlassButtonStyle()
                         .controlSize(.small)
                         .disabled(integrationBusy != nil)
                         Button(action: {Task { await loadIntegrations() }}) {
                             Label("重新检测", systemImage: "arrow.clockwise")
                         }
-                        .buttonStyle(.bordered).controlSize(.small)
+                        .adaptiveGlassButtonStyle().controlSize(.small)
                     }
                     if integrations.isEmpty {
                         Text("未检测到 agent 集成状态。点击「重新检测」。")
@@ -261,13 +251,13 @@ struct SettingsView: View {
                                         ProgressView().controlSize(.mini)
                                     } else if integ.mcpInstalled {
                                         Button("卸载") { showUninstallConfirm = integ.agent }
-                                            .buttonStyle(.bordered).controlSize(.mini)
+                                            .adaptiveGlassButtonStyle().controlSize(.mini)
                                     } else if integ.isAgentDetected && integ.canInstallIntegration {
                                         Button("安装") {
                                             let a = integ.agent
                                             Task { await runInstall(a) }
                                         }
-                                        .buttonStyle(.borderedProminent).controlSize(.mini)
+                                        .adaptiveGlassButtonStyle(prominent: true).controlSize(.mini)
                                     }
                                 }
                                 if !integ.details.isEmpty {
@@ -347,7 +337,7 @@ struct SettingsView: View {
                                     Text(webdavVerifying ? "正在验证…" : "验证")
                                 }
                             }
-                            .buttonStyle(.bordered)
+                            .adaptiveGlassButtonStyle()
                             .controlSize(.small)
                             .disabled(
                                 webdavHost.isEmpty || webdavVerifying
@@ -367,7 +357,7 @@ struct SettingsView: View {
                                     )
                                 }
                             }
-                            .buttonStyle(.borderedProminent)
+                            .adaptiveGlassButtonStyle(prominent: true)
                             .controlSize(.small)
                             .disabled(
                                 webdavHost.isEmpty || webdavSyncing
@@ -376,7 +366,7 @@ struct SettingsView: View {
                             Button("保存") {
                                 Task { await persistWebDAVSettings() }
                             }
-                            .buttonStyle(.bordered).controlSize(.small)
+                            .adaptiveGlassButtonStyle().controlSize(.small)
                             .disabled(
                                 webdavVerifying || webdavSyncing || store.syncInProgress
                             )
@@ -427,15 +417,15 @@ struct SettingsView: View {
                             Button(action: {pickSyncFolder()}) {
                                 Image(systemName: "folder")
                             }
-                            .buttonStyle(.bordered)
+                            .adaptiveGlassButtonStyle()
                         }
                         HStack(spacing: 8) {
                             Button(action: {Task { await store.syncLocalNow(folder: syncFolder) }}) { Text("立即同步") }
-                            .buttonStyle(.borderedProminent).controlSize(.small)
+                            .adaptiveGlassButtonStyle(prominent: true).controlSize(.small)
                             .disabled(syncFolder.isEmpty)
                             if !syncFolder.isEmpty {
                                 Button(action: {Task { await checkReadiness() }}) { Text("检测云盘状态") }
-                                .buttonStyle(.bordered).controlSize(.small)
+                                .adaptiveGlassButtonStyle().controlSize(.small)
                             }
                             Spacer()
                         }
@@ -477,7 +467,7 @@ struct SettingsView: View {
                         Button("立即创建恢复点") {
                             Task { await store.createRecoveryPoint() }
                         }
-                        .buttonStyle(.borderedProminent)
+                        .adaptiveGlassButtonStyle(prominent: true)
                         Button("在 Finder 中显示备份") {
                             let url = DataPaths.supportDir.appendingPathComponent(
                                 "backups",
@@ -489,112 +479,8 @@ struct SettingsView: View {
                             )
                             NSWorkspace.shared.activateFileViewerSelecting([url])
                         }
-                        .buttonStyle(.bordered)
+                        .adaptiveGlassButtonStyle()
                     }
-                }
-                }
-
-                if selectedCategory == .updates {
-                section("升级就绪检查", icon: "checkmark.shield") {
-                    HStack {
-                        Button {
-                            Task { await runUpgradeReadinessCheck() }
-                        } label: {
-                            if readinessBusy {
-                                ProgressView().controlSize(.small)
-                            } else {
-                                Label("运行升级就绪检查", systemImage: "checkmark.shield")
-                            }
-                        }
-                        .buttonStyle(.bordered)
-                        .disabled(readinessBusy)
-                        if let report = readinessReport {
-                            Text(report.summary)
-                                .font(Theme.appFont(size: 11, weight: .medium))
-                                .foregroundStyle(
-                                    report.status == "ok"
-                                        ? Color.green
-                                        : report.status == "error"
-                                            ? Color.red
-                                            : Color.orange
-                                )
-                        }
-                        Spacer()
-                    }
-                    if let report = readinessReport {
-                        VStack(alignment: .leading, spacing: 8) {
-                            ForEach(report.checks) { check in
-                                HStack(alignment: .top, spacing: 8) {
-                                    Image(systemName: readinessIcon(check.status))
-                                        .foregroundStyle(readinessColor(check.status))
-                                        .frame(width: 16)
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text(check.label)
-                                            .font(Theme.appFont(size: 11, weight: .semibold))
-                                        Text(check.detail)
-                                            .font(Theme.appFont(size: 10))
-                                            .foregroundStyle(Theme.mutedText)
-                                    }
-                                }
-                            }
-                        }
-                        .padding(10)
-                        .background(Theme.soft)
-                            .clipShape(RoundedRectangle(cornerRadius: 9))
-                    }
-                }
-
-                section("软件更新", icon: "arrow.down.circle") {
-                    Toggle(
-                        "自动检查更新",
-                        isOn: boolBinding("autoCheckUpdates", default: true)
-                    )
-                    TextField(
-                        "GitHub Releases API 地址",
-                        text: $updateFeedURL,
-                        prompt: Text("例如：https://api.github.com/repos/owner/repo/releases/latest")
-                    )
-                    .textFieldStyle(.roundedBorder)
-                    HStack {
-                        Button("保存更新源") {
-                            persistScalarSetting(
-                                key: "updateFeedURL",
-                                value: updateFeedURL.trimmingCharacters(
-                                    in: .whitespacesAndNewlines
-                                )
-                            )
-                        }
-                        .buttonStyle(.bordered)
-                        Button {
-                            Task { await checkForUpdates() }
-                        } label: {
-                            if updateBusy {
-                                ProgressView().controlSize(.small)
-                            } else {
-                                Text("立即检查")
-                            }
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .disabled(updateBusy)
-                        if let release = availableRelease {
-                            if release.assetURL != nil {
-                                Button("下载并打开安装包") {
-                                    Task { await downloadUpdate(release) }
-                                }
-                                .buttonStyle(.borderedProminent)
-                                .disabled(updateBusy)
-                            }
-                            Link("查看发布说明", destination: release.pageURL)
-                        }
-                        Spacer()
-                    }
-                    Text(updateStatus)
-                        .font(Theme.appFont(size: 11))
-                        .foregroundStyle(Theme.secondaryText)
-                    Text("AI Memory 使用独立更新源，不会下载或覆盖 ChatMem。未配置发布源时会明确提示，不会伪装成已是最新版。")
-                        .font(Theme.appFont(size: 10))
-                        .foregroundStyle(Theme.mutedText)
-                    settingsRow("遥测子系统", DataPaths.subsystem, mono: true)
                 }
                 }
 
@@ -606,7 +492,7 @@ struct SettingsView: View {
                     Button("打开回收站") {
                         store.openWorkspace(.trash)
                     }
-                    .buttonStyle(.bordered)
+                    .adaptiveGlassButtonStyle()
                 }
                 }
             }
@@ -689,9 +575,6 @@ struct SettingsView: View {
                         ?? (sync["sync_folder"] as? String)
                         ?? ""
                 }
-                self.updateFeedURL = (s["updateFeedURL"] as? String)
-                    ?? (s["update_feed_url"] as? String)
-                    ?? ""
             }
             let storedUsername = await MainActor.run { self.webdavUser }
             if !storedUsername.isEmpty,
@@ -726,7 +609,8 @@ struct SettingsView: View {
             case .disabled:
                 store.flash("已关闭登录时自动启动。")
             case .requiresApproval:
-                store.bannerError = "系统需要批准登录项，请打开系统设置完成授权。"
+                store.bannerMessage = "请在系统设置中批准 AI Memory 登录项。"
+                launchAtLoginService.openSystemSettings()
             case .unavailable:
                 store.bannerError = launchAtLoginState.detail
             }
@@ -980,62 +864,6 @@ struct SettingsView: View {
         }
     }
 
-    private func checkForUpdates() async {
-        await MainActor.run {
-            updateBusy = true
-            availableRelease = nil
-            updateStatus = "正在检查…"
-        }
-        defer { Task { @MainActor in updateBusy = false } }
-        do {
-            let feed = URL(
-                string: updateFeedURL.trimmingCharacters(in: .whitespacesAndNewlines)
-            )
-            let version = Bundle.main.object(
-                forInfoDictionaryKey: "CFBundleShortVersionString"
-            ) as? String ?? "0.1.0"
-            let result = try await updateService.check(
-                feedURL: feed,
-                currentVersion: version
-            )
-            await MainActor.run {
-                switch result {
-                case .current(let release):
-                    updateStatus = "当前版本 \(version) 已是最新；更新源最新版本为 \(release.version)。"
-                case .available(let release):
-                    availableRelease = release
-                    updateStatus = "发现新版本 \(release.version)：\(release.title)"
-                }
-            }
-        } catch {
-            await MainActor.run {
-                updateStatus = error.localizedDescription
-            }
-        }
-    }
-
-    private func runUpgradeReadinessCheck() async {
-        readinessBusy = true
-        readinessReport = await store.client.runUpgradeReadinessCheck()
-        readinessBusy = false
-    }
-
-    private func readinessIcon(_ status: String) -> String {
-        switch status {
-        case "ok": "checkmark.circle.fill"
-        case "error": "xmark.octagon.fill"
-        default: "exclamationmark.triangle.fill"
-        }
-    }
-
-    private func readinessColor(_ status: String) -> Color {
-        switch status {
-        case "ok": .green
-        case "error": .red
-        default: .orange
-        }
-    }
-
     private func webDAVFeedbackIcon(_ kind: WebDAVFeedbackKind) -> String {
         switch kind {
         case .success: "checkmark.circle.fill"
@@ -1049,24 +877,6 @@ struct SettingsView: View {
         case .success: .green
         case .warning: .orange
         case .failure: .red
-        }
-    }
-
-    private func downloadUpdate(_ release: NativeUpdateRelease) async {
-        await MainActor.run {
-            updateBusy = true
-            updateStatus = "正在下载安装包…"
-        }
-        defer { Task { @MainActor in updateBusy = false } }
-        do {
-            let url = try await updateService.downloadAndOpen(release)
-            await MainActor.run {
-                updateStatus = "安装包已下载并打开：\(url.lastPathComponent)"
-            }
-        } catch {
-            await MainActor.run {
-                updateStatus = "下载失败：\(error.localizedDescription)"
-            }
         }
     }
 
