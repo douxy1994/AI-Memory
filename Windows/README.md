@@ -4,6 +4,8 @@ AI Memory 的 Windows 11 原生版本，使用 C#、WinUI 3 与 Windows App SDK 
 
 > 当前状态：**Preview**。核心层、主要页面及本机 win-x64/win-arm64 helper 发布产物已验证；当前提交仍需 Windows Runner 完成 WinUI 打包与真实 Windows 11 桌面交互验收。
 
+> macOS `v0.1.3` 的 Windows 功能对齐任务、差异定位和验收证据要求见 [`KIMI_HANDOFF.md`](./KIMI_HANDOFF.md)；可直接交给 Windows 端 Codex 执行。
+
 ## 原生技术栈
 
 - C# / .NET 10；
