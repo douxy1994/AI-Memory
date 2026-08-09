@@ -35,6 +35,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 | GitHub 更新检查 | 已实现 | 已实现：与更新设置集中到独立“关于”窗口 |
 | 升级就绪与运行诊断 | 已实现：与更新入口合并到“关于”页 | 已实现：同样集中到“关于”窗口；设置、WebDAV、Credential Locker、数据库结构及完整性实机检查通过 |
 | Liquid Glass | 已实现：macOS 26+ 系统玻璃，较早系统使用原生材质回退；覆盖工作台及二级页面动作 | 不适用 |
-| 签名公开安装包 | 已发布：v0.1.3 universal DMG、本地固定签名与 SHA-256；尚未 Apple Developer ID 公证 | 已发布：v0.1.3 x64 MSIX、自签名证书与 SHA-256；尚未 Microsoft Store 签名 |
+| 签名公开安装包 | 已发布：v0.1.3 universal DMG、本地固定签名与 SHA-256；尚未 Apple Developer ID 公证 | 已发布：v0.1.3 x64 unsigned MSIX 与 SHA-256 |
 
 Windows 0.1.3 已在真实 Windows 11 桌面会话完成注册安装、启动、单实例、通知区域、设置、关于、Agent 集成、启动导入与 WebDAV 交互验收；完整命令和当前限制见 [Windows 说明](../Windows/README.md)。

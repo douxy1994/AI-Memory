@@ -121,9 +121,9 @@ flowchart LR
 ### 下载
 
 - **macOS 14+（Apple silicon 与 Intel）**：[下载 AI Memory 0.1.3](https://github.com/douxy1994/AI-Memory/releases/download/v0.1.3/AI-Memory-0.1.3-macOS-universal.dmg)
-- **Windows 11 x64**：[下载 AI Memory 0.1.3 MSIX](https://github.com/douxy1994/AI-Memory/releases/download/v0.1.3/AI-Memory-0.1.3-Windows-x64.msix)（首次安装需同时信任 Release 中的发布证书，步骤见 [Windows 说明](./Windows/README.md)）。
+- **Windows 11 x64**：[下载 AI Memory 0.1.3 MSIX](https://github.com/douxy1994/AI-Memory/releases/download/v0.1.3/AI-Memory-0.1.3-Windows-x64.msix)。
 
-macOS 当前构建尚未使用 Apple Developer ID 公证；Windows MSIX 使用项目自签名证书，尚未经过 Microsoft Store 签名。两个平台的安装包、证书和 SHA-256 校验文件均发布在 [v0.1.3 Release 页面](https://github.com/douxy1994/AI-Memory/releases/tag/v0.1.3)。
+macOS 当前构建尚未使用 Apple Developer ID 公证；Windows 提供 unsigned MSIX。两个平台的安装包和 SHA-256 校验文件均发布在 [v0.1.3 Release 页面](https://github.com/douxy1994/AI-Memory/releases/tag/v0.1.3)。
 
 ## 数据与隐私
 

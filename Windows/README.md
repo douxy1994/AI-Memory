@@ -95,19 +95,15 @@ WebDAV 同步（上传 0、下载 0、跳过 733；64/64 响应采样）。
 ## 下载与安装
 
 从 [v0.1.3 Release](https://github.com/douxy1994/AI-Memory/releases/tag/v0.1.3)
-下载 `AI-Memory-0.1.3-Windows-x64.msix`、同名 `.sha256` 和
-`AI-Memory-0.1.3-Windows.cer`。本版本尚未经过 Microsoft Store 签名，首次安装：
-
-1. 双击 `.cer`，选择“安装证书”→“当前用户”→“将所有证书放入下列存储”→
-   “受信任人”；
-2. 对照 `.sha256` 校验 MSIX：
+下载 `AI-Memory-0.1.3-Windows-x64.msix` 和同名 `.sha256`。本版本按照 Windows
+交接验收要求发布 unsigned MSIX；请在允许侧载 unsigned MSIX 的 Windows 11
+开发或受管环境中安装。安装前对照 `.sha256` 校验文件：
 
    ```powershell
    Get-FileHash .\AI-Memory-0.1.3-Windows-x64.msix -Algorithm SHA256
    ```
 
-3. 双击 MSIX 安装。应用数据保存在 `%LOCALAPPDATA%\AIMemory`，安装或升级不会
-   删除数据库、设置或凭据。
+应用数据保存在 `%LOCALAPPDATA%\AIMemory`，安装或升级不会删除数据库、设置或凭据。
 
 ## 构建
 
