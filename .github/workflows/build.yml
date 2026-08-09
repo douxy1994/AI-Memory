@@ -71,6 +71,9 @@ jobs:
         run: dotnet build Windows/src/AIMemory.Windows/AIMemory.Windows.csproj --configuration Release -p:Platform=x64
       - name: Build WinUI 3 ARM64
         run: dotnet build Windows/src/AIMemory.Windows/AIMemory.Windows.csproj --configuration Release -p:Platform=ARM64
+      - name: Build Windows x64 EXE installer
+        shell: pwsh
+        run: pwsh ./Windows/scripts/build-installer.ps1
       - name: Smoke test packaged MCP helper
         shell: pwsh
         run: |
@@ -233,6 +236,8 @@ jobs:
           name: windows-build-artifacts
           if-no-files-found: ignore
           path: |
+            release/0.1.3/*.exe
+            release/0.1.3/*.sha256
             Windows/src/AIMemory.Windows/bin/**/*.msix
             Windows/src/AIMemory.Windows/bin/**/Helpers/aimemory-mcp.exe
             Windows/src/AIMemory.Windows/bin/**/AIMemorySourceRevision.txt

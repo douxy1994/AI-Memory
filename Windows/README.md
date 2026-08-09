@@ -2,7 +2,7 @@
 
 AI Memory 的 Windows 11 原生版本，使用 C#、WinUI 3 与 Windows App SDK 构建。它与 macOS 版本共享产品行为和数据语义，但不使用跨平台 UI，也不会覆盖 macOS 应用或 ChatMem。
 
-> 当前版本：**0.1.3**。Windows 11 x64 MSIX、x64/ARM64 Release 构建、真实桌面生命周期、启动导入、Agent 集成与 WebDAV 增量同步均已在 Windows 11 实机验收。
+> 当前版本：**0.1.3**。Windows 11 x64 EXE 安装程序、x64/ARM64 Release 构建、真实桌面生命周期、启动导入、Agent 集成与 WebDAV 增量同步均已在 Windows 11 实机验收。
 
 > macOS `v0.1.3` 的功能对齐基线和固定验收要求见 [`KIMI_HANDOFF.md`](./KIMI_HANDOFF.md)；本版本已经按该清单完成同步。
 
@@ -88,19 +88,19 @@ AI Memory 的 Windows 11 原生版本，使用 C#、WinUI 3 与 Windows App SDK 
 八类本地历史及 Kimi 写入/回滚/恢复均通过共享核心层测试；完整状态见
 [功能矩阵](../docs/FEATURE_MATRIX.md)。本机最终回归为 95/95 核心测试、37/37
 功能契约、22 项 MCP 工具；x64 与 ARM64 WinUI Release 构建均为 0 警告、0 错误。
-注册 MSIX 后已验证单实例、可见窗口、关闭到通知区域、二次启动恢复、设置三分类、
+通过 EXE 安装程序注册 WinUI 包后已验证单实例、可见窗口、关闭到通知区域、二次启动恢复、设置三分类、
 独立关于窗口、登录启动开关、6 个实际已安装来源的 47 条会话启动导入，以及真实
 WebDAV 同步（上传 0、下载 0、跳过 733；64/64 响应采样）。
 
 ## 下载与安装
 
 从 [v0.1.3 Release](https://github.com/douxy1994/AI-Memory/releases/tag/v0.1.3)
-下载 `AI-Memory-0.1.3-Windows-x64.msix` 和同名 `.sha256`。本版本按照 Windows
-交接验收要求发布 unsigned MSIX；请在允许侧载 unsigned MSIX 的 Windows 11
-开发或受管环境中安装。安装前对照 `.sha256` 校验文件：
+下载 `AI-Memory-0.1.3-Windows-x64-Setup.exe` 和同名 `.sha256`，双击 EXE
+即可安装并启动 AI Memory。安装程序会把 WinUI 应用注册到当前用户，安装目录为
+`%LOCALAPPDATA%\Programs\AI Memory\0.1.3`；安装前对照 `.sha256` 校验文件：
 
    ```powershell
-   Get-FileHash .\AI-Memory-0.1.3-Windows-x64.msix -Algorithm SHA256
+   Get-FileHash .\AI-Memory-0.1.3-Windows-x64-Setup.exe -Algorithm SHA256
    ```
 
 应用数据保存在 `%LOCALAPPDATA%\AIMemory`，安装或升级不会删除数据库、设置或凭据。
@@ -134,7 +134,7 @@ dotnet build .\Windows\src\AIMemory.Windows\AIMemory.Windows.csproj `
 进程、关闭主窗口后进程继续驻留、再次启动不会创建第二个持久进程，并能恢复
 原窗口。测试只清理自己启动的进程；检测到已有 AI Memory 时会直接停止。
 
-验证构建输出（展开 unsigned MSIX 得到完整包布局后注册其根清单；构建输出目录里的
+验证构建输出（展开内部 MSIX 负载得到完整包布局后注册其根清单；构建输出目录里的
 AppxManifest.xml 仍含构建命名空间且缺少 Assets，而 `-DisableDevelopmentMode` 会让
 部署拒绝未签名的松散布局）：
 
@@ -163,7 +163,7 @@ finally {
 }
 ```
 
-验证已安装的 MSIX：
+验证 EXE 安装后的 Windows 包：
 
 ```powershell
 $appId = (Get-StartApps | Where-Object Name -eq "AI Memory").AppID
@@ -172,12 +172,21 @@ pwsh .\Windows\scripts\smoke-desktop.ps1 `
   -ProcessName "AIMemory.Windows"
 ```
 
+构建可发布的 x64 EXE 安装程序：
+
+```powershell
+pwsh .\Windows\scripts\build-installer.ps1
+```
+
+输出位于 `release/0.1.3/AI-Memory-0.1.3-Windows-x64-Setup.exe`，旁边同时生成
+同名 `.sha256` 校验文件。
+
 ## 项目
 
 | 项目 | 职责 |
 | --- | --- |
 | `AIMemory.Core` | 数据模型、SQLite、同步、备份、导入、诊断和记忆治理 |
-| `AIMemory.Windows` | WinUI 3 页面、窗口、菜单、系统集成与 MSIX |
+| `AIMemory.Windows` | WinUI 3 页面、窗口、菜单、系统集成与 Windows 包负载 |
 | `AIMemory.Mcp` | Windows stdio MCP helper |
 | `AIMemory.Core.Tests` | 核心数据与业务测试 |
 

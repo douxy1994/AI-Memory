@@ -92,7 +92,7 @@ flowchart LR
 ### 原生桌面体验
 
 - macOS 使用 Swift 6、SwiftUI、AppKit、SQLite、Keychain 与 Apple 官方 Framework；
-- Windows 使用 C#、WinUI 3、Windows App SDK、SQLite、PasswordVault 与 MSIX；
+- Windows 使用 C#、WinUI 3、Windows App SDK、SQLite、PasswordVault，并通过 EXE 安装程序部署 WinUI 包；
 - 桌面 GUI 保持单实例，重复启动会恢复现有窗口；
 - 设置、关于、更新检查、状态栏/系统托盘和快捷键遵循各自平台习惯。
 - macOS 26 及以上使用系统 Liquid Glass；较早系统自动使用原生材质回退。
@@ -112,7 +112,7 @@ flowchart LR
       <img src="./docs/images/platform-windows.svg" width="100%" alt="AI Memory for Windows 11">
       <h3 id="windows-11">Windows 11</h3>
       <p><strong>原生版本 · v0.1.3</strong></p>
-      <p>C# · WinUI 3 · Windows App SDK · MSIX</p>
+      <p>C# · WinUI 3 · Windows App SDK · EXE 安装程序</p>
       <p>已完成原生工作台、Agent/CLI 自动导入与集成、迁移、增量同步、备份恢复、MCP、Mica、通知区域和单实例体验。</p>
     </td>
   </tr>
@@ -121,9 +121,9 @@ flowchart LR
 ### 下载
 
 - **macOS 14+（Apple silicon 与 Intel）**：[下载 AI Memory 0.1.3](https://github.com/douxy1994/AI-Memory/releases/download/v0.1.3/AI-Memory-0.1.3-macOS-universal.dmg)
-- **Windows 11 x64**：[下载 AI Memory 0.1.3 MSIX](https://github.com/douxy1994/AI-Memory/releases/download/v0.1.3/AI-Memory-0.1.3-Windows-x64.msix)。
+- **Windows 11 x64**：[下载 AI Memory 0.1.3 EXE 安装程序](https://github.com/douxy1994/AI-Memory/releases/download/v0.1.3/AI-Memory-0.1.3-Windows-x64-Setup.exe)。
 
-macOS 当前构建尚未使用 Apple Developer ID 公证；Windows 提供 unsigned MSIX。两个平台的安装包和 SHA-256 校验文件均发布在 [v0.1.3 Release 页面](https://github.com/douxy1994/AI-Memory/releases/tag/v0.1.3)。
+两个平台的安装包和 SHA-256 校验文件均发布在 [v0.1.3 Release 页面](https://github.com/douxy1994/AI-Memory/releases/tag/v0.1.3)。Windows 安装程序会注册 WinUI 包身份，因此通知区域、登录启动和 MCP 等系统集成功能与已验收版本一致。
 
 ## 数据与隐私
 
