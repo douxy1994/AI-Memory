@@ -209,6 +209,28 @@ const contracts = {
     ],
     [/UpgradeReadinessReport/, /quick_check/, /RunReadinessButton/],
   ),
+  "x64-arm64-builds": source(
+    [
+      ".github/workflows/build.yml",
+      "Windows/scripts/verify.ps1",
+    ],
+    [/-p:Platform=x64/, /-p:Platform=ARM64/, /GenerateAppxPackageOnBuild=true/],
+  ),
+  "mcp-runtime-smoke": source(
+    [
+      "Windows/src/AIMemory.Mcp/Program.cs",
+      ".github/workflows/build.yml",
+    ],
+    [/ToolDefinitions/, /aimemory-mcp\.exe/, /2025-03-26/],
+  ),
+  "desktop-lifecycle-smoke": source(
+    [
+      "Windows/scripts/smoke-desktop.ps1",
+      "Windows/src/AIMemory.Windows/Program.cs",
+      "Windows/src/AIMemory.Windows/App.xaml.cs",
+    ],
+    [/shell:AppsFolder/, /launch\.complete/, /AppInstance/],
+  ),
 };
 
 const readContract = (id, contract) => {
@@ -240,11 +262,7 @@ for (const feature of implemented) {
   readContract(feature.id, contract);
 }
 
-const expectedPending = new Set([
-  "x64-arm64-builds",
-  "mcp-runtime-smoke",
-  "desktop-lifecycle-smoke",
-]);
+const expectedPending = new Set([]);
 const actualPending = new Set(pending.map((feature) => feature.id));
 if (actualPending.size !== expectedPending.size
     || [...expectedPending].some((id) => !actualPending.has(id))) {

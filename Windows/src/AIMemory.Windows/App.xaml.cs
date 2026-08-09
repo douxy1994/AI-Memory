@@ -2,6 +2,7 @@
 // Copyright © 2026 douxy1994
 // SPDX-License-Identifier: AGPL-3.0-only
 //
+using System.Runtime.InteropServices;
 using AIMemory.Core.Persistence;
 using AIMemory.Core.Services;
 using AIMemory.Windows.Services;
@@ -27,6 +28,11 @@ public sealed partial class App : Application
         _instance.Activated += OnActivated;
         UnhandledException += (_, eventArgs) =>
         {
+            var detail = eventArgs.Exception.ToString()
+                .Replace("\r\n", " | ")
+                .Replace("\n", " | ");
+            Services.StartupDiagnostics.Write(
+                "app.unhandled " + detail);
             System.Diagnostics.Debug.WriteLine(eventArgs.Exception);
         };
 
@@ -169,15 +175,104 @@ public sealed partial class App : Application
 
     public static void ApplyApplicationFont(string preference)
     {
+        var family = FontPreferenceService.ResolveWindowsFamily(preference);
+        if (!IsFontInstalled(family))
+        {
+            // WinUI collapses text layout when the family is missing, so
+            // fall back explicitly instead of relying on XAML font lookup.
+            family = "Segoe UI Variable Text";
+        }
         Current.Resources["ContentControlThemeFontFamily"] =
-            new FontFamily(
-                FontPreferenceService.ResolveWindowsFamily(preference));
+            new FontFamily(family);
     }
+
+    private static bool IsFontInstalled(string family)
+    {
+        var found = false;
+        var query = new NativeFontLog { CharSet = 1 };
+        var hdc = GetDC(nint.Zero);
+        try
+        {
+            EnumFontFamiliesExW(
+                hdc,
+                ref query,
+                (ref NativeFontLog font, nint metrics, uint fontType, nint data) =>
+                {
+                    if (string.Equals(
+                            font.FaceName,
+                            family,
+                            StringComparison.OrdinalIgnoreCase))
+                    {
+                        found = true;
+                        return 0;
+                    }
+                    return 1;
+                },
+                nint.Zero,
+                0);
+        }
+        finally
+        {
+            ReleaseDC(nint.Zero, hdc);
+        }
+        return found;
+    }
+
+    private delegate int FontEnumProc(
+        ref NativeFontLog font,
+        nint metrics,
+        uint fontType,
+        nint data);
+
+    [StructLayout(
+        LayoutKind.Sequential,
+        CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
+    private struct NativeFontLog
+    {
+        public int Height;
+        public int Width;
+        public int Escapement;
+        public int Orientation;
+        public int Weight;
+        public byte Italic;
+        public byte Underline;
+        public byte StrikeOut;
+        public byte CharSet;
+        public byte OutPrecision;
+        public byte ClipPrecision;
+        public byte Quality;
+        public byte PitchAndFamily;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
+        public string FaceName;
+    }
+
+    [DllImport("gdi32.dll", CharSet = CharSet.Unicode)]
+    private static extern int EnumFontFamiliesExW(
+        nint hdc,
+        ref NativeFontLog logFont,
+        FontEnumProc proc,
+        nint lParam,
+        uint flags);
+
+    [DllImport("user32.dll")]
+    private static extern nint GetDC(nint window);
+
+    [DllImport("user32.dll")]
+    private static extern int ReleaseDC(nint window, nint hdc);
 
     public static void ApplyApplicationLanguage(string preference)
     {
-        ApplicationLanguages.PrimaryLanguageOverride =
-            LanguagePreferenceService.ResolveWindowsLanguageTag(preference);
+        var tag = LanguagePreferenceService.ResolveWindowsLanguageTag(preference);
+        if (tag.Length == 0)
+        {
+            // "system" follows Windows.  MRT Core rejects an empty override
+            // with 0x80070057, so mirror the top Windows display language
+            // instead of assigning "".
+            tag = global::Windows.System.UserProfile.GlobalizationPreferences
+                .Languages.FirstOrDefault() ?? "";
+        }
+        if (tag.Length == 0) return;
+        ApplicationLanguages.PrimaryLanguageOverride = tag;
     }
 
     private async Task CheckForUpdatesAtLaunchAsync()

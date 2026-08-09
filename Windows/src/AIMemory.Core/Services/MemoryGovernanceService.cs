@@ -6,6 +6,11 @@ using AIMemory.Core.Persistence;
 
 namespace AIMemory.Core.Services;
 
+public sealed record MemoryEvidenceRecord(
+    string? ConversationId,
+    string? MessageId,
+    string Excerpt);
+
 public sealed record MemoryCandidateRecord(
     string Id,
     string RepoId,
@@ -18,6 +23,7 @@ public sealed record MemoryCandidateRecord(
     string CreatedAt)
 {
     public IReadOnlyList<string> EvidenceRefs { get; init; } = [];
+    public IReadOnlyList<MemoryEvidenceRecord> Evidence { get; init; } = [];
     public string? MergeSuggestion { get; init; }
     public string? ConflictSuggestion { get; init; }
 }
@@ -93,12 +99,12 @@ public sealed class MemoryGovernanceService(AIMemoryDatabase database)
         {
             var evidenceCommand = connection.CreateCommand();
             evidenceCommand.CommandText = """
-                SELECT owner_id,excerpt
+                SELECT owner_id,conversation_id,message_id,excerpt
                 FROM evidence_refs
                 WHERE owner_type IN ('candidate','memory_candidate')
                 ORDER BY created_at,evidence_id;
                 """;
-            var evidence = new Dictionary<string, List<string>>(
+            var evidence = new Dictionary<string, List<MemoryEvidenceRecord>>(
                 StringComparer.Ordinal);
             await using var evidenceReader =
                 await evidenceCommand.ExecuteReaderAsync(cancellationToken);
@@ -110,7 +116,14 @@ public sealed class MemoryGovernanceService(AIMemoryDatabase database)
                     excerpts = [];
                     evidence[owner] = excerpts;
                 }
-                excerpts.Add(evidenceReader.GetString(1));
+                excerpts.Add(new MemoryEvidenceRecord(
+                    evidenceReader.IsDBNull(1)
+                        ? null
+                        : evidenceReader.GetString(1),
+                    evidenceReader.IsDBNull(2)
+                        ? null
+                        : evidenceReader.GetString(2),
+                    evidenceReader.GetString(3)));
             }
             for (var index = 0; index < result.Count; index++)
             {
@@ -118,7 +131,10 @@ public sealed class MemoryGovernanceService(AIMemoryDatabase database)
                 {
                     result[index] = result[index] with
                     {
-                        EvidenceRefs = excerpts,
+                        Evidence = excerpts,
+                        EvidenceRefs = excerpts
+                            .Select(value => value.Excerpt)
+                            .ToArray(),
                     };
                 }
             }

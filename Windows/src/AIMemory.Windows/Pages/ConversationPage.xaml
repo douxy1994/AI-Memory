@@ -7,7 +7,7 @@
     x:Class="AIMemory.Windows.Pages.ConversationPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <Grid>
+    <Grid Background="{ThemeResource WindowBackgroundBrush}">
         <Grid x:Name="LoadingPanel"
               Padding="32"
               Visibility="Visible">
@@ -28,7 +28,7 @@
         <Grid x:Name="ErrorPanel"
               Padding="32"
               Visibility="Collapsed">
-            <Border Style="{StaticResource CardStyle}"
+            <Border Style="{ThemeResource CardStyle}"
                     Width="560"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center">
@@ -49,10 +49,11 @@
                                 Spacing="8">
                         <Button x:Uid="ConversationBackFromError"
                                 Content="返回历史"
+                                Style="{ThemeResource GhostPillButtonStyle}"
                                 Click="Back_Click" />
                         <Button x:Uid="ConversationRetry"
                                 Content="重试"
-                                Style="{StaticResource AccentButtonStyle}"
+                                Style="{ThemeResource PrimaryPillButtonStyle}"
                                 Click="Retry_Click" />
                     </StackPanel>
                 </StackPanel>
@@ -76,11 +77,11 @@
                 </Grid.ColumnDefinitions>
                 <StackPanel Spacing="4">
                     <TextBlock x:Name="TitleText"
-                               Style="{StaticResource PageTitleStyle}"
+                               Style="{ThemeResource PageTitleStyle}"
                                TextWrapping="Wrap" />
                     <TextBlock x:Name="MetadataText"
                                TextWrapping="Wrap"
-                               Opacity="0.65" />
+                               Style="{ThemeResource PageSubtitleStyle}" />
                 </StackPanel>
                 <CommandBar Grid.Column="1"
                             Background="Transparent"
@@ -120,32 +121,35 @@
                     <ColumnDefinition />
                     <ColumnDefinition />
                 </Grid.ColumnDefinitions>
-                <Border Style="{StaticResource CardStyle}" Padding="12">
+                <Border Style="{ThemeResource CardStyle}" Padding="12">
                     <StackPanel>
                         <TextBlock x:Name="MessageCountText"
                                    FontSize="20"
                                    FontWeight="SemiBold" />
-                        <TextBlock x:Uid="ConversationMessages" Text="消息" Opacity="0.6" />
+                        <TextBlock x:Uid="ConversationMessages" Text="消息"
+                                   Foreground="{ThemeResource SubtleTextBrush}" />
                     </StackPanel>
                 </Border>
                 <Border Grid.Column="1"
-                        Style="{StaticResource CardStyle}"
+                        Style="{ThemeResource CardStyle}"
                         Padding="12">
                     <StackPanel>
                         <TextBlock x:Name="FileCountText"
                                    FontSize="20"
                                    FontWeight="SemiBold" />
-                        <TextBlock x:Uid="ConversationFileChangesMetric" Text="文件变更" Opacity="0.6" />
+                        <TextBlock x:Uid="ConversationFileChangesMetric" Text="文件变更"
+                                   Foreground="{ThemeResource SubtleTextBrush}" />
                     </StackPanel>
                 </Border>
                 <Border Grid.Column="2"
-                        Style="{StaticResource CardStyle}"
+                        Style="{ThemeResource CardStyle}"
                         Padding="12">
                     <StackPanel>
                         <TextBlock x:Name="ToolCallCountText"
                                    FontSize="20"
                                    FontWeight="SemiBold" />
-                        <TextBlock x:Uid="ConversationToolCalls" Text="工具调用" Opacity="0.6" />
+                        <TextBlock x:Uid="ConversationToolCalls" Text="工具调用"
+                                   Foreground="{ThemeResource SubtleTextBrush}" />
                     </StackPanel>
                 </Border>
             </Grid>
@@ -159,7 +163,7 @@
                     <ListView x:Name="MessageList" SelectionMode="None">
                         <ListView.ItemTemplate>
                             <DataTemplate>
-                                <Border Style="{StaticResource CardStyle}" Margin="0,4">
+                                <Border Style="{ThemeResource CardStyle}" Margin="0,4">
                                     <StackPanel Spacing="8">
                                         <Grid ColumnSpacing="8">
                                             <Grid.ColumnDefinitions>
@@ -168,7 +172,7 @@
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Text="{Binding RoleLabel}"
                                                        FontWeight="SemiBold"
-                                                       Foreground="{StaticResource AIMemoryGreenBrush}" />
+                                                       Foreground="{ThemeResource AIMemoryGreenBrush}" />
                                             <TextBlock Grid.Column="1"
                                                        Text="{Binding TimestampLabel}"
                                                        Opacity="0.5" />
@@ -178,7 +182,7 @@
                                                    TextWrapping="Wrap"
                                                    IsTextSelectionEnabled="True" />
                                         <Border Visibility="{Binding ToolCallsVisibility}"
-                                                Background="{StaticResource AIMemoryGreenSoftBrush}"
+                                                Background="{ThemeResource AIMemoryGreenSoftBrush}"
                                                 CornerRadius="8"
                                                 Padding="10">
                                             <StackPanel Spacing="8">
@@ -212,7 +216,7 @@
                                                                                        Opacity="0.68" />
                                                                         </StackPanel>
                                                                         <Border Grid.Column="1"
-                                                                                Background="{StaticResource AIMemoryGreenSoftBrush}"
+                                                                                Background="{ThemeResource AIMemoryGreenSoftBrush}"
                                                                                 CornerRadius="8"
                                                                                 Padding="7,2">
                                                                             <TextBlock Text="{Binding StatusLabel}"
@@ -276,11 +280,10 @@
 
                 <ScrollViewer Grid.Column="1">
                     <StackPanel Spacing="12">
-                        <Border Style="{StaticResource CardStyle}">
+                        <Border Style="{ThemeResource CardStyle}">
                             <StackPanel Spacing="10">
                                 <TextBlock x:Uid="ConversationResumeTitle" Text="可恢复进度"
-                                           FontSize="17"
-                                           FontWeight="SemiBold" />
+                                           Style="{ThemeResource SectionTitleStyle}" />
                                 <StackPanel x:Name="ResumePanel"
                                             Spacing="8"
                                             Visibility="Collapsed">
@@ -290,6 +293,7 @@
                                              TextWrapping="Wrap"
                                              FontFamily="Cascadia Mono" />
                                     <Button x:Uid="ConversationCopyResume" Content="复制恢复命令"
+                                            Style="{ThemeResource GhostPillButtonStyle}"
                                             HorizontalAlignment="Right"
                                             Click="CopyResume_Click" />
                                 </StackPanel>
@@ -300,11 +304,10 @@
                             </StackPanel>
                         </Border>
 
-                        <Border Style="{StaticResource CardStyle}">
+                        <Border Style="{ThemeResource CardStyle}">
                             <StackPanel Spacing="10">
                                 <TextBlock x:Uid="ConversationFileChangesTitle" Text="文件变更"
-                                           FontSize="17"
-                                           FontWeight="SemiBold" />
+                                           Style="{ThemeResource SectionTitleStyle}" />
                                 <ListView x:Name="FileChangeList"
                                           SelectionMode="None"
                                           MaxHeight="280">
@@ -329,16 +332,16 @@
                             </StackPanel>
                         </Border>
 
-                        <Border Style="{StaticResource CardStyle}">
+                        <Border Style="{ThemeResource CardStyle}">
                             <StackPanel Spacing="10">
                                 <TextBlock x:Uid="ConversationHandoffTitle" Text="Agent 交接"
-                                           FontSize="17"
-                                           FontWeight="SemiBold" />
+                                           Style="{ThemeResource SectionTitleStyle}" />
                                 <ComboBox x:Name="TargetAgentBox"
                                           x:Uid="ConversationTargetAgent"
                                           PlaceholderText="目标 Agent"
                                           DisplayMemberPath="Label" />
                                 <Button x:Uid="ConversationCreateHandoff" Content="创建交接包"
+                                        Style="{ThemeResource PrimaryPillButtonStyle}"
                                         HorizontalAlignment="Right"
                                         Click="CreateHandoff_Click" />
                             </StackPanel>

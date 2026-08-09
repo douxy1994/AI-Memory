@@ -113,17 +113,22 @@ dotnet build .\Windows\src\AIMemory.Windows\AIMemory.Windows.csproj `
 进程、关闭主窗口后进程继续驻留、再次启动不会创建第二个持久进程，并能恢复
 原窗口。测试只清理自己启动的进程；检测到已有 AI Memory 时会直接停止。
 
-验证构建输出（先注册 manifest，避免无包身份的原始 exe 只启动进程而不创建窗口）：
+验证构建输出（展开 unsigned MSIX 得到完整包布局后注册其根清单；构建输出目录里的
+AppxManifest.xml 仍含构建命名空间且缺少 Assets，而 `-DisableDevelopmentMode` 会让
+部署拒绝未签名的松散布局）：
 
 ```powershell
-$manifest = Get-ChildItem `
+$msix = Get-ChildItem `
   .\Windows\src\AIMemory.Windows\bin `
-  -Recurse -Filter AppxManifest.xml |
+  -Recurse -Filter *.msix |
   Where-Object FullName -Match '\\x64\\' |
-  Where-Object FullName -NotMatch '\\obj\\' |
   Sort-Object LastWriteTime -Descending |
   Select-Object -First 1
-Add-AppxPackage -Path $manifest.FullName -Register -DisableDevelopmentMode
+$layout = Join-Path $env:TEMP "AIMemory-msix-layout"
+if (Test-Path -LiteralPath $layout) { Remove-Item $layout -Recurse -Force }
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+[System.IO.Compression.ZipFile]::ExtractToDirectory($msix.FullName, $layout)
+Add-AppxPackage -Path (Join-Path $layout "AppxManifest.xml") -Register
 $package = Get-AppxPackage -Name "com.aimemory.windows"
 try {
   pwsh .\Windows\scripts\smoke-desktop.ps1 `
@@ -133,6 +138,7 @@ try {
 finally {
   Get-AppxPackage -Name "com.aimemory.windows" |
     Remove-AppxPackage -ErrorAction SilentlyContinue
+  Remove-Item $layout -Recurse -Force -ErrorAction SilentlyContinue
 }
 ```
 

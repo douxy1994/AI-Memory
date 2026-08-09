@@ -27,7 +27,6 @@ public sealed partial class MainWindow : Window
     public nint NativeHandle => _windowHandle;
     private readonly AppWindow _appWindow;
     private readonly nint _windowHandle;
-    private AboutWindow? _aboutWindow;
     private CancellationTokenSource? _automaticBackup;
     private NotificationAreaService? _notificationArea;
     private bool _isExiting;
@@ -45,9 +44,23 @@ public sealed partial class MainWindow : Window
         _windowHandle = WindowNative.GetWindowHandle(this);
         var id = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(_windowHandle);
         _appWindow = AppWindow.GetFromWindowId(id);
-        _appWindow.Resize(new global::Windows.Graphics.SizeInt32(1180, 760));
+        var iconPath = Path.Combine(
+            AppContext.BaseDirectory,
+            "Assets",
+            "AppIcon.ico");
+        if (File.Exists(iconPath))
+        {
+            _appWindow.SetIcon(iconPath);
+        }
+        var scale = Math.Max(
+            1d,
+            NativeMethods.GetDpiForWindow(_windowHandle) / 96d);
+        _appWindow.Resize(new global::Windows.Graphics.SizeInt32(
+            (int)Math.Round(1180 * scale),
+            (int)Math.Round(760 * scale)));
         _appWindow.Closing += OnAppWindowClosing;
-        Navigation.SelectedItem = Navigation.MenuItems[0];
+        Sidebar.Attach(this);
+        ContentFrame.Navigated += ContentFrame_Navigated;
         RegisterAccelerators();
 
         try
@@ -84,6 +97,7 @@ public sealed partial class MainWindow : Window
         StartupProgress.IsActive = false;
         StartupOverlay.Visibility = Visibility.Collapsed;
         Navigate("workbench");
+        _ = Sidebar.ReloadAsync();
     }
 
     public void ShowStartupFailure(Exception exception)
@@ -106,6 +120,37 @@ public sealed partial class MainWindow : Window
         NativeMethods.ShowWindow(handle, 9);
         NativeMethods.UpdateWindow(handle);
         NativeMethods.SetForegroundWindow(handle);
+        // The first frame can size the HWND before the XamlRoot scale is
+        // known; normalize the effective window size after activation.
+        DispatcherQueue.TryEnqueue(
+            Microsoft.UI.Dispatching.DispatcherQueuePriority.Low,
+            NormalizeInitialWindowSize);
+    }
+
+    private bool _initialWindowSizeNormalized;
+
+    /// <summary>
+    /// The constructor resizes the AppWindow before the XamlRoot scale
+    /// exists, so on scaled displays the HWND can stay physically 1180x760
+    /// while the XamlRoot later applies (for example) 1.5x, leaving far
+    /// less effective space than intended and breaking content layout.
+    /// Re-assert the intended effective size once the real scale is known.
+    /// </summary>
+    private void NormalizeInitialWindowSize()
+    {
+        if (_initialWindowSizeNormalized) return;
+        _initialWindowSizeNormalized = true;
+        var scale = Content.XamlRoot?.RasterizationScale ?? 1.0;
+        if (scale <= 0) scale = 1.0;
+        if (!NativeMethods.GetWindowRect(_windowHandle, out var rect)) return;
+        NativeMethods.SetWindowPos(
+            _windowHandle,
+            0,
+            rect.Left,
+            rect.Top,
+            (int)(1180 * scale),
+            (int)(760 * scale),
+            NativeMethods.SwpNoZOrder | NativeMethods.SwpNoActivate);
     }
 
     public void ApplyFontFamily(string preference)
@@ -113,7 +158,7 @@ public sealed partial class MainWindow : Window
         App.ApplyApplicationFont(preference);
         var font = new FontFamily(
             FontPreferenceService.ResolveWindowsFamily(preference));
-        Navigation.FontFamily = font;
+        Sidebar.FontFamily = font;
         MainMenuBar.FontFamily = font;
     }
 
@@ -161,50 +206,10 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private void Navigation_SelectionChanged(
-        NavigationView sender,
-        NavigationViewSelectionChangedEventArgs args)
-    {
-        if (!_isStartupComplete) return;
-        Navigate(args.IsSettingsSelected
-            ? "settings"
-            : (args.SelectedItemContainer?.Tag as string ?? "workbench"));
-    }
-
     public void NavigateTo(string tag)
     {
         if (!_isStartupComplete) return;
-        if (tag == "settings")
-        {
-            if (ReferenceEquals(Navigation.SelectedItem, Navigation.SettingsItem))
-            {
-                Navigate(tag);
-            }
-            else
-            {
-                Navigation.SelectedItem = Navigation.SettingsItem;
-            }
-            return;
-        }
-        var item = Navigation.MenuItems
-            .Concat(Navigation.FooterMenuItems)
-            .OfType<NavigationViewItem>()
-            .FirstOrDefault(value => string.Equals(
-                value.Tag as string,
-                tag,
-                StringComparison.Ordinal));
-        if (item is null)
-        {
-            Navigate(tag);
-        }
-        else if (ReferenceEquals(Navigation.SelectedItem, item))
-        {
-            Navigate(tag);
-        }
-        else
-        {
-            Navigation.SelectedItem = item;
-        }
+        Navigate(tag);
     }
 
     /// <summary>
@@ -213,12 +218,41 @@ public sealed partial class MainWindow : Window
     /// settings landing section.
     /// </summary>
     public void OpenSettingsCategory(string category)
+        => OpenSettingsCategory(category, checkForUpdates: false);
+
+    public void OpenSettingsCategory(
+        string category,
+        bool checkForUpdates)
     {
         if (!_isStartupComplete) return;
-        Navigation.SelectedItem = Navigation.SettingsItem;
         ContentFrame.Navigate(
             typeof(SettingsPage),
-            new SettingsNavigation(this, category));
+            new SettingsNavigation(this, category, checkForUpdates));
+    }
+
+    public void OpenConversationFromSidebar(ConversationSummary conversation)
+    {
+        if (!_isStartupComplete) return;
+        ContentFrame.Navigate(
+            typeof(Pages.ConversationPage),
+            new Pages.ConversationNavigation(this, conversation));
+    }
+
+    public async Task OpenMachineGroupManagerAsync()
+    {
+        if (!_isStartupComplete) return;
+        Pages.WorkbenchPage? workbench =
+            ContentFrame.Content as Pages.WorkbenchPage;
+        if (workbench is null)
+        {
+            NavigateTo("workbench");
+            await Task.Yield();
+            workbench = ContentFrame.Content as Pages.WorkbenchPage;
+        }
+        if (workbench is not null)
+        {
+            await workbench.OpenMachineGroupManagerAsync();
+        }
     }
 
     private void Navigate(string tag)
@@ -235,6 +269,32 @@ public sealed partial class MainWindow : Window
             _ => typeof(WorkbenchPage),
         };
         ContentFrame.Navigate(page, this);
+    }
+
+    private void ContentFrame_Navigated(
+        object sender,
+        Microsoft.UI.Xaml.Navigation.NavigationEventArgs args)
+    {
+        var settings = args.SourcePageType == typeof(SettingsPage);
+        var workbench = args.SourcePageType == typeof(WorkbenchPage);
+        ApplyWorkspaceChrome(settings);
+        BackToWorkbenchButton.Visibility = workbench
+            ? Visibility.Collapsed
+            : Visibility.Visible;
+        BackToWorkbenchButton.IsHitTestVisible = !workbench;
+        if (!settings)
+        {
+            _ = Sidebar.ReloadAsync();
+        }
+    }
+
+    private void ApplyWorkspaceChrome(bool settings)
+    {
+        Sidebar.Visibility = settings
+            ? Visibility.Collapsed
+            : Visibility.Visible;
+        Grid.SetColumn(ContentFrame, settings ? 0 : 1);
+        Grid.SetColumnSpan(ContentFrame, settings ? 2 : 1);
     }
 
     private void RegisterAccelerators()
@@ -505,22 +565,8 @@ public sealed partial class MainWindow : Window
 
     private void ShowHelp() => NavigateTo("help");
 
-    private void ShowAbout(bool checkForUpdates)
-    {
-        if (_aboutWindow is null)
-        {
-            _aboutWindow = new AboutWindow(Settings);
-            _aboutWindow.Closed += (_, _) => _aboutWindow = null;
-        }
-        _aboutWindow.Activate();
-        if (checkForUpdates)
-        {
-            _ = _aboutWindow.CheckForUpdatesAsync(automaticInstall: true);
-        }
-    }
-
     public void OpenAboutAndCheckForUpdates() =>
-        ShowAbout(checkForUpdates: true);
+        OpenSettingsCategory("about", checkForUpdates: true);
 
     private void OnAppWindowClosing(
         AppWindow sender,
@@ -581,6 +627,9 @@ public sealed partial class MainWindow : Window
     private void BackMenu_Click(object sender, RoutedEventArgs args) =>
         GoBack();
 
+    private void ReturnWorkbench_Click(object sender, RoutedEventArgs args) =>
+        NavigateTo("workbench");
+
     private void SettingsMenu_Click(object sender, RoutedEventArgs args) =>
         NavigateTo("settings");
 
@@ -588,10 +637,10 @@ public sealed partial class MainWindow : Window
         ShowHelp();
 
     private void AboutMenu_Click(object sender, RoutedEventArgs args) =>
-        ShowAbout(checkForUpdates: false);
+        OpenSettingsCategory("about");
 
     private void CheckUpdatesMenu_Click(object sender, RoutedEventArgs args) =>
-        ShowAbout(checkForUpdates: true);
+        OpenSettingsCategory("about", checkForUpdates: true);
 }
 
 file static class NativeMethods
@@ -605,7 +654,42 @@ file static class NativeMethods
     internal static extern bool ShowWindow(nint hWnd, int nCmdShow);
 
     [System.Runtime.InteropServices.DllImport("user32.dll")]
+    internal static extern uint GetDpiForWindow(nint hWnd);
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
     [return: System.Runtime.InteropServices.MarshalAs(
         System.Runtime.InteropServices.UnmanagedType.Bool)]
     internal static extern bool UpdateWindow(nint hWnd);
+
+    internal const uint SwpNoZOrder = 0x0004;
+    internal const uint SwpNoActivate = 0x0010;
+
+    [System.Runtime.InteropServices.StructLayout(
+        System.Runtime.InteropServices.LayoutKind.Sequential)]
+    internal struct WindowRect
+    {
+        internal int Left;
+        internal int Top;
+        internal int Right;
+        internal int Bottom;
+    }
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    [return: System.Runtime.InteropServices.MarshalAs(
+        System.Runtime.InteropServices.UnmanagedType.Bool)]
+    internal static extern bool GetWindowRect(
+        nint hWnd,
+        out WindowRect rect);
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    [return: System.Runtime.InteropServices.MarshalAs(
+        System.Runtime.InteropServices.UnmanagedType.Bool)]
+    internal static extern bool SetWindowPos(
+        nint hWnd,
+        nint insertAfter,
+        int x,
+        int y,
+        int cx,
+        int cy,
+        uint flags);
 }

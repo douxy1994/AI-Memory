@@ -151,22 +151,30 @@ jobs:
         shell: pwsh
         run: |
           # A raw WinUI executable has no package identity and can remain
-          # alive without creating a visible AppWindow. Register the generated
-          # unpackaged manifest instead, then launch through AppsFolder just as
-          # a Windows user launches the installed application.
-          $manifests = Get-ChildItem `
+          # alive without creating a visible AppWindow. Register a package
+          # layout instead, then launch through AppsFolder just as a Windows
+          # user launches the installed application. The AppxManifest.xml in
+          # the raw build output still carries appx/2015/build metadata and
+          # lacks the Assets payload, and -DisableDevelopmentMode makes
+          # deployment reject unsigned loose layouts, so expand the unsigned
+          # MSIX and register its final root manifest.
+          $msix = Get-ChildItem `
             Windows/src/AIMemory.Windows/bin `
-            -Recurse -Filter AppxManifest.xml |
+            -Recurse -Filter *.msix |
             Where-Object FullName -Match '\\x64\\' |
-            Where-Object FullName -NotMatch '\\obj\\' |
-            Sort-Object LastWriteTime -Descending
-          $manifests | ForEach-Object {
-            Write-Host "Candidate AppxManifest.xml: $($_.FullName)"
+            Sort-Object LastWriteTime -Descending |
+            Select-Object -First 1
+          if (-not $msix) {
+            throw "AIMemory.Windows.msix was not found in the build output."
           }
-          $manifest = $manifests | Select-Object -First 1
-          if (-not $manifest) {
-            throw "AIMemory.Windows AppxManifest.xml was not found in the build output."
+          $layout = Join-Path $env:TEMP "AIMemory-msix-layout"
+          if (Test-Path -LiteralPath $layout) {
+            Remove-Item -LiteralPath $layout -Recurse -Force
           }
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          [System.IO.Compression.ZipFile]::ExtractToDirectory($msix.FullName, $layout)
+          $manifest = Get-Item -LiteralPath (Join-Path $layout "AppxManifest.xml")
+          Write-Host "Candidate AppxManifest.xml: $($manifest.FullName)"
           $manifestText = Get-Content -LiteralPath $manifest.FullName -Raw
           if ($manifestText -notmatch 'Identity\s+Name="com\.aimemory\.windows"') {
             throw "The generated AppxManifest has the wrong package identity."
@@ -182,7 +190,7 @@ jobs:
           if ($existing) {
             $existing | Remove-AppxPackage -ErrorAction Stop
           }
-          Add-AppxPackage -Path $manifest.FullName -Register -DisableDevelopmentMode
+          Add-AppxPackage -Path $manifest.FullName -Register
           $package = Get-AppxPackage -Name "com.aimemory.windows"
           if (-not $package) {
             throw "The AI Memory Windows package was not registered."
@@ -197,6 +205,9 @@ jobs:
             $running = Get-AppxPackage -Name "com.aimemory.windows" -ErrorAction SilentlyContinue
             if ($running) {
               $running | Remove-AppxPackage -ErrorAction SilentlyContinue
+            }
+            if (Test-Path -LiteralPath $layout) {
+              Remove-Item -LiteralPath $layout -Recurse -Force -ErrorAction SilentlyContinue
             }
           }
       - name: Collect Windows startup diagnostics

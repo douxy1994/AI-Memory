@@ -186,7 +186,14 @@ public static class Program
                     OptionalInt(arguments, "limit", 25)),
                 "detect_agent_integrations" => new
                 {
-                    integrations = new AgentCatalog().Detect(),
+                    integrations = new AgentIntegrationManager(
+                        Environment.GetFolderPath(
+                            Environment.SpecialFolder.UserProfile),
+                        Environment.ProcessPath
+                            ?? Path.Combine(
+                                AppContext.BaseDirectory,
+                                "aimemory-mcp.exe"))
+                        .Detect(),
                 },
                 _ => throw new InvalidOperationException($"Unknown tool: {name}"),
             };

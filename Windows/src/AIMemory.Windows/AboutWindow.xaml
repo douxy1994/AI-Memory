@@ -7,16 +7,20 @@
     x:Class="AIMemory.Windows.AboutWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Grid Background="{ThemeResource WindowBackgroundBrush}">
         <ScrollViewer>
             <StackPanel Padding="40,34,40,30"
                         Spacing="20"
                         MaxWidth="620"
                         HorizontalAlignment="Stretch">
                 <StackPanel HorizontalAlignment="Center" Spacing="10">
-                    <Image Source="Assets/Square150x150Logo.png"
-                           Width="96"
-                           Height="96" />
+                    <Border Background="{ThemeResource AIMemoryGreenSoftBrush}"
+                            CornerRadius="22"
+                            Padding="6">
+                        <Image Source="Assets/Square150x150Logo.png"
+                               Width="96"
+                               Height="96" />
+                    </Border>
                     <TextBlock Text="AI Memory"
                                FontFamily="Segoe UI Variable Display"
                                FontSize="30"
@@ -25,30 +29,29 @@
                     <StackPanel Orientation="Horizontal"
                                 HorizontalAlignment="Center"
                                 Spacing="8">
-                        <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}"
-                                CornerRadius="12"
-                                Padding="10,5">
+                        <Border Style="{ThemeResource TagChipStyle}">
                             <TextBlock x:Name="ReleaseVersionText"
-                                       FontSize="12" />
+                                       FontSize="12"
+                                       VerticalAlignment="Center" />
                         </Border>
-                        <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}"
-                                CornerRadius="12"
-                                Padding="10,5">
+                        <Border Style="{ThemeResource TagChipStyle}">
                             <TextBlock x:Name="DevelopmentVersionText"
-                                       FontSize="12" />
+                                       FontSize="12"
+                                       VerticalAlignment="Center" />
                         </Border>
                     </StackPanel>
                     <TextBlock x:Uid="AboutSubtitle" Text="面向 AI Agent 与 CLI 的本地优先记忆、历史检索和工作接续工具。"
                                MaxWidth="460"
                                TextAlignment="Center"
                                TextWrapping="Wrap"
-                               Opacity="0.68" />
+                               Foreground="{ThemeResource SubtleTextBrush}" />
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal"
                             HorizontalAlignment="Center"
                             Spacing="10">
-                    <Button Click="GitHub_Click">
+                    <Button Style="{ThemeResource GhostPillButtonStyle}"
+                            Click="GitHub_Click">
                         <StackPanel Orientation="Horizontal" Spacing="7">
                             <Image Source="Assets/GitHubMark.svg"
                                    Width="16"
@@ -57,7 +60,7 @@
                         </StackPanel>
                     </Button>
                     <Button x:Name="CheckUpdateButton"
-                            Style="{StaticResource AccentButtonStyle}"
+                            Style="{ThemeResource PrimaryPillButtonStyle}"
                             Click="CheckUpdate_Click">
                         <StackPanel Orientation="Horizontal" Spacing="7">
                             <FontIcon Glyph="&#xE72C;" FontSize="14" />
@@ -75,15 +78,21 @@
                          Severity="Informational"
                          Message="尚未检查更新" />
 
-                <Border Style="{StaticResource CardStyle}">
+                <Border Style="{ThemeResource CardStyle}">
                     <StackPanel Spacing="12">
                         <Grid>
-                            <TextBlock x:Uid="AboutLatestRelease" Text="最近版本更新"
-                                       FontSize="17"
-                                       FontWeight="SemiBold" />
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE73E;"
+                                          FontSize="15"
+                                          Foreground="{ThemeResource AIMemoryGreenBrush}"
+                                          VerticalAlignment="Center" />
+                                <TextBlock x:Uid="AboutLatestRelease" Text="最近版本更新"
+                                           Style="{ThemeResource SectionTitleStyle}"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
                             <TextBlock x:Name="ReleaseTagText"
                                        HorizontalAlignment="Right"
-                                       Foreground="{StaticResource AIMemoryGreenBrush}"
+                                       Foreground="{ThemeResource AIMemoryGreenBrush}"
                                        FontWeight="SemiBold" />
                         </Grid>
                         <TextBlock x:Uid="AboutChangelogSync" Text="✓ 增量同步更可靠&#x0a;WebDAV 与本地备份只传输发生变化的内容。"
@@ -105,11 +114,17 @@
                     </StackPanel>
                 </Border>
 
-                <Border Style="{StaticResource CardStyle}">
+                <Border Style="{ThemeResource CardStyle}">
                     <StackPanel Spacing="14">
-                        <TextBlock x:Uid="AboutSoftwareTitle" Text="关于本软件"
-                                   FontSize="17"
-                                   FontWeight="SemiBold" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE946;"
+                                      FontSize="15"
+                                      Foreground="{ThemeResource AIMemoryGreenBrush}"
+                                      VerticalAlignment="Center" />
+                            <TextBlock x:Uid="AboutSoftwareTitle" Text="关于本软件"
+                                       Style="{ThemeResource SectionTitleStyle}"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
                         <TextBlock x:Uid="AboutSoftwareBody" Text="AI Memory 是一款本地优先的 AI 工作记忆工具。它将不同 AI Agent 与命令行工具产生的对话历史、记忆规则、检查点和交接信息集中到一个原生工作台，帮助你快速找回上下文、检索过去的工作，并从上次中断的位置继续。&#x0a;&#x0a;所有核心数据均由本机管理，兼顾隐私、可靠性与长期可用性。"
                                    FontSize="14"
                                    TextWrapping="Wrap"
@@ -122,18 +137,20 @@
                 <StackPanel HorizontalAlignment="Center" Spacing="4">
                     <TextBlock x:Uid="AboutFooter" Text="本地优先 · 独立数据 · 原生 Windows 11"
                                FontWeight="SemiBold"
-                               Opacity="0.7" />
+                               Foreground="{ThemeResource SubtleTextBrush}" />
                     <TextBlock x:Uid="AboutCopyright" Text="Copyright © 2026 douxy1994"
                                FontWeight="SemiBold"
-                               Opacity="0.7" />
+                               Foreground="{ThemeResource SubtleTextBrush}" />
                     <TextBlock x:Uid="AboutLicense"
                                Text="Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0-only)"
                                FontSize="11"
-                               Opacity="0.55" />
+                               Foreground="{ThemeResource SubtleTextBrush}"
+                               Opacity="0.8" />
                     <TextBlock Text="Package  com.aimemory.windows"
                                FontFamily="Cascadia Mono"
                                FontSize="11"
-                               Opacity="0.55" />
+                               Foreground="{ThemeResource SubtleTextBrush}"
+                               Opacity="0.8" />
                 </StackPanel>
             </StackPanel>
         </ScrollViewer>

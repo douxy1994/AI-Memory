@@ -193,17 +193,21 @@ public sealed class ConversationRepository(AIMemoryDatabase database)
                     reader.GetString(3)));
             }
         }
-        var messages = new List<WebDavMessage>();
-        foreach (var message in messageRows)
-        {
-            messages.Add(new WebDavMessage(
+        // Read every tool call for the conversation in one query. The previous
+        // implementation issued one SQLite query per message, which made a
+        // real WebDAV sync spend minutes on the UI thread for large histories.
+        var toolsByMessage = await ReadToolsForConversationAsync(
+            connection, id, cancellationToken);
+        var messages = messageRows.Select(message => new WebDavMessage(
                 message.Id,
                 message.Timestamp,
                 message.Role,
                 message.Content,
-                await ReadToolsAsync(connection, message.Id, cancellationToken),
-                []));
-        }
+                toolsByMessage.TryGetValue(message.Id, out var tools)
+                    ? tools
+                    : [],
+                []))
+            .ToArray();
 
         var changeCommand = connection.CreateCommand();
         changeCommand.CommandText = """
@@ -368,8 +372,21 @@ public sealed class ConversationRepository(AIMemoryDatabase database)
                 await toolInsert.ExecuteNonQueryAsync(cancellationToken);
             }
         }
+        var fileChangeOccurrences = new Dictionary<string, int>(
+            StringComparer.Ordinal);
         foreach (var change in detail.FileChanges)
         {
+            var naturalKey =
+                $"{detail.Id}|{change.Path}|{change.ChangeType}|{change.Timestamp}";
+            fileChangeOccurrences.TryGetValue(naturalKey, out var occurrence);
+            fileChangeOccurrences[naturalKey] = occurrence + 1;
+            // Older builds derived the primary key from the four fields above.
+            // Keep that stable for the first row, while deterministically
+            // namespacing genuine duplicate rows instead of aborting the whole
+            // WebDAV transaction with SQLITE_CONSTRAINT_PRIMARYKEY.
+            var identity = occurrence == 0
+                ? naturalKey
+                : $"{naturalKey}|duplicate:{occurrence}";
             var insert = connection.CreateCommand();
             insert.Transaction = (SqliteTransaction)transaction;
             insert.CommandText = """
@@ -379,7 +396,7 @@ public sealed class ConversationRepository(AIMemoryDatabase database)
             insert.Parameters.AddWithValue(
                 "$id",
                 Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(
-                    $"{detail.Id}|{change.Path}|{change.ChangeType}|{change.Timestamp}")))
+                    identity)))
                     .ToLowerInvariant());
             insert.Parameters.AddWithValue("$conversation", detail.Id);
             insert.Parameters.AddWithValue("$message", (object?)change.MessageId ?? "");
@@ -391,39 +408,54 @@ public sealed class ConversationRepository(AIMemoryDatabase database)
         await transaction.CommitAsync(cancellationToken);
     }
 
-    private static async Task<IReadOnlyList<WebDavToolCall>> ReadToolsAsync(
+    private static async Task<IReadOnlyDictionary<string, IReadOnlyList<WebDavToolCall>>>
+        ReadToolsForConversationAsync(
         SqliteConnection connection,
-        string messageId,
+        string conversationId,
         CancellationToken cancellationToken)
     {
         var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT tool_call_id,name,input_json,output_text,status
-            FROM tool_calls WHERE message_id=$id ORDER BY rowid;
+            SELECT t.message_id,t.tool_call_id,t.name,t.input_json,
+                   t.output_text,t.status
+            FROM tool_calls t
+            INNER JOIN messages m ON m.message_id=t.message_id
+            WHERE m.conversation_id=$id
+            ORDER BY t.rowid;
             """;
-        command.Parameters.AddWithValue("$id", messageId);
-        var result = new List<WebDavToolCall>();
+        command.Parameters.AddWithValue("$id", conversationId);
+        var result = new Dictionary<string, List<WebDavToolCall>>(
+            StringComparer.Ordinal);
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         while (await reader.ReadAsync(cancellationToken))
         {
             JsonElement input;
             try
             {
-                using var document = JsonDocument.Parse(reader.GetString(2));
+                using var document = JsonDocument.Parse(reader.GetString(3));
                 input = document.RootElement.Clone();
             }
             catch (JsonException)
             {
                 input = JsonSerializer.SerializeToElement<object?>(null);
             }
-            result.Add(new WebDavToolCall(
-                reader.GetString(0),
+            var messageId = reader.GetString(0);
+            if (!result.TryGetValue(messageId, out var tools))
+            {
+                tools = [];
+                result[messageId] = tools;
+            }
+            tools.Add(new WebDavToolCall(
                 reader.GetString(1),
+                reader.GetString(2),
                 input,
-                reader.IsDBNull(3) ? null : reader.GetString(3),
-                reader.GetString(4)));
+                reader.IsDBNull(4) ? null : reader.GetString(4),
+                reader.GetString(5)));
         }
-        return result;
+        return result.ToDictionary(
+            pair => pair.Key,
+            pair => (IReadOnlyList<WebDavToolCall>)pair.Value,
+            StringComparer.Ordinal);
     }
 
     private static int IndexOf<T>(

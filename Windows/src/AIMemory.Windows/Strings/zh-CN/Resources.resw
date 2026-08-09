@@ -310,12 +310,12 @@
 
   <data name="SettingsTitle.Text" xml:space="preserve"><value>设置</value></data>
   <data name="SettingsSubtitle.Text" xml:space="preserve"><value>管理启动、Agent 集成、数据同步与备份以及软件更新。</value></data>
-  <data name="SettingsCategoryGeneral.Text" xml:space="preserve"><value>常规</value></data>
+  <data name="SettingsCategoryGeneral.Text" xml:space="preserve"><value>通用</value></data>
   <data name="SettingsCategoryAgents.Text" xml:space="preserve"><value>Agent 集成</value></data>
   <data name="SettingsCategorySync.Text" xml:space="preserve"><value>数据同步与备份</value></data>
-  <data name="SettingsCategoryUpdates.Text" xml:space="preserve"><value>更新与诊断</value></data>
-  <data name="SettingsGeneralTitle.Text" xml:space="preserve"><value>常规</value></data>
-  <data name="SettingsGeneralSubtitle.Text" xml:space="preserve"><value>控制字体、登录启动、记忆恢复点和自动备份。</value></data>
+  <data name="SettingsCategoryAbout.Text" xml:space="preserve"><value>关于</value></data>
+  <data name="SettingsGeneralTitle.Text" xml:space="preserve"><value>通用</value></data>
+  <data name="SettingsGeneralSubtitle.Text" xml:space="preserve"><value>调整 AI Memory 的语言、字体与日常使用体验。</value></data>
   <data name="SettingsLanguageFontTitle.Text" xml:space="preserve"><value>语言与字体</value></data>
   <data name="SettingsLanguage.Header" xml:space="preserve"><value>界面语言</value></data>
   <data name="SettingsLanguageRestartHint.Text" xml:space="preserve"><value>语言更改将在重新启动 AI Memory 后生效。</value></data>
@@ -332,11 +332,13 @@
   <data name="SettingsBackupInterval.Header" xml:space="preserve"><value>备份间隔（分钟）</value></data>
   <data name="SettingsSaveAutoBackup.Content" xml:space="preserve"><value>保存自动备份设置</value></data>
   <data name="SettingsAgentsTitle.Text" xml:space="preserve"><value>Agent 集成</value></data>
-  <data name="SettingsAgentsSubtitle.Text" xml:space="preserve"><value>已安装项目优先显示；未安装项目保持关闭。</value></data>
+  <data name="SettingsAgentsSectionTitle.Text" xml:space="preserve"><value>Agent 集成</value></data>
+  <data name="SettingsAgentsSectionHint.Text" xml:space="preserve"><value>把 AI Memory 的 MCP 服务和 skill 写入各 agent 配置。安装前会自动备份现有配置。</value></data>
+  <data name="SettingsStartupSectionTitle.Text" xml:space="preserve"><value>启动与窗口</value></data>
+  <data name="SettingsAgentsSubtitle.Text" xml:space="preserve"><value>管理 AI Memory 与本机 AI Agent 的连接。</value></data>
   <data name="SettingsDetectAgents.Content" xml:space="preserve"><value>重新检测</value></data>
-  <data name="SettingsInstallAllAgents.Label" xml:space="preserve"><value>全部安装</value></data>
-  <data name="SettingsUninstallAllAgents.Label" xml:space="preserve"><value>全部卸载</value></data>
-  <data name="SettingsDetectAgents.Label" xml:space="preserve"><value>重新检测</value></data>
+  <data name="SettingsInstallAllAgents.Content" xml:space="preserve"><value>全部安装</value></data>
+  <data name="SettingsUninstallAllAgents.Content" xml:space="preserve"><value>全部卸载</value></data>
   <data name="SettingsSyncTitle.Text" xml:space="preserve"><value>数据同步与备份</value></data>
   <data name="SettingsSyncSubtitle.Text" xml:space="preserve"><value>集中管理本地目录、WebDAV、历史导入和恢复点。</value></data>
   <data name="SettingsLocalSyncTitle.Text" xml:space="preserve"><value>本地同步目录</value></data>
@@ -366,7 +368,7 @@
   <data name="SettingsAutoUpdateTitle.Text" xml:space="preserve"><value>自动检查更新</value></data>
   <data name="SettingsAutoUpdateHint.Text" xml:space="preserve"><value>从 AI Memory 的 GitHub Releases 获取正式版本。</value></data>
   <data name="SettingsSaveUpdate.Label" xml:space="preserve"><value>保存更新设置</value></data>
-  <data name="SettingsCheckUpdateAbout.Label" xml:space="preserve"><value>在关于中检查更新</value></data>
+  <data name="SettingsCheckUpdateAbout.Label" xml:space="preserve"><value>检查更新</value></data>
   <data name="SettingsUpdateStatus.Text" xml:space="preserve"><value>更新检查与安装统一在“关于 AI Memory”窗口中完成。</value></data>
   <data name="SettingsReadinessTitle.Text" xml:space="preserve"><value>升级就绪检查</value></data>
   <data name="SettingsReadinessHint.Text" xml:space="preserve"><value>验证设置文件、WebDAV 配置、凭据和数据库，提前发现会阻断升级的问题。</value></data>
@@ -377,7 +379,8 @@
   <data name="SettingsCopyDiagnostics.Label" xml:space="preserve"><value>复制诊断</value></data>
   <data name="SettingsOpenDataFolder.Label" xml:space="preserve"><value>打开数据目录</value></data>
   <data name="WorkbenchTitle.Text" xml:space="preserve"><value>继续工作</value></data>
-  <data name="WorkbenchSubtitle.Text" xml:space="preserve"><value>最近进度、项目分组、恢复命令和下一步集中在一个工作台。</value></data>
+  <data name="WorkbenchSubtitle.Text" xml:space="preserve"><value>把最近进度、恢复命令、项目记忆和下一步集中在一个工作台里。</value></data>
+  <data name="WorkbenchHeroConversationCount.Text" xml:space="preserve"><value>0 条对话</value></data>
   <data name="WorkbenchSync.Label" xml:space="preserve"><value>立即同步</value></data>
   <data name="WorkbenchRefresh.Label" xml:space="preserve"><value>刷新来源</value></data>
   <data name="WorkbenchHistory.Label" xml:space="preserve"><value>历史</value></data>
@@ -620,4 +623,62 @@
   <data name="ConversationRoleAssistant" xml:space="preserve"><value>助手</value></data>
   <data name="ConversationRoleSystem" xml:space="preserve"><value>系统</value></data>
   <data name="ConversationToolCallsCount" xml:space="preserve"><value>工具调用（{0}）</value></data>
+  <data name="SidebarProjects.Text" xml:space="preserve"><value>项目</value></data>
+  <data name="SidebarNavSettings.Content" xml:space="preserve"><value>设置</value></data>
+  <data name="SettingsCategoryAdvanced.Text" xml:space="preserve"><value>高级</value></data>
+  <data name="SettingsPickerGeneral.Content" xml:space="preserve"><value>常规</value></data>
+  <data name="SettingsPickerAgents.Content" xml:space="preserve"><value>Agent 集成</value></data>
+  <data name="SettingsPickerSync.Content" xml:space="preserve"><value>数据同步与备份</value></data>
+  <data name="SettingsPickerAbout.Content" xml:space="preserve"><value>关于</value></data>
+  <data name="SettingsPickerAdvanced.Content" xml:space="preserve"><value>高级</value></data>
+  <data name="SettingsAdvancedTitle.Text" xml:space="preserve"><value>高级</value></data>
+  <data name="SettingsAdvancedSubtitle.Text" xml:space="preserve"><value>查看隔离信息并处理需要谨慎操作的功能。</value></data>
+  <data name="SettingsAdvancedDataTitle.Text" xml:space="preserve"><value>本地数据与隔离</value></data>
+  <data name="SettingsAdvancedDataHint.Text" xml:space="preserve"><value>AI Memory 与 ChatMem 使用各自独立的数据、设置和凭据位置。</value></data>
+  <data name="SettingsAdvancedDangerTitle.Text" xml:space="preserve"><value>危险操作</value></data>
+  <data name="SettingsAdvancedDangerHint.Text" xml:space="preserve"><value>删除与清理操作统一在回收站中执行，并在实际变更前显示确认。</value></data>
+  <data name="SettingsAdvancedOpenTrash.Content" xml:space="preserve"><value>打开回收站</value></data>
+  <data name="DatabaseFilePath" xml:space="preserve"><value>数据库：{0}</value></data>
+  <data name="SettingsFilePath" xml:space="preserve"><value>设置文件：{0}</value></data>
+  <data name="HistoryLocalIndexTab.Header" xml:space="preserve"><value>本地索引</value></data>
+  <data name="HistoryLocalIndexTitle.Text" xml:space="preserve"><value>本地历史索引</value></data>
+  <data name="HistoryLocalIndexHint.Text" xml:space="preserve"><value>扫描本地 Agent 历史、检查索引状态并维护仓库投影。</value></data>
+  <data name="HistoryLocalIndexRepoRoot.Header" xml:space="preserve"><value>仓库根目录</value></data>
+  <data name="HistoryLocalIndexUseCurrent.Content" xml:space="preserve"><value>使用当前项目</value></data>
+  <data name="HistoryLocalIndexStatusTitle.Text" xml:space="preserve"><value>索引状态</value></data>
+  <data name="HistoryLocalIndexScanned.Text" xml:space="preserve"><value>扫描对话</value></data>
+  <data name="HistoryLocalIndexLinked.Text" xml:space="preserve"><value>已索引对话</value></data>
+  <data name="HistoryLocalIndexCandidates.Text" xml:space="preserve"><value>候选规则</value></data>
+  <data name="HistoryLocalIndexMemories.Text" xml:space="preserve"><value>已批准记忆</value></data>
+  <data name="HistoryLocalIndexActionsTitle.Text" xml:space="preserve"><value>操作</value></data>
+  <data name="HistoryLocalIndexScan.Label" xml:space="preserve"><value>扫描</value></data>
+  <data name="HistoryLocalIndexImportAll.Label" xml:space="preserve"><value>导入全部</value></data>
+  <data name="HistoryLocalIndexMergeAlias.Label" xml:space="preserve"><value>合并别名</value></data>
+  <data name="HistoryLocalIndexRebuildWiki.Label" xml:space="preserve"><value>重建 Wiki</value></data>
+  <data name="HistoryLocalIndexRebuildSearch.Label" xml:space="preserve"><value>重建索引</value></data>
+  <data name="LocalIndexDocumentCount" xml:space="preserve"><value>检索文档数：{0}</value></data>
+  <data name="LocalIndexNoCurrentProject" xml:space="preserve"><value>当前没有可用的项目。</value></data>
+  <data name="LocalIndexScanCompleted" xml:space="preserve"><value>扫描完成：{0}。</value></data>
+  <data name="LocalIndexOperationFailed" xml:space="preserve"><value>本地索引操作失败：{0}</value></data>
+  <data name="LocalIndexAliasPath" xml:space="preserve"><value>旧仓库或项目根目录</value></data>
+  <data name="LocalIndexMergeAliasTitle" xml:space="preserve"><value>合并仓库别名</value></data>
+  <data name="Merge" xml:space="preserve"><value>合并</value></data>
+  <data name="LocalIndexAliasMerged" xml:space="preserve"><value>仓库别名已合并。</value></data>
+  <data name="LocalIndexWikiRebuilt" xml:space="preserve"><value>Wiki 已重建：{0} 页。</value></data>
+  <data name="LocalIndexSearchRebuilt" xml:space="preserve"><value>本地索引已重建：{0} 个文档，{1} 个向量。</value></data>
+  <data name="LocalIndexRepositoryRequired" xml:space="preserve"><value>请先选择或输入仓库根目录。</value></data>
+  <data name="MemoryOpenCandidateSource.Content" xml:space="preserve"><value>打开来源对话</value></data>
+  <data name="CandidateSourceNotFound" xml:space="preserve"><value>来源对话当前不在本地索引中。</value></data>
+  <data name="ArrangeChatsFirst" xml:space="preserve"><value>对话优先</value></data>
+  <data name="FilterProjects" xml:space="preserve"><value>筛选项目</value></data>
+  <data name="AllProjectsSelected" xml:space="preserve"><value>全部项目 ✓</value></data>
+  <data name="ShowAllProjects" xml:space="preserve"><value>显示全部项目</value></data>
+  <data name="SidebarBeginSelection" xml:space="preserve"><value>批量选择对话</value></data>
+  <data name="SidebarCancelSelection" xml:space="preserve"><value>取消批量选择</value></data>
+  <data name="SidebarTrashSelected" xml:space="preserve"><value>将选中对话移入回收站</value></data>
+  <data name="SidebarCollapseAll" xml:space="preserve"><value>折叠全部项目</value></data>
+  <data name="SidebarExpandAll" xml:space="preserve"><value>展开全部项目</value></data>
+  <data name="SidebarOrganize" xml:space="preserve"><value>整理（排列 / 排序）</value></data>
+  <data name="Arrange" xml:space="preserve"><value>排列</value></data>
+  <data name="Sort" xml:space="preserve"><value>排序</value></data>
 </root>

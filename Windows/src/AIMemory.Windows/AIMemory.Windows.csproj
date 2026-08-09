@@ -33,7 +33,14 @@
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.4654" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Assets\*.*" />
+    <Content Include="Assets\*.*"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest"
+             TargetPath="Assets\%(Filename)%(Extension)" />
+    <Content Include="Assets\Icons\*.svg"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest"
+             TargetPath="Assets\Icons\%(Filename)%(Extension)" />
     <Content Include="$(McpPublishDir)aimemory-mcp.exe"
              Link="Helpers\aimemory-mcp.exe"
              CopyToOutputDirectory="PreserveNewest" />
