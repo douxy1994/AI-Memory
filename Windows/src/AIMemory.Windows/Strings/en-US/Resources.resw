@@ -27,6 +27,7 @@
   <data name="StartupDisabled" xml:space="preserve"><value>Disabled</value></data>
   <data name="StartupSettingUpdated" xml:space="preserve"><value>Startup setting updated.</value></data>
   <data name="StartupSettingFailed" xml:space="preserve"><value>Could not update the startup setting: {0}</value></data>
+  <data name="StartupRegistryUnavailable" xml:space="preserve"><value>Could not open the current user startup registry key.</value></data>
   <data name="StartupSettingsLaunchRejected" xml:space="preserve"><value>Windows declined to open Startup Apps settings.</value></data>
   <data name="StartupSettingsLaunchFailed" xml:space="preserve"><value>Could not open Startup Apps settings: {0}</value></data>
   <data name="AutomaticBackupEnabled" xml:space="preserve"><value>Automatic backup is enabled and checks for changes every {0} minutes.</value></data>
@@ -681,4 +682,12 @@
   <data name="SidebarOrganize" xml:space="preserve"><value>Organize (Arrange / Sort)</value></data>
   <data name="Arrange" xml:space="preserve"><value>Arrange</value></data>
   <data name="Sort" xml:space="preserve"><value>Sort</value></data>
+  <data name="MigrationTargetReadOnly" xml:space="preserve"><value>{0} · read-only format</value></data>
+  <data name="SourcesStartupCompleted" xml:space="preserve"><value>Automatically detected {0} local sources and scanned {1} conversations.</value></data>
+  <data name="SourcesStartupCompletedWithWarnings" xml:space="preserve"><value>Automatically detected {0} local sources and scanned {1} conversations; {2} sources reported warnings.</value></data>
+  <data name="AboutSaveUpdateButton.Content" xml:space="preserve"><value>Save Update Settings</value></data>
+  <data name="AboutRunReadinessButton.Content" xml:space="preserve"><value>Run Upgrade Readiness Check</value></data>
+  <data name="AboutRefreshDiagnosticsButton.Content" xml:space="preserve"><value>Refresh Diagnostics</value></data>
+  <data name="AboutCopyDiagnosticsButton.Content" xml:space="preserve"><value>Copy Diagnostics</value></data>
+  <data name="AboutOpenDataFolderButton.Content" xml:space="preserve"><value>Open Data Folder</value></data>
 </root>

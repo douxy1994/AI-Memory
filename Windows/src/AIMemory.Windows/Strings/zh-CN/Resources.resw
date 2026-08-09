@@ -27,6 +27,7 @@
   <data name="StartupDisabled" xml:space="preserve"><value>已关闭</value></data>
   <data name="StartupSettingUpdated" xml:space="preserve"><value>启动设置已更新。</value></data>
   <data name="StartupSettingFailed" xml:space="preserve"><value>更新启动设置失败：{0}</value></data>
+  <data name="StartupRegistryUnavailable" xml:space="preserve"><value>无法打开当前用户启动注册表。</value></data>
   <data name="StartupSettingsLaunchRejected" xml:space="preserve"><value>Windows 拒绝打开启动应用设置。</value></data>
   <data name="StartupSettingsLaunchFailed" xml:space="preserve"><value>打开启动应用设置失败：{0}</value></data>
   <data name="AutomaticBackupEnabled" xml:space="preserve"><value>自动备份已开启，每 {0} 分钟检查一次变化。</value></data>
@@ -681,4 +682,12 @@
   <data name="SidebarOrganize" xml:space="preserve"><value>整理（排列 / 排序）</value></data>
   <data name="Arrange" xml:space="preserve"><value>排列</value></data>
   <data name="Sort" xml:space="preserve"><value>排序</value></data>
+  <data name="MigrationTargetReadOnly" xml:space="preserve"><value>{0} · 当前格式只读</value></data>
+  <data name="SourcesStartupCompleted" xml:space="preserve"><value>已自动识别 {0} 个本机来源，扫描 {1} 条对话。</value></data>
+  <data name="SourcesStartupCompletedWithWarnings" xml:space="preserve"><value>已自动识别 {0} 个本机来源，扫描 {1} 条对话；{2} 个来源包含警告。</value></data>
+  <data name="AboutSaveUpdateButton.Content" xml:space="preserve"><value>保存更新设置</value></data>
+  <data name="AboutRunReadinessButton.Content" xml:space="preserve"><value>运行升级就绪检查</value></data>
+  <data name="AboutRefreshDiagnosticsButton.Content" xml:space="preserve"><value>刷新诊断</value></data>
+  <data name="AboutCopyDiagnosticsButton.Content" xml:space="preserve"><value>复制诊断</value></data>
+  <data name="AboutOpenDataFolderButton.Content" xml:space="preserve"><value>打开数据目录</value></data>
 </root>

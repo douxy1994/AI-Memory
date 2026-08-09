@@ -11,7 +11,7 @@
         <ScrollViewer>
             <StackPanel Padding="40,34,40,30"
                         Spacing="20"
-                        MaxWidth="620"
+                        MaxWidth="760"
                         HorizontalAlignment="Stretch">
                 <StackPanel HorizontalAlignment="Center" Spacing="10">
                     <Border Background="{ThemeResource AIMemoryGreenSoftBrush}"
@@ -77,6 +77,120 @@
                          IsClosable="False"
                          Severity="Informational"
                          Message="尚未检查更新" />
+
+                <Border Style="{ThemeResource CardStyle}">
+                    <StackPanel Spacing="14">
+                        <Grid ColumnSpacing="16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Spacing="4">
+                                <TextBlock x:Uid="SettingsAutoUpdateTitle"
+                                           Text="自动检查更新"
+                                           FontWeight="SemiBold" />
+                                <TextBlock x:Uid="SettingsAutoUpdateHint"
+                                           Text="从 AI Memory 的 GitHub Releases 获取正式版本。"
+                                           TextWrapping="Wrap"
+                                           Foreground="{ThemeResource SubtleTextBrush}" />
+                            </StackPanel>
+                            <ToggleSwitch x:Name="AutoUpdateToggle"
+                                          Grid.Column="1"
+                                          VerticalAlignment="Center" />
+                        </Grid>
+                        <TextBox x:Name="UpdateFeedBox"
+                                 Header="GitHub Releases API"
+                                 PlaceholderText="https://api.github.com/repos/owner/repository/releases/latest" />
+                        <Button x:Uid="AboutSaveUpdateButton"
+                                Content="保存更新设置"
+                                HorizontalAlignment="Right"
+                                Click="SaveUpdateSettings_Click" />
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{ThemeResource CardStyle}">
+                    <StackPanel Spacing="14">
+                        <TextBlock x:Uid="SettingsReadinessTitle"
+                                   Text="升级就绪检查"
+                                   Style="{ThemeResource SectionTitleStyle}" />
+                        <TextBlock x:Uid="SettingsReadinessHint"
+                                   Text="验证设置文件、WebDAV 配置、凭据和数据库，提前发现会阻断升级的问题。"
+                                   TextWrapping="Wrap"
+                                   Foreground="{ThemeResource SubtleTextBrush}" />
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Button x:Name="RunReadinessButton"
+                                    x:Uid="AboutRunReadinessButton"
+                                    Content="运行升级就绪检查"
+                                    Click="RunReadiness_Click" />
+                            <ProgressRing x:Name="ReadinessProgress"
+                                          Width="20"
+                                          Height="20"
+                                          IsActive="False"
+                                          Visibility="Collapsed"
+                                          VerticalAlignment="Center" />
+                            <TextBlock x:Name="ReadinessSummary"
+                                       Visibility="Collapsed"
+                                       TextWrapping="Wrap"
+                                       FontWeight="SemiBold"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                        <ItemsControl x:Name="ReadinessList">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Padding="0,7" ColumnSpacing="10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="24" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding StatusGlyph}"
+                                                   FontSize="16"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{ThemeResource AIMemoryGreenBrush}"
+                                                   HorizontalAlignment="Center" />
+                                        <StackPanel Grid.Column="1" Spacing="2">
+                                            <TextBlock Text="{Binding Label}"
+                                                       FontWeight="SemiBold" />
+                                            <TextBlock Text="{Binding Detail}"
+                                                       TextWrapping="Wrap"
+                                                       Foreground="{ThemeResource SubtleTextBrush}" />
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{ThemeResource CardStyle}">
+                    <StackPanel Spacing="14">
+                        <TextBlock x:Uid="SettingsDiagnosticsTitle"
+                                   Text="运行诊断"
+                                   Style="{ThemeResource SectionTitleStyle}" />
+                        <TextBlock x:Uid="SettingsDiagnosticsHint"
+                                   Text="以下内容来自当前数据库与本机环境，可用于核对版本、数据和 Agent 状态。"
+                                   TextWrapping="Wrap"
+                                   Foreground="{ThemeResource SubtleTextBrush}" />
+                        <TextBox x:Name="DiagnosticsBox"
+                                 IsReadOnly="True"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 MinHeight="180"
+                                 FontFamily="Cascadia Mono" />
+                        <StackPanel Orientation="Horizontal"
+                                    HorizontalAlignment="Right"
+                                    Spacing="8">
+                            <Button x:Uid="AboutRefreshDiagnosticsButton"
+                                    Content="刷新诊断"
+                                    Click="RefreshDiagnostics_Click" />
+                            <Button x:Uid="AboutCopyDiagnosticsButton"
+                                    Content="复制诊断"
+                                    Click="CopyDiagnostics_Click" />
+                            <Button x:Uid="AboutOpenDataFolderButton"
+                                    Content="打开数据目录"
+                                    Click="OpenDataDirectory_Click" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
 
                 <Border Style="{ThemeResource CardStyle}">
                     <StackPanel Spacing="12">

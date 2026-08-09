@@ -93,6 +93,7 @@ public sealed partial class App : Application
                 StartupDiagnostics.Write("activation.replayed");
             }
             _window.ConfigureAutomaticBackup(settings);
+            _ = _window.SynchronizeInstalledAgentHistoryAfterLaunchAsync();
             // Do compatibility migration after the first window is visible.  A
             // stale ChatMem profile or credential provider must not delay the
             // Windows shell, single-instance activation, or the workbench.
@@ -287,7 +288,7 @@ public sealed partial class App : Application
                 return;
             }
             var version = typeof(App).Assembly.GetName().Version?
-                .ToString(3) ?? "0.1.0";
+                .ToString(3) ?? "0.1.3";
             var result = await new UpdateService().CheckAsync(
                 settings.UpdateFeedUrl,
                 version);

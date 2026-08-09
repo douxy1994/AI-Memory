@@ -482,6 +482,7 @@ public sealed class ConversationRepository(AIMemoryDatabase database)
             "claude" => $"claude --resume {id}",
             "codex" => $"codex resume {id}",
             "gemini" => $"gemini --resume {id}",
+            "kimi" => $"kimi --session {id}",
             _ => null,
         };
 

@@ -107,7 +107,8 @@ public sealed class StartupService
     private static void SetRegistryStartup(bool enabled)
     {
         using var key = Registry.CurrentUser.CreateSubKey(RunKeyPath, true)
-            ?? throw new InvalidOperationException("无法打开当前用户启动注册表。");
+            ?? throw new InvalidOperationException(
+                LocalizationService.Get("StartupRegistryUnavailable"));
         if (!enabled)
         {
             key.DeleteValue(RunValueName, throwOnMissingValue: false);

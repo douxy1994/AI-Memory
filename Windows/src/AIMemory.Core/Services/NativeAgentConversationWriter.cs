@@ -25,14 +25,14 @@ public sealed record NativeSourceArchive(
     string? DatabasePath,
     IReadOnlyDictionary<string, string?> Metadata);
 
-/// Writes only the four native history formats that AI Memory can read back
+/// Writes only the native history formats that AI Memory can read back
 /// and verify. Other agents remain detection/search targets until their local
 /// stores have a stable, tested write contract.
 public sealed class NativeAgentConversationWriter
 {
     public static IReadOnlySet<string> WritableTargets { get; } =
         new HashSet<string>(
-            ["claude", "codex", "gemini", "opencode"],
+            ["claude", "codex", "gemini", "opencode", "kimi"],
             StringComparer.OrdinalIgnoreCase);
     public static IReadOnlySet<string> ArchivableSources { get; } =
         new HashSet<string>(
@@ -69,6 +69,8 @@ public sealed class NativeAgentConversationWriter
                 conversation.Id, cancellationToken),
             "opencode" => await ArchiveOpenCodeAsync(
                 conversation.Id, cancellationToken),
+            "kimi" => await ArchiveKimiAsync(
+                conversation, cancellationToken),
             "hermes" => throw new NotSupportedException(
                 "Hermes 不支持安全归档原始会话。"),
             _ => ArchiveFileBackedSource(conversation),
@@ -99,6 +101,9 @@ public sealed class NativeAgentConversationWriter
             case "codex":
                 await RestoreCodexArchiveAsync(archive, cancellationToken);
                 return;
+            case "kimi":
+                await RestoreKimiArchiveAsync(archive, cancellationToken);
+                return;
             default:
                 throw new InvalidDataException(
                     $"未知原始会话归档类型：{archive.Kind}");
@@ -114,7 +119,7 @@ public sealed class NativeAgentConversationWriter
             await DeleteOpenCodeArchiveAsync(archive, cancellationToken);
             return;
         }
-        if (archive.Kind is not ("file" or "directory" or "codex")) return;
+        if (archive.Kind is not ("file" or "directory" or "codex" or "kimi")) return;
         if (File.Exists(archive.BackupPath))
         {
             File.Delete(archive.BackupPath);
@@ -136,6 +141,7 @@ public sealed class NativeAgentConversationWriter
             "codex" => await WriteCodexAsync(conversation, cancellationToken),
             "gemini" => await WriteGeminiAsync(conversation, cancellationToken),
             "opencode" => await WriteOpenCodeAsync(conversation, cancellationToken),
+            "kimi" => await WriteKimiAsync(conversation, cancellationToken),
             _ => throw new NotSupportedException(
                 $"{target} 的原生会话格式不支持安全写入。"),
         };
@@ -190,6 +196,17 @@ public sealed class NativeAgentConversationWriter
                     await session.ExecuteNonQueryAsync(cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
                 }
+                return;
+            case "kimi":
+                var statePath = result.StoragePath;
+                var sessionDirectory = Path.GetDirectoryName(statePath);
+                if (!string.IsNullOrWhiteSpace(sessionDirectory)
+                    && Directory.Exists(sessionDirectory))
+                {
+                    Directory.Delete(sessionDirectory, recursive: true);
+                }
+                await RemoveKimiSessionIndexEntryAsync(
+                    result.Id, cancellationToken);
                 return;
         }
     }
@@ -378,6 +395,159 @@ public sealed class NativeAgentConversationWriter
             JsonSerializer.Serialize(value, JsonOptions) + Environment.NewLine,
             cancellationToken);
         return new NativeAgentWriteResult(id, path, $"gemini --resume {id}");
+    }
+
+    private async Task<NativeAgentWriteResult> WriteKimiAsync(
+        WebDavConversationDetail conversation,
+        CancellationToken cancellationToken)
+    {
+        var id = $"session_{Guid.NewGuid().ToString().ToLowerInvariant()}";
+        var project = NormalizeProject(conversation.ProjectDir);
+        var digest = Convert.ToHexString(
+                SHA256.HashData(Encoding.UTF8.GetBytes(project)))
+            .ToLowerInvariant();
+        var leaf = Path.GetFileName(project.TrimEnd(
+            Path.DirectorySeparatorChar,
+            Path.AltDirectorySeparatorChar));
+        var safeLeaf = string.Concat((leaf ?? "").ToLowerInvariant().Select(
+            character => char.IsLetterOrDigit(character) ? character : '_'));
+        if (string.IsNullOrWhiteSpace(safeLeaf)) safeLeaf = "workspace";
+        var workspace = $"wd_{safeLeaf}_{digest[..12]}";
+        var sessionDirectory = Path.Combine(
+            _home, ".kimi-code", "sessions", workspace, id);
+        var agentDirectory = Path.Combine(sessionDirectory, "agents", "main");
+        var statePath = Path.Combine(sessionDirectory, "state.json");
+        var wirePath = Path.Combine(agentDirectory, "wire.jsonl");
+        Directory.CreateDirectory(agentDirectory);
+
+        var firstUser = conversation.Messages.FirstOrDefault(message =>
+            message.Role.Equals("user", StringComparison.OrdinalIgnoreCase))
+            ?.Content ?? "";
+        var state = new
+        {
+            createdAt = conversation.CreatedAt,
+            updatedAt = conversation.UpdatedAt,
+            title = Title(conversation),
+            isCustomTitle = false,
+            lastPrompt = firstUser,
+            workDir = project,
+            agents = new
+            {
+                main = new
+                {
+                    homedir = agentDirectory,
+                    type = "main",
+                    parentAgentId = (string?)null,
+                },
+            },
+            custom = new { },
+            aimemoryFileChanges = conversation.FileChanges,
+        };
+
+        var events = new List<object>();
+        for (var index = 0; index < conversation.Messages.Count; index++)
+        {
+            var message = conversation.Messages[index];
+            var time = ParseDate(message.Timestamp).ToUnixTimeMilliseconds();
+            if (message.Role.Equals("user", StringComparison.OrdinalIgnoreCase))
+            {
+                events.Add(new
+                {
+                    type = "turn.prompt",
+                    input = new[] { new { type = "text", text = message.Content } },
+                    origin = new { kind = "user" },
+                    time,
+                });
+                continue;
+            }
+
+            var turnId = index.ToString();
+            var step = index + 1;
+            var stepUuid = Guid.NewGuid().ToString().ToLowerInvariant();
+            if (!string.IsNullOrEmpty(message.Content))
+            {
+                events.Add(new
+                {
+                    type = "context.append_loop_event",
+                    @event = new
+                    {
+                        type = "content.part",
+                        uuid = Guid.NewGuid().ToString().ToLowerInvariant(),
+                        part = new { type = "text", text = message.Content },
+                    },
+                    time,
+                });
+            }
+            for (var toolIndex = 0; toolIndex < message.ToolCalls.Count; toolIndex++)
+            {
+                var tool = message.ToolCalls[toolIndex];
+                // Kimi only requires the call and result to share a stable ID.
+                // Namespace it to the new session so AI Memory's global
+                // tool_call_id key cannot collide with the source conversation.
+                var callDigest = Convert.ToHexString(SHA256.HashData(
+                        Encoding.UTF8.GetBytes(
+                            $"{id}|{message.Id}|{tool.Id}|{toolIndex}")))
+                    .ToLowerInvariant();
+                var callId = $"tool_{callDigest[..24]}";
+                events.Add(new
+                {
+                    type = "context.append_loop_event",
+                    @event = new
+                    {
+                        type = "tool.call",
+                        uuid = Guid.NewGuid().ToString().ToLowerInvariant(),
+                        turnId,
+                        step,
+                        stepUuid,
+                        toolCallId = callId,
+                        name = tool.Name,
+                        args = tool.Input,
+                    },
+                    time,
+                });
+                events.Add(new
+                {
+                    type = "context.append_loop_event",
+                    @event = new
+                    {
+                        type = "tool.result",
+                        toolCallId = callId,
+                        result = new
+                        {
+                            output = tool.Output ?? "",
+                            isError = tool.Status.Equals(
+                                "error", StringComparison.OrdinalIgnoreCase),
+                        },
+                    },
+                    time,
+                });
+            }
+        }
+
+        try
+        {
+            await File.WriteAllTextAsync(
+                statePath,
+                JsonSerializer.Serialize(state, JsonOptions) + Environment.NewLine,
+                cancellationToken);
+            await File.WriteAllLinesAsync(
+                wirePath,
+                events.Select(value => JsonSerializer.Serialize(value)),
+                cancellationToken);
+            await AppendKimiSessionIndexEntryAsync(
+                id, sessionDirectory, project, cancellationToken);
+        }
+        catch
+        {
+            if (Directory.Exists(sessionDirectory))
+            {
+                Directory.Delete(sessionDirectory, recursive: true);
+            }
+            await RemoveKimiSessionIndexEntryAsync(id, cancellationToken);
+            throw;
+        }
+        return new NativeAgentWriteResult(
+            id, statePath, $"kimi --session {id}");
     }
 
     private async Task<NativeAgentWriteResult> WriteCodexAsync(
@@ -794,6 +964,194 @@ public sealed class NativeAgentConversationWriter
             "",
             databasePath,
             new Dictionary<string, string?>());
+    }
+
+    private async Task<NativeSourceArchive> ArchiveKimiAsync(
+        WebDavConversationDetail conversation,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(conversation.StoragePath))
+        {
+            throw new InvalidDataException("Kimi 会话缺少原始存储路径。");
+        }
+        var original = string.Equals(
+                Path.GetFileName(conversation.StoragePath),
+                "state.json",
+                StringComparison.OrdinalIgnoreCase)
+            ? Path.GetDirectoryName(conversation.StoragePath)
+            : conversation.StoragePath;
+        if (string.IsNullOrWhiteSpace(original) || !Directory.Exists(original))
+        {
+            throw new DirectoryNotFoundException(
+                $"Kimi 会话目录不存在：{original}");
+        }
+
+        var indexLine = await FindKimiSessionIndexEntryAsync(
+                conversation.Id, cancellationToken)
+            ?? JsonSerializer.Serialize(new
+            {
+                sessionId = conversation.Id,
+                sessionDir = original,
+                workDir = NormalizeProject(conversation.ProjectDir),
+            });
+        Directory.CreateDirectory(_archiveRoot);
+        var backup = Path.Combine(
+            _archiveRoot,
+            $"kimi-{conversation.Id}-{Guid.NewGuid():N}");
+        await RemoveKimiSessionIndexEntryAsync(
+            conversation.Id, cancellationToken);
+        try
+        {
+            Directory.Move(original, backup);
+        }
+        catch
+        {
+            await AppendKimiIndexLineAsync(indexLine, cancellationToken);
+            throw;
+        }
+        return new NativeSourceArchive(
+            "kimi",
+            conversation.Id,
+            "kimi",
+            original,
+            backup,
+            null,
+            new Dictionary<string, string?>
+            {
+                ["index_entry"] = indexLine,
+            });
+    }
+
+    private async Task RestoreKimiArchiveAsync(
+        NativeSourceArchive archive,
+        CancellationToken cancellationToken)
+    {
+        if (Directory.Exists(archive.OriginalPath)
+            || File.Exists(archive.OriginalPath))
+        {
+            throw new IOException(
+                $"原位置已有内容，拒绝覆盖：{archive.OriginalPath}");
+        }
+        if (!Directory.Exists(archive.BackupPath))
+        {
+            throw new DirectoryNotFoundException(
+                $"Kimi 原始历史归档不存在：{archive.BackupPath}");
+        }
+        Directory.CreateDirectory(Path.GetDirectoryName(archive.OriginalPath)!);
+        Directory.Move(archive.BackupPath, archive.OriginalPath);
+        try
+        {
+            var indexLine = archive.Metadata.GetValueOrDefault("index_entry")
+                ?? JsonSerializer.Serialize(new
+                {
+                    sessionId = archive.ConversationId,
+                    sessionDir = archive.OriginalPath,
+                    workDir = _home,
+                });
+            await AppendKimiIndexLineAsync(indexLine, cancellationToken);
+        }
+        catch
+        {
+            Directory.Move(archive.OriginalPath, archive.BackupPath);
+            throw;
+        }
+    }
+
+    private Task AppendKimiSessionIndexEntryAsync(
+        string id,
+        string sessionDirectory,
+        string workDirectory,
+        CancellationToken cancellationToken) =>
+        AppendKimiIndexLineAsync(
+            JsonSerializer.Serialize(new
+            {
+                sessionId = id,
+                sessionDir = sessionDirectory,
+                workDir = workDirectory,
+            }),
+            cancellationToken);
+
+    private async Task AppendKimiIndexLineAsync(
+        string line,
+        CancellationToken cancellationToken)
+    {
+        var indexPath = Path.Combine(_home, ".kimi-code", "session_index.jsonl");
+        Directory.CreateDirectory(Path.GetDirectoryName(indexPath)!);
+        var prefix = "";
+        if (File.Exists(indexPath) && new FileInfo(indexPath).Length > 0)
+        {
+            await using var stream = new FileStream(
+                indexPath,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.ReadWrite);
+            stream.Seek(-1, SeekOrigin.End);
+            prefix = stream.ReadByte() == '\n' ? "" : Environment.NewLine;
+        }
+        await File.AppendAllTextAsync(
+            indexPath,
+            prefix + line + Environment.NewLine,
+            new UTF8Encoding(encoderShouldEmitUTF8Identifier: false),
+            cancellationToken);
+    }
+
+    private async Task<string?> FindKimiSessionIndexEntryAsync(
+        string id,
+        CancellationToken cancellationToken)
+    {
+        var indexPath = Path.Combine(_home, ".kimi-code", "session_index.jsonl");
+        if (!File.Exists(indexPath)) return null;
+        foreach (var line in await File.ReadAllLinesAsync(
+                     indexPath, cancellationToken))
+        {
+            if (KimiIndexLineMatches(line, id)) return line;
+        }
+        return null;
+    }
+
+    private async Task RemoveKimiSessionIndexEntryAsync(
+        string id,
+        CancellationToken cancellationToken)
+    {
+        var indexPath = Path.Combine(_home, ".kimi-code", "session_index.jsonl");
+        if (!File.Exists(indexPath)) return;
+        var kept = (await File.ReadAllLinesAsync(indexPath, cancellationToken))
+            .Where(line => !KimiIndexLineMatches(line, id))
+            .ToArray();
+        var body = kept.Length == 0
+            ? ""
+            : string.Join(Environment.NewLine, kept) + Environment.NewLine;
+        var temporary = indexPath + $".aimemory-{Guid.NewGuid():N}.tmp";
+        try
+        {
+            await File.WriteAllTextAsync(
+                temporary,
+                body,
+                new UTF8Encoding(encoderShouldEmitUTF8Identifier: false),
+                cancellationToken);
+            File.Move(temporary, indexPath, overwrite: true);
+        }
+        finally
+        {
+            if (File.Exists(temporary)) File.Delete(temporary);
+        }
+    }
+
+    private static bool KimiIndexLineMatches(string line, string id)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(line);
+            return document.RootElement.TryGetProperty(
+                       "sessionId", out var value)
+                   && value.ValueKind == JsonValueKind.String
+                   && string.Equals(
+                       value.GetString(), id, StringComparison.Ordinal);
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
     }
 
     private static async Task SetOpenCodeArchivedAsync(

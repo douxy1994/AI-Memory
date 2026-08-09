@@ -29,7 +29,7 @@ public sealed partial class WorkbenchPage : Page
         await ReloadAsync();
     }
 
-    private async Task ReloadAsync()
+    public async Task ReloadAsync()
     {
         if (_window is null) return;
         _allConversations = await _window.Conversations.ListAsync(limit: 5_000);
@@ -492,7 +492,7 @@ public sealed partial class WorkbenchPage : Page
         catch
         {
             return typeof(WorkbenchPage).Assembly.GetName().Version?
-                .ToString(3) ?? "0.1.0";
+                .ToString(3) ?? "0.1.3";
         }
     }
 }

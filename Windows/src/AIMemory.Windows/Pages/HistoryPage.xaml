@@ -32,7 +32,14 @@
             </Grid>
         </Border>
 
-        <TabView Grid.Row="1">
+        <TabView Grid.Row="1"
+                 HorizontalAlignment="Stretch"
+                 HorizontalContentAlignment="Stretch">
+            <TabView.Resources>
+                <Style TargetType="TabViewItem">
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                </Style>
+            </TabView.Resources>
             <TabViewItem x:Uid="HistoryConversationsTab" Header="对话" IsClosable="False">
                 <Grid RowSpacing="12">
                     <Grid.RowDefinitions>
