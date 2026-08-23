@@ -35,18 +35,14 @@ struct AIMemoryApp: App {
     }
 
     var body: some Scene {
-        WindowGroup("AI Memory") {
-            RootView(store: store)
+        Window("AI Memory", id: MainWindowIdentity.sceneID) {
+            MainSceneRoot(store: store, appDelegate: appDelegate)
                 .frame(
                     minWidth: 1040,
                     idealWidth: 1240,
                     minHeight: 680,
                     idealHeight: 820
                 )
-                .onAppear {
-                    appDelegate.attach(store: store)
-                    appDelegate.startBootstrap()
-                }
         }
         .windowStyle(.hiddenTitleBar)
         .windowToolbarStyle(.unifiedCompact)
@@ -147,21 +143,100 @@ struct AIMemoryApp: App {
     }
 }
 
+private enum MainWindowIdentity {
+    static let sceneID = "main"
+    static let windowIdentifier = NSUserInterfaceItemIdentifier(
+        "com.aimemory.app.main-window"
+    )
+}
+
+/// Registers the exact SwiftUI-owned main window and retains an `openWindow`
+/// action that can recreate the scene if macOS discards the underlying
+/// NSWindow after days in the background.
+private struct MainSceneRoot: View {
+    @ObservedObject var store: AppStore
+    let appDelegate: AppDelegate
+    @Environment(\.openWindow) private var openWindow
+
+    var body: some View {
+        RootView(store: store)
+            .background {
+                MainWindowAccessor { window in
+                    appDelegate.attach(
+                        store: store,
+                        mainWindow: window,
+                        reopenAction: {
+                            openWindow(id: MainWindowIdentity.sceneID)
+                        }
+                    )
+                    appDelegate.startBootstrap()
+                }
+            }
+    }
+}
+
+private struct MainWindowAccessor: NSViewRepresentable {
+    let register: @MainActor (NSWindow) -> Void
+
+    func makeNSView(context: Context) -> NSView {
+        WindowReportingView(register: register)
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        guard let reportingView = nsView as? WindowReportingView else { return }
+        reportingView.register = register
+        reportingView.reportWindow()
+    }
+}
+
+private final class WindowReportingView: NSView {
+    var register: @MainActor (NSWindow) -> Void
+
+    init(register: @escaping @MainActor (NSWindow) -> Void) {
+        self.register = register
+        super.init(frame: .zero)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError() }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        reportWindow()
+    }
+
+    func reportWindow() {
+        guard let window else { return }
+        Task { @MainActor [register] in
+            register(window)
+        }
+    }
+}
+
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var store: AppStore?
     private var importHelper: ImportPanelHelper?
     private var statusItem: NSStatusItem?
     private var bootstrapTask: Task<Void, Never>?
-    private weak var retainedMainWindow: NSWindow?
+    // Keep the SwiftUI NSWindow alive even after it is closed or macOS prunes
+    // its scene while the menu-bar process remains resident.
+    private var retainedMainWindow: NSWindow?
+    private var reopenMainWindowAction: (@MainActor () -> Void)?
+    private var reopenGeneration = 0
     private var duplicateLaunchDetected = false
 
-    func attach(store: AppStore) {
+    func attach(
+        store: AppStore,
+        mainWindow: NSWindow,
+        reopenAction: @escaping @MainActor () -> Void
+    ) {
         self.store = store
-        self.importHelper = ImportPanelHelper(store: store)
-        DispatchQueue.main.async { [weak self] in
-            self?.configureMainWindow()
+        if importHelper == nil {
+            importHelper = ImportPanelHelper(store: store)
         }
+        reopenMainWindowAction = reopenAction
+        configureMainWindow(mainWindow)
     }
 
     func startBootstrap() {
@@ -339,19 +414,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = item
     }
 
-    private func configureMainWindow() {
-        let appWindows = NSApp.windows.filter {
-            $0.contentView != nil && !($0 is NSPanel)
-        }
-        guard let window = retainedMainWindow ?? appWindows.first else { return }
+    private func configureMainWindow(_ window: NSWindow) {
+        guard !(window is NSPanel) else { return }
         retainedMainWindow = window
+        window.identifier = MainWindowIdentity.windowIdentifier
         window.isReleasedWhenClosed = false
         window.standardWindowButton(.closeButton)?.target = self
         window.standardWindowButton(.closeButton)?.action = #selector(hideMainWindow)
 
-        // A WindowGroup remains the safest launch scene for the menu-bar app,
-        // but AI Memory intentionally exposes one main window only.
-        for duplicate in appWindows where duplicate !== window {
+        // The `Window` scene is single-instance. This cleanup also handles a
+        // stale duplicate left by an older WindowGroup-based build.
+        for duplicate in NSApp.windows where isMainWindowCandidate(duplicate)
+            && duplicate !== window {
             duplicate.orderOut(nil)
             duplicate.close()
         }
@@ -361,11 +435,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let retainedMainWindow {
             return retainedMainWindow
         }
-        let window = NSApp.windows.first { window in
-            window.contentView != nil && !(window is NSPanel)
-        }
+        let window = NSApp.windows.first(where: isMainWindowCandidate)
         retainedMainWindow = window
         return window
+    }
+
+    private func isMainWindowCandidate(_ window: NSWindow) -> Bool {
+        guard window.contentView != nil, !(window is NSPanel) else { return false }
+        return window.identifier == MainWindowIdentity.windowIdentifier
+            || window.title == "AI Memory"
+    }
+
+    private var hasVisibleUserWindow: Bool {
+        NSApp.windows.contains { window in
+            guard window.isVisible,
+                  !window.isMiniaturized,
+                  !(window is NSPanel)
+            else { return false }
+            // Ignore transient status-menu and system helper windows.
+            return window.frame.width >= 300 && window.frame.height >= 200
+        }
     }
 
     @objc private func showAbout() {
@@ -409,8 +498,41 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func showMainWindow() {
+        restoreMainWindow()
+    }
+
+    private func restoreMainWindow() {
+        NSApp.setActivationPolicy(.regular)
+        NSApp.unhide(nil)
         NSApp.activate(ignoringOtherApps: true)
-        mainWindow?.makeKeyAndOrderFront(nil)
+
+        if let window = mainWindow {
+            if window.isMiniaturized {
+                window.deminiaturize(nil)
+            }
+            window.makeKeyAndOrderFront(nil)
+            window.orderFrontRegardless()
+            return
+        }
+
+        // Recreate the SwiftUI scene when there is no retained NSWindow. The
+        // generation token prevents delayed retries from an older request from
+        // fighting a newer activation.
+        reopenGeneration += 1
+        let generation = reopenGeneration
+        reopenMainWindowAction?()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) { [weak self] in
+            guard let self, generation == self.reopenGeneration else { return }
+            if let window = self.mainWindow {
+                self.configureMainWindow(window)
+                window.makeKeyAndOrderFront(nil)
+                window.orderFrontRegardless()
+            } else {
+                // `applicationOpenUntitledFile` asks the SwiftUI scene system
+                // for the single Window again on the next run-loop turn.
+                self.reopenMainWindowAction?()
+            }
+        }
     }
 
     @objc private func syncFromStatusItem() {
@@ -442,8 +564,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         return true
     }
 
+    func applicationOpenUntitledFile(_ sender: NSApplication) -> Bool {
+        restoreMainWindow()
+        return true
+    }
+
+    func applicationDidBecomeActive(_ notification: Notification) {
+        guard !duplicateLaunchDetected else { return }
+        // Covers Dock activation on macOS releases that do not deliver
+        // applicationShouldHandleReopen after a long menu-bar-only residency.
+        DispatchQueue.main.async { [weak self] in
+            guard let self, !self.hasVisibleUserWindow else { return }
+            self.restoreMainWindow()
+        }
+    }
+
     func applicationWillTerminate(_ notification: Notification) {
         bootstrapTask?.cancel()
+        retainedMainWindow = nil
+        reopenMainWindowAction = nil
     }
 }
 
