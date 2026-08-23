@@ -238,8 +238,8 @@ struct AboutView: View {
                 "支持 \(NativeAgentIntegrationStore.catalogCount) 种主流 Agent 与 CLI 检测；已安装项目优先显示，未安装项目保持关闭。"
             )
             releaseItem(
-                "原生体验改进",
-                "强化单实例窗口、菜单栏、独立设置、状态反馈与本机数据保护。"
+                "主窗口恢复修复",
+                "关闭、隐藏或长时间后台驻留后，Dock 与菜单栏入口都能可靠恢复唯一的主窗口。"
             )
         }
         .frame(maxWidth: .infinity, alignment: .leading)
