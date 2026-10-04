@@ -24,7 +24,7 @@ final class NativeHistoryImporterTests: XCTestCase {
         )
         let rollout = codexRoot.appendingPathComponent("launch-sync.jsonl")
         let lines = [
-            #"{"timestamp":"2026-08-09T01:00:00Z","type":"session_meta","payload":{"id":"codex-1","cwd":"/tmp/launch-sync"}}"#,
+            #"{"timestamp":"2026-08-09T01:00:00Z","type":"session_meta","payload":{"id":"codex-1","cwd":"/workspace/launch-sync"}}"#,
             #"{"timestamp":"2026-08-09T01:01:00Z","type":"event_msg","payload":{"type":"user_message","message":"Auto import me"}}"#,
             #"{"timestamp":"2026-08-09T01:02:00Z","type":"event_msg","payload":{"type":"agent_message","message":"Imported"}}"#,
         ]
@@ -63,7 +63,7 @@ final class NativeHistoryImporterTests: XCTestCase {
         try FileManager.default.createDirectory(at: codexRoot, withIntermediateDirectories: true)
         let rollout = codexRoot.appendingPathComponent("rollout.jsonl")
         let codexLines = [
-            #"{"timestamp":"2026-07-23T10:00:00Z","type":"session_meta","payload":{"id":"codex-1","cwd":"/tmp/codex-project"}}"#,
+            #"{"timestamp":"2026-07-23T10:00:00Z","type":"session_meta","payload":{"id":"codex-1","cwd":"/workspace/codex-project"}}"#,
             #"{"timestamp":"2026-07-23T10:01:00Z","type":"event_msg","payload":{"type":"user_message","message":"Implement native storage"}}"#,
             #"{"timestamp":"2026-07-23T10:02:00Z","type":"response_item","payload":{"type":"function_call","name":"exec_command","arguments":"{\"cmd\":\"pwd\"}","call_id":"call-1"}}"#,
             #"{"timestamp":"2026-07-23T10:03:00Z","type":"response_item","payload":{"type":"function_call_output","call_id":"call-1","output":"ok"}}"#,
@@ -82,8 +82,8 @@ final class NativeHistoryImporterTests: XCTestCase {
         )
         let claude = claudeProject.appendingPathComponent("claude-1.jsonl")
         let claudeLines = [
-            #"{"type":"user","uuid":"u1","timestamp":"2026-07-23T11:00:00Z","cwd":"/tmp/claude-project","message":{"role":"user","content":"Review migration"}}"#,
-            #"{"type":"assistant","uuid":"a1","timestamp":"2026-07-23T11:01:00Z","message":{"role":"assistant","id":"api-1","content":[{"type":"text","text":"Reviewed"},{"type":"tool_use","id":"tool-1","name":"Read","input":{"file_path":"/tmp/a"}}]}}"#,
+            #"{"type":"user","uuid":"u1","timestamp":"2026-07-23T11:00:00Z","cwd":"/workspace/claude-project","message":{"role":"user","content":"Review migration"}}"#,
+            #"{"type":"assistant","uuid":"a1","timestamp":"2026-07-23T11:01:00Z","message":{"role":"assistant","id":"api-1","content":[{"type":"text","text":"Reviewed"},{"type":"tool_use","id":"tool-1","name":"Read","input":{"file_path":"/workspace/a"}}]}}"#,
             #"{"type":"user","uuid":"r1","timestamp":"2026-07-23T11:02:00Z","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"tool-1","content":"contents"}]}}"#,
         ]
         try Data(claudeLines.joined(separator: "\n").utf8).write(to: claude)
@@ -95,7 +95,7 @@ final class NativeHistoryImporterTests: XCTestCase {
         XCTAssertTrue(report.warnings.isEmpty)
 
         let codexDetail = try await store.readConversation(agent: "codex", id: "codex-1")
-        XCTAssertEqual(codexDetail.projectDir, "/tmp/codex-project")
+        XCTAssertEqual(codexDetail.projectDir, "/workspace/codex-project")
         XCTAssertEqual(codexDetail.messages.flatMap(\.toolCalls).first?.name, "exec_command")
         let claudeDetail = try await store.readConversation(agent: "claude", id: "claude-1")
         XCTAssertEqual(claudeDetail.messages.flatMap(\.toolCalls).first?.output, "contents")
@@ -121,7 +121,7 @@ final class NativeHistoryImporterTests: XCTestCase {
         )
         let gemini: [String: Any] = [
             "sessionId": "gemini-1",
-            "projectPath": "/tmp/gemini-project",
+            "projectPath": "/workspace/gemini-project",
             "startTime": "2026-07-23T12:00:00Z",
             "lastUpdated": "2026-07-23T12:02:00Z",
             "messages": [
@@ -139,7 +139,7 @@ final class NativeHistoryImporterTests: XCTestCase {
                     "toolCalls": [[
                         "id": "g-tool",
                         "name": "write_file",
-                        "args": ["file_path": "/tmp/gemini-project/a.swift"],
+                        "args": ["file_path": "/workspace/gemini-project/a.swift"],
                         "resultDisplay": "ok",
                         "status": "success",
                     ]],
@@ -163,7 +163,7 @@ final class NativeHistoryImporterTests: XCTestCase {
 
         let geminiDetail = try await store.readConversation(agent: "gemini", id: "gemini-1")
         XCTAssertEqual(geminiDetail.messages.flatMap(\.toolCalls).first?.output, "ok")
-        XCTAssertEqual(geminiDetail.fileChanges.first?.path, "/tmp/gemini-project/a.swift")
+        XCTAssertEqual(geminiDetail.fileChanges.first?.path, "/workspace/gemini-project/a.swift")
         let hermesDetail = try await store.readConversation(agent: "hermes", id: "hermes-1")
         XCTAssertEqual(hermesDetail.messages.flatMap(\.toolCalls).first?.output, "terminal output")
         XCTAssertTrue(FileManager.default.fileExists(atPath: geminiChat.path))
@@ -189,7 +189,7 @@ final class NativeHistoryImporterTests: XCTestCase {
         )
         let kimiState: [String: Any] = [
             "title": "Kimi fixture",
-            "workDir": "/tmp/kimi-project",
+            "workDir": "/workspace/kimi-project",
             "createdAt": "2026-07-23T13:00:00Z",
             "updatedAt": "2026-07-23T13:03:00Z",
         ]
@@ -197,7 +197,7 @@ final class NativeHistoryImporterTests: XCTestCase {
             .write(to: kimiSession.appendingPathComponent("state.json"))
         let kimiWire = [
             #"{"type":"turn.prompt","time":1784797200000,"input":[{"type":"text","text":"Edit Kimi file"}]}"#,
-            #"{"type":"context.append_loop_event","time":1784797260000,"event":{"type":"tool.call","turnId":"t","step":1,"toolCallId":"k-tool","name":"write_file","args":{"file_path":"/tmp/kimi-project/a.swift"}}}"#,
+            #"{"type":"context.append_loop_event","time":1784797260000,"event":{"type":"tool.call","turnId":"t","step":1,"toolCallId":"k-tool","name":"write_file","args":{"file_path":"/workspace/kimi-project/a.swift"}}}"#,
             #"{"type":"context.append_loop_event","time":1784797320000,"event":{"type":"tool.result","turnId":"t","step":1,"toolCallId":"k-tool","result":{"output":"written","isError":false}}}"#,
             #"{"type":"context.append_loop_event","time":1784797380000,"event":{"type":"content.part","turnId":"t","step":1,"part":{"type":"text","text":"Done"}}}"#,
         ]
@@ -213,7 +213,7 @@ final class NativeHistoryImporterTests: XCTestCase {
         )
         let antiLines = [
             #"{"source":"USER_EXPLICIT","type":"MESSAGE","status":"SUCCESS","content":"<USER_REQUEST>Review Antigravity</USER_REQUEST>","created_at":"2026-07-23T14:00:00Z"}"#,
-            #"{"source":"MODEL","type":"MESSAGE","status":"SUCCESS","content":"Reviewed","created_at":"2026-07-23T14:01:00Z","tool_calls":[{"name":"write_file","args":{"cwd":"/tmp/anti-project","file_path":"/tmp/anti-project/a.swift"}}]}"#,
+            #"{"source":"MODEL","type":"MESSAGE","status":"SUCCESS","content":"Reviewed","created_at":"2026-07-23T14:01:00Z","tool_calls":[{"name":"write_file","args":{"cwd":"/workspace/anti-project","file_path":"/workspace/anti-project/a.swift"}}]}"#,
         ]
         try Data(antiLines.joined(separator: "\n").utf8).write(to: antiURL)
 
@@ -229,11 +229,11 @@ final class NativeHistoryImporterTests: XCTestCase {
                 "taskId": "task-1",
                 "provider": "claude",
                 "title": "ZCode fixture",
-                "workspacePath": "/tmp/zcode-project",
+                "workspacePath": "/workspace/zcode-project",
                 "createdAt": 1_784_797_200_000,
                 "updatedAt": 1_784_797_320_000,
                 "changeSummary": [
-                    "files": [["path": "/tmp/zcode-project/a.swift", "added": 2, "removed": 0]]
+                    "files": [["path": "/workspace/zcode-project/a.swift", "added": 2, "removed": 0]]
                 ],
             ],
             "messages": [
@@ -244,7 +244,7 @@ final class NativeHistoryImporterTests: XCTestCase {
                     "timestamp": 1_784_797_260_000,
                     "tools": [[
                         "title": "Read",
-                        "input": ["file_path": "/tmp/zcode-project/a.swift"],
+                        "input": ["file_path": "/workspace/zcode-project/a.swift"],
                         "output": "contents",
                         "status": "completed",
                     ]],
@@ -272,7 +272,7 @@ final class NativeHistoryImporterTests: XCTestCase {
         let kimi = try await store.readConversation(agent: "kimi", id: "session-kimi")
         XCTAssertEqual(kimi.messages.flatMap(\.toolCalls).first?.output, "written")
         let anti = try await store.readConversation(agent: "antigravity", id: "anti-1")
-        XCTAssertEqual(anti.projectDir, "/tmp/anti-project")
+        XCTAssertEqual(anti.projectDir, "/workspace/anti-project")
         let openCode = try await store.readConversation(agent: "opencode", id: "oc-1")
         XCTAssertEqual(openCode.messages.flatMap(\.toolCalls).first?.output, "ok")
         let zcodeDetail = try await store.readConversation(
@@ -284,6 +284,29 @@ final class NativeHistoryImporterTests: XCTestCase {
         for source in [kimiWireURL, antiURL, zcodeURL, openCodeDB] {
             XCTAssertTrue(FileManager.default.fileExists(atPath: source.path))
         }
+    }
+
+    func testSystemTemporaryWorkspaceIsSkippedWithoutTouchingSource() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("NativeTemporaryImport-\(UUID())")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let databaseURL = root.appendingPathComponent("app.db")
+        let database = try NativeDatabase(url: databaseURL)
+        _ = try await database.currentSchemaVersion()
+        let codex = root.appendingPathComponent(".codex")
+        try FileManager.default.createDirectory(at: codex, withIntermediateDirectories: true)
+        let rollout = codex.appendingPathComponent("temporary.jsonl")
+        let text = #"{"type":"session_meta","payload":{"cwd":"/private/tmp/review"}}"#
+            + "\n" + #"{"type":"event_msg","payload":{"type":"user_message","message":"Review fixture"}}"#
+        let source = Data(text.utf8)
+        try source.write(to: rollout)
+        try makeCodexDatabase(at: codex.appendingPathComponent("state_5.sqlite"), rollout: rollout)
+        let store = NativeConversationStore(databaseURL: databaseURL, home: root)
+        let report = await NativeHistoryImporter(store: store, home: root).importAgent(.codex)
+        XCTAssertEqual(report.imported["codex"], 0)
+        let conversations = try await store.listConversations(agent: "codex")
+        XCTAssertTrue(conversations.isEmpty)
+        XCTAssertEqual(try Data(contentsOf: rollout), source)
     }
 
     private func makeCodexDatabase(at url: URL, rollout: URL) throws {
@@ -298,7 +321,7 @@ final class NativeHistoryImporterTests: XCTestCase {
           created_at INTEGER, updated_at INTEGER, source TEXT
         );
         INSERT INTO threads VALUES(
-          'codex-1', '\(rollout.path)', '/tmp/fallback', 'Native importer',
+          'codex-1', '\(rollout.path)', '/workspace/fallback', 'Native importer',
           1784797200, 1784797440, 'cli'
         );
         """
@@ -324,7 +347,7 @@ final class NativeHistoryImporterTests: XCTestCase {
         );
         INSERT INTO sessions VALUES(
           'hermes-1', 'Hermes importer', 1784797200.0, 1784797320.0,
-          '/tmp/hermes-project', 0
+          '/workspace/hermes-project', 0
         );
         INSERT INTO messages VALUES(
           1, 'hermes-1', 'user', 'Run a command', NULL, NULL, 1784797200.0, 1
@@ -362,7 +385,7 @@ final class NativeHistoryImporterTests: XCTestCase {
           id TEXT, session_id TEXT, message_id TEXT, time_created INTEGER, data TEXT
         );
         INSERT INTO session VALUES(
-          'oc-1', '/tmp/opencode-project', 'OpenCode fixture',
+          'oc-1', '/workspace/opencode-project', 'OpenCode fixture',
           1784797200000, 1784797320000, NULL
         );
         INSERT INTO message VALUES(
@@ -379,7 +402,7 @@ final class NativeHistoryImporterTests: XCTestCase {
         );
         INSERT INTO part VALUES(
           'p2', 'oc-1', 'oc-agent', 1784797260000,
-          '{"type":"tool","tool":"read","state":{"status":"completed","input":{"file_path":"/tmp/a"},"output":"ok"}}'
+          '{"type":"tool","tool":"read","state":{"status":"completed","input":{"file_path":"/workspace/a"},"output":"ok"}}'
         );
         """
         guard sqlite3_exec(raw, sql, nil, nil, nil) == SQLITE_OK else {

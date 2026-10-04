@@ -444,7 +444,7 @@ final class NativeWebDAVServiceTests: XCTestCase {
         ConversationDetail(
             id: id,
             sourceAgent: agent,
-            projectDir: "/tmp/webdav-project",
+            projectDir: "/workspace/webdav-project",
             createdAt: "2026-07-23T10:00:00Z",
             updatedAt: "2026-07-23T11:00:00Z",
             summary: summary ?? "\(agent) conversation",

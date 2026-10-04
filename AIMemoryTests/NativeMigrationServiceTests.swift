@@ -175,7 +175,7 @@ final class NativeMigrationServiceTests: XCTestCase {
         ConversationDetail(
             id: id,
             sourceAgent: agent,
-            projectDir: "/tmp/migration-project",
+            projectDir: "/workspace/migration-project",
             createdAt: "2026-07-23T10:00:00Z",
             updatedAt: "2026-07-23T11:00:00Z",
             summary: "Migration source",
@@ -276,11 +276,11 @@ private final class Fixture {
                 database,
                 """
                 INSERT INTO project VALUES (
-                  'project_source', '/tmp/migration-project', 'git', 'migration-project',
+                  'project_source', '/workspace/migration-project', 'git', 'migration-project',
                   1784800800000, 1784804400000, '[]'
                 );
                 INSERT INTO session VALUES (
-                  'ses_source', 'project_source', 'source', '/tmp/migration-project',
+                  'ses_source', 'project_source', 'source', '/workspace/migration-project',
                   'Migration source', '1.0.0', 0, 1784800800000, 1784804400000, NULL
                 );
                 INSERT INTO message VALUES (

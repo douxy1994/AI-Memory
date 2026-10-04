@@ -19,7 +19,7 @@ final class NativeTrashStoreTests: XCTestCase {
         let detail = ConversationDetail(
             id: "trash-roundtrip",
             sourceAgent: "codex",
-            projectDir: "/tmp/trash-project",
+            projectDir: "/workspace/trash-project",
             createdAt: "2026-07-23T10:00:00Z",
             updatedAt: "2026-07-23T11:00:00Z",
             summary: "Trash roundtrip",
@@ -384,7 +384,7 @@ final class NativeTrashStoreTests: XCTestCase {
         ConversationDetail(
             id: id,
             sourceAgent: agent,
-            projectDir: "/tmp/trash-project",
+            projectDir: "/workspace/trash-project",
             createdAt: "2026-07-23T10:00:00Z",
             updatedAt: "2026-07-23T11:00:00Z",
             summary: "Trash source roundtrip",

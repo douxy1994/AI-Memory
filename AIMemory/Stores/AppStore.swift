@@ -88,6 +88,7 @@ final class AppStore: ObservableObject {
     @Published private(set) var reposWithCandidates: [RepoCandidateCount] = []
 
     @Published private(set) var memoryLoading: Bool = false
+    @Published private(set) var reviewingCandidateIDs: Set<String> = []
 
     private var listRequestIDs: [AgentKind: Int] = [:]
     private var detailRequestID = 0
@@ -1745,6 +1746,10 @@ final class AppStore: ObservableObject {
         value: String? = nil,
         usageHint: String? = nil
     ) async {
+        guard reviewingCandidateIDs.insert(candidate.candidateID).inserted else { return }
+        defer { reviewingCandidateIDs.remove(candidate.candidateID) }
+        let repoRoot = activeRepoRoot
+        bannerError = nil
         do {
             let edited = title != nil || value != nil || usageHint != nil
             try await client.reviewMemoryCandidate(
@@ -1754,15 +1759,20 @@ final class AppStore: ObservableObject {
                 value: value ?? candidate.value,
                 usageHint: usageHint ?? ""
             )
-            await loadRepoMemory(repoRoot: activeRepoRoot)
+            candidateReviewDidCommit(candidate.candidateID, repoRoot: repoRoot)
             flash("已批准为启动规则。")
+            await refreshCandidateReview(repoRoot: repoRoot)
         } catch {
             bannerError = "批准失败：\(error.localizedDescription)"
         }
     }
 
     func rejectAllPendingCandidates() async {
+        guard reviewingCandidateIDs.isEmpty else { return }
         let pending = pendingCandidates
+        let repoRoot = activeRepoRoot
+        reviewingCandidateIDs = Set(pending.map(\.candidateID))
+        defer { reviewingCandidateIDs.removeAll() }
         guard !pending.isEmpty else { return }
         var failed = 0
         for candidate in pending {
@@ -1775,7 +1785,7 @@ final class AppStore: ObservableObject {
                 failed += 1
             }
         }
-        await loadRepoMemory(repoRoot: activeRepoRoot)
+        await refreshCandidateReview(repoRoot: repoRoot)
         if failed == 0 {
             flash("已忽略 \(pending.count) 条候选。")
         } else {
@@ -1784,26 +1794,66 @@ final class AppStore: ObservableObject {
     }
 
     func rejectCandidate(_ candidate: MemoryCandidate) async {
+        guard reviewingCandidateIDs.insert(candidate.candidateID).inserted else { return }
+        defer { reviewingCandidateIDs.remove(candidate.candidateID) }
+        let repoRoot = activeRepoRoot
+        bannerError = nil
         do {
             try await client.reviewMemoryCandidate(
                 candidateID: candidate.candidateID, action: "reject"
             )
-            await loadRepoMemory(repoRoot: activeRepoRoot)
+            candidateReviewDidCommit(candidate.candidateID, repoRoot: repoRoot)
             flash("已拒绝候选。")
+            await refreshCandidateReview(repoRoot: repoRoot)
         } catch {
             bannerError = "拒绝失败：\(error.localizedDescription)"
         }
     }
 
     func snoozeCandidate(_ candidate: MemoryCandidate) async {
+        guard reviewingCandidateIDs.insert(candidate.candidateID).inserted else { return }
+        defer { reviewingCandidateIDs.remove(candidate.candidateID) }
+        let repoRoot = activeRepoRoot
+        bannerError = nil
         do {
             try await client.reviewMemoryCandidate(
                 candidateID: candidate.candidateID, action: "snooze"
             )
-            await loadRepoMemory(repoRoot: activeRepoRoot)
+            candidateReviewDidCommit(candidate.candidateID, repoRoot: repoRoot)
             flash("已暂缓候选。")
+            await refreshCandidateReview(repoRoot: repoRoot)
         } catch {
             bannerError = "暂缓失败：\(error.localizedDescription)"
+        }
+    }
+
+    private func candidateReviewDidCommit(_ id: String, repoRoot: String) {
+        guard activeRepoRoot == repoRoot else { return }
+        // Invalidate pre-write loads before publishing the committed result.
+        memoryRequestID &+= 1
+        memoryLoading = false
+        candidates.removeAll { $0.candidateID == id }
+    }
+
+    private func refreshCandidateReview(repoRoot: String) async {
+        guard activeRepoRoot == repoRoot else { return }
+        // Approval must not wait for unrelated wiki, graph, or timeline queries.
+        memoryRequestID &+= 1
+        let requestID = memoryRequestID
+        do {
+            async let pending = client.listMemoryCandidates(repoRoot: repoRoot)
+            async let approved = client.listRepoMemories(repoRoot: repoRoot)
+            async let repos = client.listReposWithCandidates()
+            let result = try await (pending, approved, repos)
+            guard requestID == memoryRequestID, activeRepoRoot == repoRoot else { return }
+            candidates = result.0
+            approvedMemories = result.1
+            reposWithCandidates = result.2
+            memoryLoading = false
+        } catch {
+            guard activeRepoRoot == repoRoot else { return }
+            memoryLoading = false
+            bannerError = "审批已写入，列表刷新失败：\(error.localizedDescription)"
         }
     }
 

@@ -154,8 +154,7 @@ actor NativeHistoryImporter {
                     updatedAt: Self.isoFromEpoch(row["updated_at"] as? Int ?? 0)
                 )
                 guard !detail.messages.isEmpty else { continue }
-                try await store.upsertConversation(detail)
-                count += 1
+                if try await store.importConversation(detail) { count += 1 }
             } catch {
                 continue
             }
@@ -279,8 +278,7 @@ actor NativeHistoryImporter {
             do {
                 let detail = try parseClaudeSession(url: url)
                 guard !detail.messages.isEmpty else { continue }
-                try await store.upsertConversation(detail)
-                count += 1
+                if try await store.importConversation(detail) { count += 1 }
             } catch {
                 continue
             }
@@ -529,7 +527,7 @@ actor NativeHistoryImporter {
                 guard !messages.isEmpty else { continue }
                 let summary = root["summary"] as? String
                     ?? messages.first(where: { $0.role == "user" })?.content
-                try await store.upsertConversation(
+                if try await store.importConversation(
                     ConversationDetail(
                         id: id,
                         sourceAgent: "gemini",
@@ -542,8 +540,7 @@ actor NativeHistoryImporter {
                         messages: messages,
                         fileChanges: changes
                     )
-                )
-                count += 1
+                ) { count += 1 }
             } catch {
                 continue
             }
@@ -647,7 +644,7 @@ actor NativeHistoryImporter {
                 guard !messages.isEmpty else { continue }
                 let started = session["started_at"] as? Double ?? 0
                 let ended = session["ended_at"] as? Double ?? started
-                try await store.upsertConversation(
+                if try await store.importConversation(
                     ConversationDetail(
                         id: id,
                         sourceAgent: "hermes",
@@ -660,8 +657,7 @@ actor NativeHistoryImporter {
                         messages: messages,
                         fileChanges: []
                     )
-                )
-                count += 1
+                ) { count += 1 }
             } catch {
                 continue
             }

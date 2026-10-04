@@ -105,8 +105,7 @@ actor NativeAdditionalHistoryImporter {
             for session in directories.sorted(by: { $0.path < $1.path }) {
                 do {
                     if let detail = try parseKimiSession(session) {
-                        try await store.upsertConversation(detail)
-                        count += 1
+                        if try await store.importConversation(detail) { count += 1 }
                     }
                 } catch {
                     continue
@@ -359,8 +358,7 @@ actor NativeAdditionalHistoryImporter {
             do {
                 let detail = try parseAntigravity(transcript, id: session.lastPathComponent)
                 guard !detail.messages.isEmpty else { continue }
-                try await store.upsertConversation(detail)
-                count += 1
+                if try await store.importConversation(detail) { count += 1 }
             } catch {
                 continue
             }
@@ -500,8 +498,7 @@ actor NativeAdditionalHistoryImporter {
             do {
                 let detail = try parseOpenCode(database, session: session, id: id)
                 guard !detail.messages.isEmpty else { continue }
-                try await store.upsertConversation(detail)
-                count += 1
+                if try await store.importConversation(detail) { count += 1 }
             } catch {
                 continue
             }
@@ -655,8 +652,7 @@ actor NativeAdditionalHistoryImporter {
                         task,
                         profile: profile.lastPathComponent
                     ) else { continue }
-                    try await store.upsertConversation(detail)
-                    count += 1
+                    if try await store.importConversation(detail) { count += 1 }
                 } catch {
                     continue
                 }

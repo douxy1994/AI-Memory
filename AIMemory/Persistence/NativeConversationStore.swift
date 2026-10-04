@@ -18,6 +18,15 @@ actor NativeConversationStore {
     /// persisted. See docs/TOOL_CALL_JSON_BLOAT.md.
     static let maxToolInputBytes = 1_048_576
 
+    /// System scratch workspaces are not user projects. Keep existing rows for
+    /// recovery/direct access, but omit them from the default history surfaces.
+    nonisolated static func isTemporaryProject(_ path: String) -> Bool {
+        let path = (path.replacingOccurrences(of: "\\", with: "/") as NSString).standardizingPath
+        let roots = ["/tmp", "/private/tmp", "/var/tmp", "/private/var/tmp",
+                     "/var/folders", "/private/var/folders"]
+        return roots.contains { path == $0 || path.hasPrefix($0 + "/") }
+    }
+
     private let databaseURL: URL
     private let home: URL
     private let decoder = JSONDecoder()
@@ -89,6 +98,7 @@ actor NativeConversationStore {
             bindings: [.text(agent)]
         )
         return try decodeRows(rows, as: [ConversationSummary].self)
+            .filter { !Self.isTemporaryProject($0.projectDir) }
     }
 
     func searchConversations(agent: String, text: String) throws -> [ConversationSummary] {
@@ -123,6 +133,7 @@ actor NativeConversationStore {
             bindings: [.text(agent), .text(pattern), .text(pattern), .text(pattern)]
         )
         return try decodeRows(rows, as: [ConversationSummary].self)
+            .filter { !Self.isTemporaryProject($0.projectDir) }
     }
 
     /// Repository-scoped history search used by the native MCP service.
@@ -169,6 +180,7 @@ actor NativeConversationStore {
             bindings: [.text(repoID), .text(pattern), .text(pattern), .integer(bounded)]
         )
         return try decodeRows(rows, as: [ConversationSummary].self)
+            .filter { !Self.isTemporaryProject($0.projectDir) }
     }
 
     func readConversationByID(_ id: String) throws -> ConversationDetail {
@@ -980,7 +992,7 @@ actor NativeConversationStore {
     ) throws {
         guard let candidate = try query(
             """
-            SELECT repo_id, kind, summary, value
+            SELECT repo_id, kind, summary, value, status
             FROM memory_candidates
             WHERE candidate_id = ?
             LIMIT 1;
@@ -992,6 +1004,10 @@ actor NativeConversationStore {
         let now = ISO8601DateFormatter().string(from: Date())
         switch action {
         case "approve", "approve_with_edit":
+            // Idempotent even after the card has disappeared or a stale client retries.
+            guard ["pending_review", "pending", "snoozed"].contains(
+                candidate["status"] as? String ?? ""
+            ) else { return }
             let memoryID = UUID().uuidString
             let effectiveTitle = title.isEmpty
                 ? (candidate["summary"] as? String ?? "")
@@ -1007,8 +1023,11 @@ actor NativeConversationStore {
                       status, last_verified_at, created_from_candidate_id,
                       created_at, updated_at, freshness_status, freshness_score,
                       verified_at, verified_by
-                    ) VALUES(?, ?, ?, ?, ?, ?, 'active', ?, ?, ?, ?,
-                             'fresh', 1.0, ?, 'user');
+                    ) SELECT ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?, ?,
+                             'fresh', 1.0, ?, 'user'
+                    WHERE NOT EXISTS (
+                        SELECT 1 FROM approved_memories WHERE created_from_candidate_id = ?
+                    );
                     """,
                     [
                         .text(memoryID),
@@ -1022,6 +1041,7 @@ actor NativeConversationStore {
                         .text(now),
                         .text(now),
                         .text(now),
+                        .text(id),
                     ]
                 ),
                 (
@@ -1145,6 +1165,14 @@ actor NativeConversationStore {
                 [.text(ISO8601DateFormatter().string(from: Date())), .text(id)]
             ),
         ])
+    }
+
+    /// Automatic import excludes scratch workspaces; explicit restore/sync writes
+    /// still preserve every record and remain independent from this UI policy.
+    func importConversation(_ conversation: ConversationDetail) throws -> Bool {
+        guard !Self.isTemporaryProject(conversation.projectDir) else { return false }
+        try upsertConversation(conversation)
+        return true
     }
 
     func upsertConversation(_ conversation: ConversationDetail) throws {

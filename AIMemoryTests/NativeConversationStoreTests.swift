@@ -7,6 +7,17 @@ import SQLite3
 @testable import AIMemory
 
 final class NativeConversationStoreTests: XCTestCase {
+    func testTemporaryProjectClassificationUsesRootBoundaries() {
+        for path in ["/tmp/review", "/private/tmp/review", "/var/tmp/task",
+                     "/private/var/folders/ab/cd/T/task", "/var/folders/ab/cd/T/task"] {
+            XCTAssertTrue(NativeConversationStore.isTemporaryProject(path), path)
+        }
+        for path in ["/Users/me/project/tmp", "/Volumes/Data/tmp/project",
+                     "/Users/me/.gemini/tmp/project", "/tmp-project", ""] {
+            XCTAssertFalse(NativeConversationStore.isTemporaryProject(path), path)
+        }
+    }
+
     func testListSearchAndReadUseIndependentDatabase() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent("NativeConversationStoreTests-\(UUID().uuidString)")
@@ -21,13 +32,20 @@ final class NativeConversationStoreTests: XCTestCase {
         XCTAssertEqual(sqlite3_open(databaseURL.path, &raw), SQLITE_OK)
         let seed = """
         INSERT INTO repos VALUES(
-          'repo-1', '/tmp/native-project', 'fingerprint', NULL, NULL,
+          'repo-1', '/workspace/native-project', 'fingerprint', NULL, NULL,
           '2026-07-23T10:00:00Z', '2026-07-23T10:00:00Z'
+        );
+        INSERT INTO repos VALUES(
+          'temp-repo', '/private/tmp/review', 'temp-fingerprint', NULL, NULL, '2026', '2026'
+        );
+        INSERT INTO conversations VALUES(
+          'temp-conversation', 'temp-repo', 'codex', 'temp-conversation',
+          'needle temporary work', '2026', '2026', '/history.jsonl'
         );
         INSERT INTO conversations VALUES(
           'conversation-1', 'repo-1', 'codex', 'conversation-1',
           'Native SQLite search title', '2026-07-23T10:00:00Z',
-          '2026-07-23T11:00:00Z', '/tmp/rollout.jsonl'
+          '2026-07-23T11:00:00Z', '/workspace/rollout.jsonl'
         );
         INSERT INTO messages VALUES(
           'message-1', 'conversation-1', 'user',
@@ -43,7 +61,7 @@ final class NativeConversationStoreTests: XCTestCase {
         );
         INSERT INTO file_changes VALUES(
           'file-1', 'conversation-1', 'message-2',
-          '/tmp/native-project/file.swift', 'modified',
+          '/workspace/native-project/file.swift', 'modified',
           '2026-07-23T10:02:00Z'
         );
         """
@@ -58,9 +76,17 @@ final class NativeConversationStoreTests: XCTestCase {
         let store = NativeConversationStore(databaseURL: databaseURL)
         let list = try await store.listConversations(agent: "codex")
         XCTAssertEqual(list.count, 1)
-        XCTAssertEqual(list[0].projectDir, "/tmp/native-project")
+        XCTAssertEqual(list[0].projectDir, "/workspace/native-project")
         XCTAssertEqual(list[0].messageCount, 2)
         XCTAssertEqual(list[0].fileCount, 1)
+        let temporary = try await store.readConversation(agent: "codex", id: "temp-conversation")
+        XCTAssertEqual(temporary.projectDir, "/private/tmp/review")
+        let indexed = try await store.importConversation(temporary)
+        XCTAssertFalse(indexed)
+        let temporarySearch = try await store.searchRepoHistory(
+            repoRoot: "/private/tmp/review", text: "needle", limit: 3
+        )
+        XCTAssertTrue(temporarySearch.isEmpty)
 
         let results = try await store.searchConversations(agent: "codex", text: "needle")
         XCTAssertEqual(results.map(\.id), ["conversation-1"])
@@ -74,7 +100,7 @@ final class NativeConversationStoreTests: XCTestCase {
         XCTAssertEqual(detail.messages.count, 2)
         XCTAssertEqual(detail.messages[1].toolCalls.first?.name, "exec_command")
         XCTAssertEqual(detail.messages[1].toolCalls.first?.input.preview, "{cmd: pwd}")
-        XCTAssertEqual(detail.fileChanges.first?.path, "/tmp/native-project/file.swift")
+        XCTAssertEqual(detail.fileChanges.first?.path, "/workspace/native-project/file.swift")
         XCTAssertEqual(detail.resumeCommand, "codex resume conversation-1")
     }
 
@@ -91,7 +117,7 @@ final class NativeConversationStoreTests: XCTestCase {
         XCTAssertEqual(sqlite3_open(databaseURL.path, &raw), SQLITE_OK)
         let seed = """
         INSERT INTO repos VALUES(
-          'repo-1', '/tmp/native-project', 'fingerprint', NULL, NULL,
+          'repo-1', '/workspace/native-project', 'fingerprint', NULL, NULL,
           '2026-07-23T10:00:00Z', '2026-07-23T10:00:00Z'
         );
         INSERT INTO memory_candidates VALUES(
@@ -105,7 +131,7 @@ final class NativeConversationStoreTests: XCTestCase {
 
         let store = NativeConversationStore(databaseURL: databaseURL)
         let initialCandidates = try await store.listMemoryCandidates(
-            repoRoot: "/tmp/native-project"
+            repoRoot: "/workspace/native-project"
         )
         XCTAssertEqual(initialCandidates.count, 1)
         try await store.reviewCandidate(
@@ -116,7 +142,12 @@ final class NativeConversationStoreTests: XCTestCase {
             usageHint: "Apply to UI and storage",
             targetMemoryID: ""
         )
-        let memories = try await store.listApprovedMemories(repoRoot: "/tmp/native-project")
+        // Repeated clicks and concurrent clients must not create duplicate rules.
+        try await store.reviewCandidate(
+            id: "candidate-1", action: "approve", title: "Native only",
+            value: "", usageHint: "", targetMemoryID: ""
+        )
+        let memories = try await store.listApprovedMemories(repoRoot: "/workspace/native-project")
         XCTAssertEqual(memories.count, 1)
         XCTAssertEqual(memories[0].title, "Native only")
         XCTAssertEqual(memories[0].value, "Use Swift and Apple frameworks")
@@ -124,12 +155,12 @@ final class NativeConversationStoreTests: XCTestCase {
 
         try await store.retireMemory(id: memories[0].memoryID)
         let retired = try await store.listApprovedMemories(
-            repoRoot: "/tmp/native-project"
+            repoRoot: "/workspace/native-project"
         )
         XCTAssertEqual(retired[0].status, "retired")
         try await store.reverifyMemory(id: memories[0].memoryID)
         let verifiedList = try await store.listApprovedMemories(
-            repoRoot: "/tmp/native-project"
+            repoRoot: "/workspace/native-project"
         )
         let verified = verifiedList[0]
         XCTAssertEqual(verified.status, "active")
@@ -150,7 +181,7 @@ final class NativeConversationStoreTests: XCTestCase {
         let seed = """
         INSERT INTO repos(repo_id, repo_root, repo_fingerprint, git_remote, default_branch,
                           created_at, updated_at)
-        VALUES('repo-1', '/tmp/native-project', 'fingerprint', NULL, NULL,
+        VALUES('repo-1', '/workspace/native-project', 'fingerprint', NULL, NULL,
                '2026-07-23T10:00:00Z', '2026-07-23T10:00:00Z');
         INSERT INTO conversations(
           conversation_id, repo_id, source_agent, source_conversation_id,
@@ -158,7 +189,7 @@ final class NativeConversationStoreTests: XCTestCase {
         ) VALUES(
           'conversation-1', 'repo-1', 'codex', 'conversation-1',
           'Implement native feature', '2026-07-23T10:00:00Z',
-          '2026-07-23T11:00:00Z', '/tmp/rollout.jsonl'
+          '2026-07-23T11:00:00Z', '/workspace/rollout.jsonl'
         );
         INSERT INTO messages(message_id, conversation_id, role, content, timestamp)
         VALUES('message-1', 'conversation-1', 'assistant', 'done',
@@ -168,7 +199,7 @@ final class NativeConversationStoreTests: XCTestCase {
         INSERT INTO file_changes(
           file_change_id, conversation_id, message_id, path, change_type, timestamp
         ) VALUES(
-          'file-1', 'conversation-1', 'message-1', '/tmp/native-project/App.swift',
+          'file-1', 'conversation-1', 'message-1', '/workspace/native-project/App.swift',
           'modified', '2026-07-23T10:02:00Z'
         );
         INSERT INTO memory_candidates(
@@ -239,21 +270,21 @@ final class NativeConversationStoreTests: XCTestCase {
         sqlite3_close(raw)
 
         let store = NativeConversationStore(databaseURL: databaseURL)
-        let runs = try await store.listActiveRuns(repoRoot: "/tmp/native-project")
+        let runs = try await store.listActiveRuns(repoRoot: "/workspace/native-project")
         XCTAssertEqual(runs.count, 1)
         XCTAssertEqual(runs.first?.status, "waiting_for_review")
         XCTAssertEqual(runs.first?.artifactCount, 2)
         let artifacts = try await store.listRunArtifacts(
-            repoRoot: "/tmp/native-project"
+            repoRoot: "/workspace/native-project"
         )
         XCTAssertEqual(artifacts.count, 2)
         let conflicts = try await store.listMemoryConflicts(
-            repoRoot: "/tmp/native-project",
+            repoRoot: "/workspace/native-project",
             status: "open"
         )
         XCTAssertEqual(conflicts.first?.memoryTitle, "Build")
         let graph = try await store.listEntityGraph(
-            repoRoot: "/tmp/native-project",
+            repoRoot: "/workspace/native-project",
             limit: 25
         )
         XCTAssertEqual(graph.entities.first?.name, "SwiftUI")
@@ -298,7 +329,7 @@ final class NativeConversationStoreTests: XCTestCase {
                   repo_id, repo_root, repo_fingerprint, git_remote,
                   default_branch, created_at, updated_at
                 ) VALUES(
-                  'legacy-repo-id', '/tmp/native-project', 'legacy',
+                  'legacy-repo-id', '/workspace/native-project', 'legacy',
                   NULL, NULL, '2026-07-23T10:00:00Z',
                   '2026-07-23T10:00:00Z'
                 );
@@ -314,18 +345,18 @@ final class NativeConversationStoreTests: XCTestCase {
             ConversationDetail(
                 id: "conversation-1",
                 sourceAgent: "codex",
-                projectDir: "/tmp/native-project",
+                projectDir: "/workspace/native-project",
                 createdAt: "2026-07-23T10:00:00Z",
                 updatedAt: "2026-07-23T10:01:00Z",
                 summary: "Initial",
-                storagePath: "/tmp/rollout.jsonl",
+                storagePath: "/workspace/rollout.jsonl",
                 resumeCommand: "codex resume conversation-1",
                 messages: [],
                 fileChanges: []
             )
         )
         let first = try await store.upsertAutoCheckpoint(
-            repoRoot: "/tmp/native-project",
+            repoRoot: "/workspace/native-project",
             conversationID: "codex:conversation-1",
             sourceAgent: "codex",
             summary: "Initial",
@@ -333,7 +364,7 @@ final class NativeConversationStoreTests: XCTestCase {
             metadataJSON: #"{"capture":"auto","message_count":1}"#
         )
         let second = try await store.upsertAutoCheckpoint(
-            repoRoot: "/tmp/native-project",
+            repoRoot: "/workspace/native-project",
             conversationID: "codex:conversation-1",
             sourceAgent: "codex",
             summary: "Updated",
@@ -343,7 +374,7 @@ final class NativeConversationStoreTests: XCTestCase {
 
         XCTAssertEqual(first.checkpointID, second.checkpointID)
         let checkpoints = try await store.listCheckpoints(
-            repoRoot: "/tmp/native-project"
+            repoRoot: "/workspace/native-project"
         )
         XCTAssertEqual(checkpoints.count, 1)
         XCTAssertEqual(checkpoints.first?.summary, "Updated")
@@ -557,13 +588,13 @@ final class NativeConversationStoreTests: XCTestCase {
         }
         let seed = """
         INSERT INTO repos VALUES(
-          'repo-1', '/tmp/native-project', 'fingerprint', NULL, NULL,
+          'repo-1', '/workspace/native-project', 'fingerprint', NULL, NULL,
           '2026-07-23T10:00:00Z', '2026-07-23T10:00:00Z'
         );
         INSERT INTO conversations VALUES(
           'conversation-1', 'repo-1', 'codex', 'conversation-1',
           'Bloat regression', '2026-07-23T10:00:00Z',
-          '2026-07-23T11:00:00Z', '/tmp/rollout.jsonl'
+          '2026-07-23T11:00:00Z', '/workspace/rollout.jsonl'
         );
         INSERT INTO messages VALUES(
           'message-1', 'conversation-1', 'user',

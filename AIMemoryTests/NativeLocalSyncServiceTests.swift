@@ -245,7 +245,7 @@ final class NativeLocalSyncServiceTests: XCTestCase {
         ConversationDetail(
             id: id,
             sourceAgent: agent,
-            projectDir: "/tmp/sync-project",
+            projectDir: "/workspace/sync-project",
             createdAt: "2026-07-23T10:00:00Z",
             updatedAt: updatedAt,
             summary: "\(agent) conversation",
@@ -269,7 +269,7 @@ final class NativeLocalSyncServiceTests: XCTestCase {
         ConversationDetail(
             id: id,
             sourceAgent: "codex",
-            projectDir: "/tmp/sync-project",
+            projectDir: "/workspace/sync-project",
             createdAt: "2026-07-23T10:00:00Z",
             updatedAt: "2026-07-23T11:00:00Z",
             summary: "codex conversation",
@@ -353,7 +353,7 @@ final class NativeLocalSyncServiceTests: XCTestCase {
             {
               "id": "\(id)",
               "source_agent": "\(agent)",
-              "project_dir": "/tmp/sync-project",
+              "project_dir": "/workspace/sync-project",
               "created_at": "2026-07-23T10:00:00Z",
               "updated_at": "2026-07-23T11:00:00Z",
               "summary": "codex conversation",

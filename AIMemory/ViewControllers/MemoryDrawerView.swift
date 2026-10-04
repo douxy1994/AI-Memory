@@ -179,7 +179,9 @@ struct CandidateCard: View {
             }
             if candidate.isActionable {
                 HStack(spacing: 6) {
-                    Button("批准") { showApproveConfirm = true }
+                    Button(store.reviewingCandidateIDs.contains(candidate.candidateID) ? "处理中…" : "批准") {
+                        showApproveConfirm = true
+                    }
                         .adaptiveGlassButtonStyle(prominent: true)
                         .controlSize(.mini)
                     Button("编辑后批准") { showEditor = true }
@@ -197,6 +199,7 @@ struct CandidateCard: View {
                     .controlSize(.mini)
                     Spacer()
                 }
+                .disabled(store.reviewingCandidateIDs.contains(candidate.candidateID))
             }
             Button(expanded ? "收起" : "展开") { expanded.toggle() }
                 .font(Theme.appFont(size: 10))
