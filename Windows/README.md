@@ -2,9 +2,11 @@
 
 AI Memory 的 Windows 11 原生版本，使用 C#、WinUI 3 与 Windows App SDK 构建。它与 macOS 版本共享产品行为和数据语义，但不使用跨平台 UI，也不会覆盖 macOS 应用或 ChatMem。
 
-> 当前版本：**0.1.3**。Windows 11 x64 EXE 安装程序、x64/ARM64 Release 构建、真实桌面生命周期、启动导入、Agent 集成与 WebDAV 增量同步均已在 Windows 11 实机验收。
+当前版本：**0.1.5**（Windows 包版本 **0.1.5.0**），与 macOS 合并发布于同一个 [v0.1.5 Release](https://github.com/douxy1994/AI-Memory/releases/tag/v0.1.5)。
 
-> macOS `v0.1.3` 的功能对齐基线和固定验收要求见 [`KIMI_HANDOFF.md`](./KIMI_HANDOFF.md)；本版本已经按该清单完成同步。
+本轮对齐要求见根目录 [`handoff.md`](../handoff.md)：候选审批采用逐候选忙状态、事务内幂等检查与独立审批刷新；默认历史列表、搜索和自动导入按真实项目目录过滤系统临时项目，显式读取、恢复和同步仍保留这些记录。数据库中已有的重复规则不自动整理。
+
+本轮源码验证：132 项核心测试通过，WinUI x64/ARM64 Release 构建和打包 MCP 检查通过。旧版验收记录不作为本轮新增功能的证据。审批测试采用独立数据目录，不操作用户真实候选。
 
 ## 原生技术栈
 
@@ -178,7 +180,7 @@ pwsh .\Windows\scripts\smoke-desktop.ps1 `
 pwsh .\Windows\scripts\build-installer.ps1
 ```
 
-输出位于 `release/0.1.3/AI-Memory-0.1.3-Windows-x64-Setup.exe`，旁边同时生成
+输出位于 `release/0.1.5/AI-Memory-0.1.5-Windows-x64-Setup.exe`，旁边同时生成
 同名 `.sha256` 校验文件。
 
 ## 项目
@@ -197,3 +199,6 @@ Copyright © 2026 douxy1994
 AI Memory is licensed under the [GNU Affero General Public License v3.0
 (AGPL-3.0-only)](../LICENSE). See [../NOTICE.md](../NOTICE.md) for the
 complete project copyright and third-party attribution notice.
+
+桌面审批验收可以将已注册的应用启动为 `AIMemory.Windows.exe --test-profile <绝对目录>`。
+此参数只影响当前进程，隔离数据库和设置，并跳过启动自动导入、ChatMem 凭据迁移、自动备份和更新检查；不要在验收窗口中手动启用集成、同步或系统登录启动。测试结束后退出应用，以普通方式重新启动即可使用正常数据。默认数据位置和普通启动行为不变。

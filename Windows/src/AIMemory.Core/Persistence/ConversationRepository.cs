@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 using AIMemory.Core.Models;
+using AIMemory.Core.Services;
 using Microsoft.Data.Sqlite;
 using System.Security.Cryptography;
 using System.Text;
@@ -47,9 +48,11 @@ public sealed class ConversationRepository(AIMemoryDatabase database)
         string? sourceAgent = null,
         string? search = null,
         int limit = 500,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        bool includeTemporary = false)
     {
         await using var connection = database.OpenConnection();
+        TemporaryProjectPolicy.RegisterQueryFunction(connection);
         var command = connection.CreateCommand();
         command.CommandText = """
             SELECT c.conversation_id, c.repo_id, c.source_agent,
@@ -58,13 +61,15 @@ public sealed class ConversationRepository(AIMemoryDatabase database)
                    COALESCE(r.repo_root, '')
             FROM conversations c
             LEFT JOIN repos r ON r.repo_id=c.repo_id
-            WHERE ($agent IS NULL OR source_agent = $agent)
+            WHERE ($includeTemporary OR NOT is_temporary_project(r.repo_root))
+              AND ($agent IS NULL OR source_agent = $agent)
               AND ($search IS NULL OR c.summary LIKE '%' || $search || '%'
                    OR c.repo_id LIKE '%' || $search || '%'
                    OR r.repo_root LIKE '%' || $search || '%')
             ORDER BY c.updated_at DESC
             LIMIT $limit;
             """;
+        command.Parameters.AddWithValue("$includeTemporary", includeTemporary);
         command.Parameters.AddWithValue("$agent", (object?)sourceAgent ?? DBNull.Value);
         command.Parameters.AddWithValue("$search", (object?)search ?? DBNull.Value);
         command.Parameters.AddWithValue("$limit", Math.Clamp(limit, 1, 5_000));

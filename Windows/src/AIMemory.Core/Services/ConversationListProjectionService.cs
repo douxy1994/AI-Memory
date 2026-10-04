@@ -43,7 +43,8 @@ public static class ConversationListProjectionService
         IReadOnlySet<string>? projectFilters,
         ConversationSortMode sortMode)
     {
-        var query = conversations;
+        var query = conversations.Where(conversation =>
+            !TemporaryProjectPolicy.IsTemporaryProject(conversation.ProjectPath));
         if (!string.IsNullOrWhiteSpace(sourceAgent))
         {
             query = query.Where(conversation =>
@@ -93,6 +94,7 @@ public static class ConversationListProjectionService
     public static IReadOnlyList<ConversationProjectFilter> Projects(
         IEnumerable<ConversationSummary> conversations) =>
         conversations
+            .Where(conversation => !TemporaryProjectPolicy.IsTemporaryProject(conversation.ProjectPath))
             .GroupBy(ProjectKey, StringComparer.OrdinalIgnoreCase)
             .Select(group => new ConversationProjectFilter(
                 group.Key,
@@ -106,6 +108,7 @@ public static class ConversationListProjectionService
     public static IReadOnlyList<ConversationProjectGroup> GroupByProject(
         IEnumerable<ConversationSummary> conversations) =>
         conversations
+            .Where(conversation => !TemporaryProjectPolicy.IsTemporaryProject(conversation.ProjectPath))
             .GroupBy(ProjectKey, StringComparer.OrdinalIgnoreCase)
             .Select(group => new ConversationProjectGroup(
                 group.Key,

@@ -21,6 +21,23 @@ const projectPath = path.join(
 const assetsRoot = path.join(root, "src", "AIMemory.Windows", "Assets");
 const manifest = fs.readFileSync(manifestPath, "utf8");
 const project = fs.readFileSync(projectPath, "utf8");
+const version = project.match(/<Version>([^<]+)<\/Version>/)?.[1];
+if (!version || !manifest.includes(`Version="${version}.0"`)) {
+  throw new Error("Windows project and package versions differ.");
+}
+for (const relative of [
+  "src/AIMemory.Core/AIMemory.Core.csproj",
+  "src/AIMemory.Mcp/AIMemory.Mcp.csproj",
+  "installer/AIMemory.Setup.csproj",
+]) {
+  const component = fs.readFileSync(path.join(root, relative), "utf8");
+  for (const [element, expected] of [
+    ["Version", version], ["AssemblyVersion", `${version}.0`], ["FileVersion", `${version}.0`],
+  ]) {
+    if (!component.includes(`<${element}>${expected}</${element}>`))
+      throw new Error(`${relative}: ${element} must match ${expected}`);
+  }
+}
 
 const requiredManifestFragments = [
   '<Identity Name="com.aimemory.windows"',

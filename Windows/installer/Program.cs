@@ -14,7 +14,7 @@ internal static class Program
 {
     private const string PackageName = "com.aimemory.windows";
     private const string DisplayName = "AI Memory";
-    private const string Version = "0.1.3";
+    private const string Version = "0.1.5";
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     private static extern int MessageBox(
@@ -70,9 +70,9 @@ internal static class Program
             $"aimemory-{Guid.NewGuid():N}.msix");
         try
         {
-            RemoveExistingPackage();
             ExtractEmbeddedPayload(payloadPath, stagingDirectory);
             ValidatePackageLayout(stagingDirectory);
+            RemoveExistingPackage();
 
             if (Directory.Exists(installDirectory))
             {
@@ -130,7 +130,7 @@ internal static class Program
                 "Identity Name=\"com.aimemory.windows\"",
                 StringComparison.Ordinal)
             || !manifest.Contains(
-                "Version=\"0.1.3.0\"",
+                "Version=\"0.1.5.0\"",
                 StringComparison.Ordinal)
             || !File.Exists(Path.Combine(
                 packageDirectory,

@@ -342,7 +342,7 @@ public sealed partial class AboutWindow : Window
         catch
         {
             return typeof(AboutWindow).Assembly.GetName().Version?
-                .ToString(3) ?? "0.1.3";
+                .ToString(3) ?? "0.1.5";
         }
     }
 

@@ -92,13 +92,14 @@ public sealed partial class App : Application
                 _window.BringToFront();
                 StartupDiagnostics.Write("activation.replayed");
             }
-            _window.ConfigureAutomaticBackup(settings);
-            _ = _window.SynchronizeInstalledAgentHistoryAfterLaunchAsync();
-            // Do compatibility migration after the first window is visible.  A
-            // stale ChatMem profile or credential provider must not delay the
-            // Windows shell, single-instance activation, or the workbench.
-            _ = ImportChatMemWebDavAfterLaunchAsync(settingsStore);
-            _ = CheckForUpdatesAtLaunchAsync();
+            if (DataPaths.TestProfileDirectory is null)
+            {
+                _window.ConfigureAutomaticBackup(settings);
+                _ = _window.SynchronizeInstalledAgentHistoryAfterLaunchAsync();
+                // Compatibility migration must not delay the visible shell.
+                _ = ImportChatMemWebDavAfterLaunchAsync(settingsStore);
+                _ = CheckForUpdatesAtLaunchAsync();
+            }
             StartupDiagnostics.Write("launch.complete");
         }
         catch (Exception exception)
@@ -288,7 +289,7 @@ public sealed partial class App : Application
                 return;
             }
             var version = typeof(App).Assembly.GetName().Version?
-                .ToString(3) ?? "0.1.3";
+                .ToString(3) ?? "0.1.5";
             var result = await new UpdateService().CheckAsync(
                 settings.UpdateFeedUrl,
                 version);

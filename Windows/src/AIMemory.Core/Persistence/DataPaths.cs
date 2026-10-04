@@ -6,8 +6,24 @@ namespace AIMemory.Core.Persistence;
 
 public static class DataPaths
 {
+    // Explicit process-local profile for desktop acceptance tests. Normal launches
+    // never set this; do not persist it or derive it from downloaded content.
+    public static string? TestProfileDirectory { get; private set; }
+
+    public static void UseTestProfile(string directory)
+    {
+        if (!Path.IsPathFullyQualified(directory))
+            throw new ArgumentException("Test profile requires an absolute path.", nameof(directory));
+        var path = Path.GetFullPath(directory);
+        var normal = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AIMemory");
+        if (path.TrimEnd(Path.DirectorySeparatorChar).Equals(normal, StringComparison.OrdinalIgnoreCase))
+            throw new ArgumentException("Test profile must not use the normal data directory.", nameof(directory));
+        TestProfileDirectory = path;
+    }
+
     public static string SupportDirectory =>
-        Path.Combine(
+        TestProfileDirectory ?? Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "AIMemory");
 

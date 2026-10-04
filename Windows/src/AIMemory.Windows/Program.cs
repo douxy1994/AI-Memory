@@ -16,6 +16,8 @@ public static class Program
     {
         try
         {
+            if (args.Length == 2 && args[0] == "--test-profile")
+                AIMemory.Core.Persistence.DataPaths.UseTestProfile(args[1]);
             WinRT.ComWrappersSupport.InitializeComWrappers();
             var current = AppInstance.GetCurrent();
             var main = AppInstance.FindOrRegisterForKey("AIMemory.Main");

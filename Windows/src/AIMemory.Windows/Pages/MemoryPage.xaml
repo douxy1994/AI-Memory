@@ -122,14 +122,17 @@
                                                     Click="OpenCandidateSource_Click" />
                                             <Button x:Uid="MemoryApprove" Content="批准/编辑"
                                                     Tag="{Binding ValueRecord}"
+                                                    IsEnabled="{Binding CanReview}"
                                                     Style="{ThemeResource PrimaryPillButtonStyle}"
                                                     Click="ApproveCandidate_Click" />
                                             <Button x:Uid="MemorySnooze" Content="暂缓"
                                                     Tag="{Binding ValueRecord}"
+                                                    IsEnabled="{Binding CanReview}"
                                                     Style="{ThemeResource GhostPillButtonStyle}"
                                                     Click="SnoozeCandidate_Click" />
                                             <Button x:Uid="MemoryReject" Content="拒绝"
                                                     Tag="{Binding ValueRecord}"
+                                                    IsEnabled="{Binding CanReview}"
                                                     Style="{ThemeResource GhostPillButtonStyle}"
                                                     Click="RejectCandidate_Click" />
                                         </StackPanel>

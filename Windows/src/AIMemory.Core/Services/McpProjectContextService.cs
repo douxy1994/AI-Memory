@@ -273,6 +273,7 @@ public sealed class McpProjectContextService(AIMemoryDatabase database)
         int limit,
         CancellationToken cancellationToken)
     {
+        TemporaryProjectPolicy.RegisterQueryFunction(connection);
         var command = connection.CreateCommand();
         command.CommandText = """
             SELECT c.source_conversation_id,c.source_agent,
@@ -284,7 +285,8 @@ public sealed class McpProjectContextService(AIMemoryDatabase database)
                      WHERE f.conversation_id=c.conversation_id)
             FROM conversations c
             LEFT JOIN repos r ON r.repo_id=c.repo_id
-            WHERE c.repo_id=$repo
+            WHERE NOT is_temporary_project(r.repo_root)
+              AND c.repo_id=$repo
               AND (
                 COALESCE(c.summary,'') LIKE $pattern ESCAPE '\'
                 OR EXISTS(

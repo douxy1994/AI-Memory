@@ -4,6 +4,13 @@
 #
 $ErrorActionPreference = "Stop"
 $PSNativeCommandUseErrorActionPreference = $true
+if (-not $env:PROCESSOR_ARCHITECTURE) {
+    $env:PROCESSOR_ARCHITECTURE = switch ([Runtime.InteropServices.RuntimeInformation]::OSArchitecture) {
+        'X64' { 'AMD64' }
+        'Arm64' { 'ARM64' }
+        default { 'x86' }
+    }
+}
 $root = Split-Path -Parent $PSScriptRoot
 Push-Location $root
 try {

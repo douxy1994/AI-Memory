@@ -40,6 +40,8 @@ public sealed record ApprovedMemoryRecord(
     double FreshnessScore,
     string UpdatedAt);
 
+public sealed record CandidateApprovalResult(string MemoryId, bool Created);
+
 public sealed class MemoryGovernanceService(AIMemoryDatabase database)
 {
     public async Task<IReadOnlyList<MemoryCandidateRecord>> ListCandidatesAsync(
@@ -175,7 +177,7 @@ public sealed class MemoryGovernanceService(AIMemoryDatabase database)
         return result;
     }
 
-    public async Task ApproveCandidateAsync(
+    public async Task<CandidateApprovalResult> ApproveCandidateAsync(
         string candidateId,
         string title,
         string value,
@@ -183,12 +185,13 @@ public sealed class MemoryGovernanceService(AIMemoryDatabase database)
         CancellationToken cancellationToken = default)
     {
         await using var connection = database.OpenConnection();
-        await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+        // Acquire the write reservation before reading status, also across processes.
+        await using var transaction = connection.BeginTransaction(deferred: false);
         var read = connection.CreateCommand();
         read.Transaction = (Microsoft.Data.Sqlite.SqliteTransaction)transaction;
         read.CommandText = """
-            SELECT repo_id,kind,summary,value FROM memory_candidates
-            WHERE candidate_id=$id AND status IN ('pending','pending_review')
+            SELECT repo_id,kind,summary,value,status FROM memory_candidates
+            WHERE candidate_id=$id
             LIMIT 1;
             """;
         read.Parameters.AddWithValue("$id", candidateId);
@@ -201,7 +204,28 @@ public sealed class MemoryGovernanceService(AIMemoryDatabase database)
         var kind = reader.GetString(1);
         var fallbackTitle = reader.GetString(2);
         var fallbackValue = reader.GetString(3);
+        var status = reader.GetString(4);
         await reader.CloseAsync();
+
+        var existing = connection.CreateCommand();
+        existing.Transaction = transaction;
+        existing.CommandText = """
+            SELECT memory_id FROM approved_memories
+            WHERE created_from_candidate_id=$id ORDER BY created_at,memory_id LIMIT 1;
+            """;
+        existing.Parameters.AddWithValue("$id", candidateId);
+        var existingId = await existing.ExecuteScalarAsync(cancellationToken) as string;
+        if (status == "approved" || existingId is not null)
+        {
+            if (existingId is null)
+                throw new InvalidOperationException("候选已批准，但关联规则不存在，请刷新并检查数据。");
+            await transaction.CommitAsync(cancellationToken);
+            return new CandidateApprovalResult(existingId, false);
+        }
+        if (status is not ("pending" or "pending_review"))
+            throw new InvalidOperationException($"候选当前状态为 {status}，不能批准。");
+        if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(value))
+            throw new ArgumentException("标题和值不能为空。");
 
         var now = DateTimeOffset.UtcNow.ToString("O");
         var memoryId = Guid.NewGuid().ToString();
@@ -231,6 +255,7 @@ public sealed class MemoryGovernanceService(AIMemoryDatabase database)
         insert.Parameters.AddWithValue("$now", now);
         await insert.ExecuteNonQueryAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
+        return new CandidateApprovalResult(memoryId, true);
     }
 
     public async Task ReviewCandidateAsync(
