@@ -106,8 +106,9 @@ public sealed class ConversationDetailRepositoryTests : IDisposable
 
         Assert.Equal("internal-malformed", detail.Id);
         Assert.Equal("Still readable", Assert.Single(detail.Messages).Content);
-        Assert.Equal(JsonValueKind.Null, Assert.Single(
-            detail.Messages[0].ToolCalls).Input.ValueKind);
+        var input = Assert.Single(detail.Messages[0].ToolCalls).Input;
+        Assert.Equal(JsonValueKind.String, input.ValueKind);
+        Assert.Equal("{not-valid-json", input.GetString());
 
         var missing = await Assert.ThrowsAsync<KeyNotFoundException>(
             () => repository.ExportAsync("missing-conversation"));

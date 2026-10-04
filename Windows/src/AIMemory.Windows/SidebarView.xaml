@@ -1,0 +1,181 @@
+<!--
+  AI Memory
+  Copyright © 2026 douxy1994
+  SPDX-License-Identifier: AGPL-3.0-only
+-->
+<UserControl
+    x:Class="AIMemory.Windows.SidebarView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Background="{ThemeResource SidebarBackgroundBrush}"
+          Padding="14"
+          RowSpacing="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <ComboBox x:Name="SidebarSourceBox"
+                  HorizontalAlignment="Stretch"
+                  DisplayMemberPath="Label"
+                  SelectionChanged="SidebarSourceBox_SelectionChanged" />
+
+        <TextBox x:Name="SidebarSearchBox"
+                 Grid.Row="1"
+                 x:Uid="HistorySearch"
+                 PlaceholderText="搜索本地历史"
+                 TextChanged="SidebarSearchBox_TextChanged" />
+
+        <Grid Grid.Row="2" ColumnSpacing="6">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock x:Uid="SidebarProjects"
+                       Text="项目"
+                       Style="{ThemeResource SectionTitleStyle}"
+                       VerticalAlignment="Center" />
+            <Border Grid.Column="1"
+                    Background="{ThemeResource AIMemoryGreenSoftBrush}"
+                    CornerRadius="9"
+                    Padding="7,1"
+                    VerticalAlignment="Center">
+                <TextBlock x:Name="SidebarConversationCount"
+                           Foreground="{ThemeResource AIMemoryGreenBrush}"
+                           FontSize="11" />
+            </Border>
+            <StackPanel Grid.Column="3"
+                        Orientation="Horizontal"
+                        Spacing="0"
+                        VerticalAlignment="Center">
+                <Button x:Name="BulkSelectButton"
+                        Width="28"
+                        Height="28"
+                        Padding="0"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Click="BulkSelect_Click">
+                    <ImageIcon x:Name="BulkSelectIcon"
+                               Source="ms-appx:///Assets/Icons/sidebar-select.svg"
+                               Width="16"
+                               Height="16" />
+                </Button>
+                <Button x:Name="TrashSelectedButton"
+                        Width="28"
+                        Height="28"
+                        Padding="0"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Visibility="Collapsed"
+                        IsEnabled="False"
+                        Click="TrashSelected_Click">
+                    <ImageIcon Source="ms-appx:///Assets/Icons/sidebar-trash.svg"
+                               Width="16"
+                               Height="16" />
+                </Button>
+                <Button x:Name="CollapseProjectsButton"
+                        Width="28"
+                        Height="28"
+                        Padding="0"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Click="CollapseProjects_Click">
+                    <ImageIcon x:Name="CollapseProjectsIcon"
+                               Source="ms-appx:///Assets/Icons/sidebar-collapse.svg"
+                               Width="16"
+                               Height="16" />
+                </Button>
+                <Button x:Name="ManageMachineGroupsButton"
+                        Width="28"
+                        Height="28"
+                        Padding="0"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Click="ManageMachineGroups_Click">
+                    <ImageIcon Source="ms-appx:///Assets/Icons/sidebar-machines.svg"
+                               Width="16"
+                               Height="16" />
+                </Button>
+                <Button x:Name="OrganizeButton"
+                        Width="28"
+                        Height="28"
+                        Padding="0"
+                        Background="Transparent"
+                        BorderThickness="0">
+                    <Button.Flyout>
+                        <MenuFlyout x:Name="OrganizeMenu"
+                                    Opening="OrganizeMenu_Opening" />
+                    </Button.Flyout>
+                    <ImageIcon Source="ms-appx:///Assets/Icons/sidebar-organize.svg"
+                               Width="16"
+                               Height="16" />
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <TreeView x:Name="ProjectTree"
+                  Grid.Row="3"
+                  Background="Transparent"
+                  CanReorderItems="False"
+                  ItemInvoked="ProjectTree_ItemInvoked">
+            <TreeView.ItemTemplate>
+                <DataTemplate>
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Spacing="2"
+                                    VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Content.Title}"
+                                       FontWeight="{Binding Content.TitleWeight}"
+                                       TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{Binding Content.Subtitle}"
+                                       Visibility="{Binding Content.SubtitleVisibility}"
+                                       Foreground="{ThemeResource SubtleTextBrush}"
+                                       FontSize="12"
+                                       TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                        <Border Grid.Column="1"
+                                Background="{ThemeResource AIMemoryGreenSoftBrush}"
+                                CornerRadius="9"
+                                Padding="7,1"
+                                VerticalAlignment="Center"
+                                Visibility="{Binding Content.CountVisibility}">
+                            <TextBlock Text="{Binding Content.CountLabel}"
+                                       Foreground="{ThemeResource AIMemoryGreenBrush}"
+                                       FontSize="11" />
+                        </Border>
+                    </Grid>
+                </DataTemplate>
+            </TreeView.ItemTemplate>
+        </TreeView>
+
+        <Grid Grid.Row="4"
+              ColumnSpacing="8"
+              BorderThickness="0,1,0,0"
+              BorderBrush="{ThemeResource CardBorderBrush}"
+              Padding="0,10,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <Button x:Uid="NavigationFavorites"
+                        Content="收藏"
+                        Style="{ThemeResource GhostPillButtonStyle}"
+                        HorizontalAlignment="Stretch"
+                        Click="NavFavorites_Click" />
+                <Button x:Uid="NavigationTrash"
+                        Grid.Column="1"
+                        Content="回收站"
+                        Style="{ThemeResource GhostPillButtonStyle}"
+                        HorizontalAlignment="Stretch"
+                        Click="NavTrash_Click" />
+        </Grid>
+    </Grid>
+</UserControl>

@@ -16,6 +16,10 @@ public static class DataPaths
     public static string TrashDirectory => Path.Combine(SupportDirectory, "trash");
     public static string BackupDirectory => Path.Combine(SupportDirectory, "backups");
     public static string UpdateDirectory => Path.Combine(SupportDirectory, "updates");
+    public static string HelperDirectory => Path.Combine(SupportDirectory, "helpers");
+    public static string McpHelperPath => Path.Combine(
+        HelperDirectory,
+        "aimemory-mcp.exe");
 
     public static IReadOnlyList<string> ChatMemDatabaseCandidates =>
     [
@@ -42,6 +46,7 @@ public static class DataPaths
         Directory.CreateDirectory(SupportDirectory);
         Directory.CreateDirectory(TrashDirectory);
         Directory.CreateDirectory(BackupDirectory);
+        Directory.CreateDirectory(HelperDirectory);
         Directory.CreateDirectory(UpdateDirectory);
     }
 }

@@ -9,6 +9,7 @@ using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Windows.ApplicationModel;
+using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 using Windows.System;
 using WinRT.Interop;
@@ -19,13 +20,27 @@ public sealed partial class AboutWindow : Window
 {
     private static readonly Uri ProjectUri =
         new("https://github.com/douxy1994/AI-Memory");
+    private readonly AIMemoryDatabase _database;
     private readonly SettingsStore _settings;
+    private readonly CredentialService _credentials = new();
     private bool _checking;
 
-    public AboutWindow(SettingsStore settings)
+    public AboutWindow(AIMemoryDatabase database, SettingsStore settings)
     {
+        _database = database;
         _settings = settings;
         InitializeComponent();
+        try
+        {
+            SystemBackdrop = new Microsoft.UI.Xaml.Media.MicaBackdrop
+            {
+                Kind = Microsoft.UI.Composition.SystemBackdrops.MicaKind.BaseAlt,
+            };
+        }
+        catch
+        {
+            // The themed background remains the fallback when Mica is disabled.
+        }
         Title = LocalizationService.Get("AboutWindowTitle");
         ReleaseVersionText.Text = LocalizationService.Format(
             "ReleaseVersion",
@@ -42,7 +57,25 @@ public sealed partial class AboutWindow : Window
         var handle = WindowNative.GetWindowHandle(this);
         var id = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(handle);
         AppWindow.GetFromWindowId(id).Resize(
-            new global::Windows.Graphics.SizeInt32(620, 720));
+            new global::Windows.Graphics.SizeInt32(780, 900));
+        _ = InitializeAsync();
+    }
+
+    private async Task InitializeAsync()
+    {
+        try
+        {
+            var settings = await _settings.LoadAsync();
+            AutoUpdateToggle.IsOn = settings.AutoCheckUpdates;
+            UpdateFeedBox.Text = settings.UpdateFeedUrl;
+            await RefreshDiagnosticsAsync();
+        }
+        catch (Exception exception)
+        {
+            UpdateStatus.IsOpen = true;
+            UpdateStatus.Severity = InfoBarSeverity.Error;
+            UpdateStatus.Message = exception.Message;
+        }
     }
 
     public async Task CheckForUpdatesAsync(bool automaticInstall)
@@ -64,7 +97,7 @@ public sealed partial class AboutWindow : Window
                 CurrentVersion());
             if (!result.IsUpdateAvailable)
             {
-                UpdateStatus.Severity = InfoBarSeverity.Success;
+                UpdateStatus.Severity = InfoBarSeverity.Informational;
                 UpdateStatus.Message = LocalizationService.Format(
                     "CurrentVersionLatest",
                     result.Release.Version);
@@ -98,7 +131,7 @@ public sealed partial class AboutWindow : Window
                 throw new InvalidOperationException(
                     LocalizationService.Get("WindowsCannotOpenInstaller"));
             }
-            UpdateStatus.Severity = InfoBarSeverity.Success;
+            UpdateStatus.Severity = InfoBarSeverity.Informational;
             UpdateStatus.Message =
                 LocalizationService.Get("InstallerLaunched");
         }
@@ -127,8 +160,162 @@ public sealed partial class AboutWindow : Window
     private async void GitHub_Click(object sender, RoutedEventArgs args) =>
         await Launcher.LaunchUriAsync(ProjectUri);
 
-    private async void CheckUpdate_Click(object sender, RoutedEventArgs args) =>
-        await CheckForUpdatesAsync(automaticInstall: false);
+    private async void CheckUpdate_Click(object sender, RoutedEventArgs args)
+    {
+        if (await SaveUpdateSettingsAsync(showConfirmation: false))
+        {
+            await CheckForUpdatesAsync(automaticInstall: false);
+        }
+    }
+
+    private async void SaveUpdateSettings_Click(
+        object sender,
+        RoutedEventArgs args) =>
+        await SaveUpdateSettingsAsync(showConfirmation: true);
+
+    private async Task<bool> SaveUpdateSettingsAsync(bool showConfirmation)
+    {
+        try
+        {
+            var settings = await _settings.LoadAsync();
+            settings.AutoCheckUpdates = AutoUpdateToggle.IsOn;
+            settings.UpdateFeedUrl = UpdateFeedBox.Text.Trim();
+            await _settings.SaveAsync(settings);
+            if (showConfirmation)
+            {
+                UpdateStatus.IsOpen = true;
+                UpdateStatus.Severity = InfoBarSeverity.Informational;
+                UpdateStatus.Message = LocalizationService.Get(
+                    "UpdateSettingsSaved");
+            }
+            return true;
+        }
+        catch (Exception exception)
+        {
+            UpdateStatus.IsOpen = true;
+            UpdateStatus.Severity = InfoBarSeverity.Error;
+            UpdateStatus.Message = LocalizationService.Format(
+                "UpdateSettingsSaveFailed", exception.Message);
+            return false;
+        }
+    }
+
+    private async void RunReadiness_Click(object sender, RoutedEventArgs args)
+    {
+        RunReadinessButton.IsEnabled = false;
+        ReadinessProgress.IsActive = true;
+        ReadinessProgress.Visibility = Visibility.Visible;
+        try
+        {
+            var report = await new UpgradeReadinessService(
+                _database,
+                _settings,
+                DataPaths.SettingsPath).CheckAsync(username =>
+            {
+                var stored = _credentials.Load();
+                return stored is not null
+                    && string.Equals(
+                        stored.Value.Username,
+                        username,
+                        StringComparison.Ordinal)
+                    && !string.IsNullOrEmpty(stored.Value.Password);
+            });
+            ReadinessList.ItemsSource = report.Checks
+                .Select(value => new LocalizedUpgradeReadinessCheck(value))
+                .ToArray();
+            ReadinessSummary.Text = report.Status switch
+            {
+                "error" => LocalizationService.Format(
+                    "UpgradeReadinessErrors", report.ErrorCount),
+                "warning" => LocalizationService.Format(
+                    "UpgradeReadinessWarnings", report.WarningCount),
+                _ => LocalizationService.Get("UpgradeReadinessPassed"),
+            };
+            ReadinessSummary.Visibility = Visibility.Visible;
+            UpdateStatus.IsOpen = true;
+            UpdateStatus.Severity = report.Status switch
+            {
+                "error" => InfoBarSeverity.Error,
+                "warning" => InfoBarSeverity.Warning,
+                _ => InfoBarSeverity.Informational,
+            };
+            UpdateStatus.Message = ReadinessSummary.Text;
+        }
+        catch (Exception exception)
+        {
+            ReadinessSummary.Text = LocalizationService.Format(
+                "UpgradeReadinessFailed", exception.Message);
+            ReadinessSummary.Visibility = Visibility.Visible;
+            UpdateStatus.IsOpen = true;
+            UpdateStatus.Severity = InfoBarSeverity.Error;
+            UpdateStatus.Message = ReadinessSummary.Text;
+        }
+        finally
+        {
+            RunReadinessButton.IsEnabled = true;
+            ReadinessProgress.IsActive = false;
+            ReadinessProgress.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private async void RefreshDiagnostics_Click(
+        object sender,
+        RoutedEventArgs args) =>
+        await RefreshDiagnosticsAsync();
+
+    private async Task RefreshDiagnosticsAsync()
+    {
+        try
+        {
+            var report = await new DiagnosticsService(_database)
+                .CollectAsync(CurrentVersion());
+            DiagnosticsBox.Text = report.ToDisplayText();
+        }
+        catch (Exception exception)
+        {
+            DiagnosticsBox.Text = LocalizationService.Format(
+                "DiagnosticsReadFailed", exception.Message);
+        }
+    }
+
+    private void CopyDiagnostics_Click(object sender, RoutedEventArgs args)
+    {
+        var package = new DataPackage();
+        package.SetText(DiagnosticsBox.Text ?? "");
+        Clipboard.SetContent(package);
+        Clipboard.Flush();
+        UpdateStatus.IsOpen = true;
+        UpdateStatus.Severity = InfoBarSeverity.Informational;
+        UpdateStatus.Message = LocalizationService.Get("DiagnosticsCopied");
+    }
+
+    private async void OpenDataDirectory_Click(
+        object sender,
+        RoutedEventArgs args)
+    {
+        try
+        {
+            Directory.CreateDirectory(DataPaths.SupportDirectory);
+            var folder = await StorageFolder.GetFolderFromPathAsync(
+                DataPaths.SupportDirectory);
+            if (!await Launcher.LaunchFolderAsync(folder))
+            {
+                throw new InvalidOperationException(
+                    LocalizationService.Format(
+                        "WindowsCannotOpenLocation",
+                        LocalizationService.Get("DataDirectory")));
+            }
+        }
+        catch (Exception exception)
+        {
+            UpdateStatus.IsOpen = true;
+            UpdateStatus.Severity = InfoBarSeverity.Error;
+            UpdateStatus.Message = LocalizationService.Format(
+                "OpenLocationFailed",
+                LocalizationService.Get("DataDirectory"),
+                exception.Message);
+        }
+    }
 
     private async Task ShowUpdateResultAsync(
         string title,
@@ -155,7 +342,7 @@ public sealed partial class AboutWindow : Window
         catch
         {
             return typeof(AboutWindow).Assembly.GetName().Version?
-                .ToString(3) ?? "0.1.0";
+                .ToString(3) ?? "0.1.3";
         }
     }
 

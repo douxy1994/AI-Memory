@@ -142,10 +142,19 @@ for (const file of filesUnder(appRoot, ".xaml")) {
   for (const match of source.matchAll(
     /<([A-Za-z_][\w.:]*)\b[^>]*\bx:Name="([A-Za-z_]\w*)"[^>]*>/g,
   )) {
-    const tag = match[1].split(":").at(-1);
+    const [prefix, tag] = match[1].includes(":")
+      ? match[1].split(":", 2)
+      : [null, match[1]];
+    const namespaceName = prefix
+      ? source.match(
+        new RegExp(`xmlns:${prefix}="(?:using:|clr-namespace:)([^"]+)"`),
+      )?.[1]
+      : null;
     fields.push({
       name: match[2],
-      type: `Microsoft.UI.Xaml.Controls.${tag}`,
+      type: namespaceName
+        ? `${namespaceName}.${tag}`
+        : `Microsoft.UI.Xaml.Controls.${tag}`,
     });
   }
   classFields.set(className, fields);

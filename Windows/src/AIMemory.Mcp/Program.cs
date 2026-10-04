@@ -98,7 +98,7 @@ public static class Program
             {
                 protocolVersion = "2025-03-26",
                 capabilities = new { tools = new { } },
-                serverInfo = new { name = "aimemory", version = "0.1.0" },
+                serverInfo = new { name = "aimemory", version = "0.1.3" },
             });
         }
         if (method == "tools/list")
@@ -186,7 +186,14 @@ public static class Program
                     OptionalInt(arguments, "limit", 25)),
                 "detect_agent_integrations" => new
                 {
-                    integrations = new AgentCatalog().Detect(),
+                    integrations = new AgentIntegrationManager(
+                        Environment.GetFolderPath(
+                            Environment.SpecialFolder.UserProfile),
+                        Environment.ProcessPath
+                            ?? Path.Combine(
+                                AppContext.BaseDirectory,
+                                "aimemory-mcp.exe"))
+                        .Detect(),
                 },
                 _ => throw new InvalidOperationException($"Unknown tool: {name}"),
             };
@@ -252,7 +259,7 @@ public static class Program
     {
         var root = Required(arguments, "repo_root");
         var context = await query.GetProjectContextAsync(root, "", 3);
-        var report = await diagnostics.CollectAsync("0.1.0");
+        var report = await diagnostics.CollectAsync("0.1.3");
         return new
         {
             repo_root = root,

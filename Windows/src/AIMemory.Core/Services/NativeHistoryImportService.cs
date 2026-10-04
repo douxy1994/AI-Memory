@@ -16,20 +16,37 @@ public sealed record NativeHistoryImportReport(
     public int Total => Imported.Values.Sum();
 }
 
+public sealed record NativeHistoryReaderDescriptor(string Id, string Label);
+
 /// Reads supported local Agent histories without modifying their source files.
 /// Parsed conversations are copied into AI Memory's independent database.
 public sealed class NativeHistoryImportService
 {
+    public static IReadOnlyList<NativeHistoryReaderDescriptor> ReadableSources { get; } =
+    [
+        new("codex", "Codex"),
+        new("claude", "Claude"),
+        new("gemini", "Gemini"),
+        new("hermes", "Hermes"),
+        new("kimi", "Kimi Code"),
+        new("antigravity", "Google Antigravity"),
+        new("opencode", "OpenCode"),
+        new("zcode", "ZCode"),
+    ];
+
     private readonly ConversationRepository _repository;
     private readonly string _home;
+    private readonly AgentCatalog _catalog;
 
     public NativeHistoryImportService(
         ConversationRepository repository,
-        string? home = null)
+        string? home = null,
+        AgentCatalog? catalog = null)
     {
         _repository = repository;
         _home = home
             ?? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        _catalog = catalog ?? new AgentCatalog(home: _home);
     }
 
     public async Task<NativeHistoryImportReport> ImportAllAsync(
@@ -37,22 +54,19 @@ public sealed class NativeHistoryImportService
     {
         var imported = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         var warnings = new List<string>();
-        imported["codex"] = await ImportSafelyAsync(
-            "Codex", ImportCodexAsync, warnings, cancellationToken);
-        imported["claude"] = await ImportSafelyAsync(
-            "Claude", ImportClaudeAsync, warnings, cancellationToken);
-        imported["gemini"] = await ImportSafelyAsync(
-            "Gemini", ImportGeminiAsync, warnings, cancellationToken);
-        imported["hermes"] = await ImportSafelyAsync(
-            "Hermes", ImportHermesAsync, warnings, cancellationToken);
-        imported["kimi"] = await ImportSafelyAsync(
-            "Kimi Code", ImportKimiAsync, warnings, cancellationToken);
-        imported["antigravity"] = await ImportSafelyAsync(
-            "Google Antigravity", ImportAntigravityAsync, warnings, cancellationToken);
-        imported["opencode"] = await ImportSafelyAsync(
-            "OpenCode", ImportOpenCodeAsync, warnings, cancellationToken);
-        imported["zcode"] = await ImportSafelyAsync(
-            "ZCode", ImportZCodeAsync, warnings, cancellationToken);
+        var installed = _catalog.Detect()
+            .Where(agent => agent.IsDetected)
+            .Select(agent => agent.Id)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (var source in ReadableSources.Where(source =>
+                     installed.Contains(source.Id)))
+        {
+            imported[source.Id] = await ImportSafelyAsync(
+                source.Label,
+                token => ImportAgentAsync(source.Id, token),
+                warnings,
+                cancellationToken);
+        }
         return new NativeHistoryImportReport(imported, warnings);
     }
 
@@ -603,6 +617,7 @@ public sealed class NativeHistoryImportService
         {
             cancellationToken.ThrowIfCancellationRequested();
             var messages = new List<WebDavMessage>();
+            var fileChanges = new List<WebDavFileChange>();
             var statePath = Path.Combine(session, "state.json");
             var project = "";
             var created = File.GetCreationTimeUtc(session).ToString("O");
@@ -618,6 +633,24 @@ public sealed class NativeHistoryImportService
                     created = GetString(state.RootElement, "createdAt") ?? created;
                     updated = GetString(state.RootElement, "updatedAt") ?? updated;
                     title = GetString(state.RootElement, "title");
+                    if (state.RootElement.TryGetProperty(
+                            "aimemoryFileChanges", out var storedChanges)
+                        && storedChanges.ValueKind == JsonValueKind.Array)
+                    {
+                        foreach (var storedChange in storedChanges.EnumerateArray())
+                        {
+                            try
+                            {
+                                var change = JsonSerializer.Deserialize<WebDavFileChange>(
+                                    storedChange.GetRawText());
+                                if (change is not null) fileChanges.Add(change);
+                            }
+                            catch (JsonException)
+                            {
+                                // A malformed extension must not hide the wire log.
+                            }
+                        }
+                    }
                 }
                 catch (JsonException)
                 {
@@ -687,12 +720,47 @@ public sealed class NativeHistoryImportService
                             var arguments = eventValue.TryGetProperty("args", out var args)
                                 ? args.Clone()
                                 : EmptyJson();
-                            messages.Add(new WebDavMessage(
-                                $"kimi:{Path.GetFileName(session)}:{sequence++}",
-                                timestamp, "assistant", "",
-                                [new WebDavToolCall(
-                                    callId, name, arguments, null, "success")],
-                                []));
+                            var tool = new WebDavToolCall(
+                                callId, name, arguments, null, "success");
+                            var messageIndex = messages.Count - 1;
+                            if (messageIndex >= 0
+                                && messages[messageIndex].Role.Equals(
+                                    "assistant", StringComparison.OrdinalIgnoreCase)
+                                && string.Equals(
+                                    messages[messageIndex].Timestamp,
+                                    timestamp,
+                                    StringComparison.Ordinal))
+                            {
+                                var message = messages[messageIndex];
+                                messages[messageIndex] = message with
+                                {
+                                    ToolCalls = [.. message.ToolCalls, tool],
+                                };
+                            }
+                            else
+                            {
+                                messages.Add(new WebDavMessage(
+                                    $"kimi:{Path.GetFileName(session)}:{sequence++}",
+                                    timestamp, "assistant", "", [tool], []));
+                            }
+                        }
+                        else if (eventType == "tool.result")
+                        {
+                            var callId = GetString(eventValue, "toolCallId");
+                            if (string.IsNullOrWhiteSpace(callId)) continue;
+                            string? output = null;
+                            var status = "success";
+                            if (eventValue.TryGetProperty("result", out var result)
+                                && result.ValueKind == JsonValueKind.Object)
+                            {
+                                output = JsonText(result, "output");
+                                if (result.TryGetProperty("isError", out var isError)
+                                    && isError.ValueKind == JsonValueKind.True)
+                                {
+                                    status = "error";
+                                }
+                            }
+                            ApplyToolResult(messages, callId, output, status);
                         }
                     }
                     catch (JsonException)
@@ -709,7 +777,7 @@ public sealed class NativeHistoryImportService
                     Truncate(UsefulTitle(title)
                         ?? messages.FirstOrDefault(value => value.Role == "user")?.Content, 100),
                     File.Exists(statePath) ? statePath : session,
-                    $"kimi --session {id}", messages, []),
+                    $"kimi --session {id}", messages, fileChanges),
                 cancellationToken);
             count++;
         }

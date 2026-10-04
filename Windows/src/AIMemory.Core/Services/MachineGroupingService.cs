@@ -65,8 +65,7 @@ public sealed class MachineGroupingService
                     ProjectLabel(path),
                     machineId,
                     machineLabel,
-                    group.OrderByDescending(value => value.UpdatedAt)
-                        .ToArray());
+                    group.ToArray());
             })
             .ToArray();
         return projects

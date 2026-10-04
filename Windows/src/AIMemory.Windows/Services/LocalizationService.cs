@@ -14,8 +14,15 @@ public static class LocalizationService
 
     public static string Get(string key)
     {
-        var value = Loader.GetString(key);
-        return string.IsNullOrWhiteSpace(value) ? key : value;
+        try
+        {
+            var value = Loader.GetString(key);
+            return string.IsNullOrWhiteSpace(value) ? key : value;
+        }
+        catch (System.Runtime.InteropServices.COMException)
+        {
+            return key;
+        }
     }
 
     public static string Format(string key, params object?[] arguments) =>
@@ -31,15 +38,23 @@ public sealed record LocalizedAgentIntegration(
     AgentIntegrationStatus Value)
 {
     public string Label => Value.Label;
-    public string Detail => LocalizationService.Get(Value.State switch
+    public string Detail
     {
-        AgentIntegrationState.Integrated => "AgentStateIntegratedDetail",
-        AgentIntegrationState.Partial => "AgentStatePartialDetail",
-        AgentIntegrationState.Detected when !Value.IsIntegrationAvailable =>
-            "AgentStateDetectedManualDetail",
-        AgentIntegrationState.Detected => "AgentStateDetectedDetail",
-        _ => "AgentStateMissingDetail",
-    });
+        get
+        {
+            var detail = LocalizationService.Get(Value.State switch
+            {
+                AgentIntegrationState.Integrated => "AgentStateIntegratedDetail",
+                AgentIntegrationState.Partial => "AgentStatePartialDetail",
+                AgentIntegrationState.Detected when !Value.IsIntegrationAvailable =>
+                    "AgentStateDetectedManualDetail",
+                AgentIntegrationState.Detected => "AgentStateDetectedDetail",
+                _ => "AgentStateMissingDetail",
+            });
+            if (Value.DetectionPaths.Count == 0) return detail;
+            return $"{detail} · {string.Join(" · ", Value.DetectionPaths)}";
+        }
+    }
     public string State => LocalizationService.Get(Value.State switch
     {
         AgentIntegrationState.Integrated => "AgentStateIntegrated",
@@ -50,6 +65,7 @@ public sealed record LocalizedAgentIntegration(
     public string ActionLabel => LocalizationService.Get(
         Value.IsIntegrated ? "Disable" : "Enable");
     public bool CanToggle => Value.CanToggle;
+    public string DetectionMark => Value.IsDetected ? "●" : "○";
 }
 
 public sealed record LocalizedUpgradeReadinessCheck(

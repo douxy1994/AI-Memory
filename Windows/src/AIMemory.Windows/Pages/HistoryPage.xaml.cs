@@ -138,6 +138,248 @@ public sealed partial class HistoryPage : Page
         NoEntitiesText.Visibility = rows.Length == 0
             ? Visibility.Visible
             : Visibility.Collapsed;
+
+        if (string.IsNullOrWhiteSpace(LocalIndexRepoRootBox.Text))
+        {
+            LocalIndexRepoRootBox.Text = _allConversations
+                .Select(value => value.ProjectPath)
+                .FirstOrDefault(value => !string.IsNullOrWhiteSpace(value))
+                ?? "";
+        }
+        await ReloadLocalIndexStatusAsync();
+    }
+
+    private async Task ReloadLocalIndexStatusAsync()
+    {
+        if (_window is null) return;
+        var root = LocalIndexRepoRootBox.Text.Trim();
+        if (root.Length == 0)
+        {
+            LocalIndexScannedText.Text = "—";
+            LocalIndexLinkedText.Text = "—";
+            LocalIndexCandidatesText.Text = "—";
+            LocalIndexMemoriesText.Text = "—";
+            LocalIndexDocumentsText.Text = "";
+            return;
+        }
+
+        var context = await new McpProjectContextService(_window.Database)
+            .GetProjectContextAsync(root, "status", "startup", 3);
+        var matching = _allConversations.Count(value =>
+            string.Equals(
+                value.ProjectPath?.TrimEnd('\\', '/'),
+                root.TrimEnd('\\', '/'),
+                StringComparison.OrdinalIgnoreCase));
+        LocalIndexScannedText.Text = (context.Health.LatestScan?
+            .ScannedConversationCount ?? _allConversations.Count).ToString();
+        LocalIndexLinkedText.Text = (context.Health.LatestScan?
+            .LinkedConversationCount ?? matching).ToString();
+        LocalIndexCandidatesText.Text = context.Health.PendingCandidateCount
+            .ToString();
+        LocalIndexMemoriesText.Text = context.Health.ApprovedMemoryCount
+            .ToString();
+        LocalIndexDocumentsText.Text = LocalizationService.Format(
+            "LocalIndexDocumentCount",
+            context.Health.SearchDocumentCount);
+    }
+
+    private void UseCurrentProject_Click(object sender, RoutedEventArgs args)
+    {
+        var current = _allConversations
+            .OrderByDescending(value => value.UpdatedAt)
+            .Select(value => value.ProjectPath)
+            .FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
+        if (string.IsNullOrWhiteSpace(current))
+        {
+            Show(
+                LocalizationService.Get("LocalIndexNoCurrentProject"),
+                InfoBarSeverity.Warning);
+            return;
+        }
+        LocalIndexRepoRootBox.Text = current;
+        _ = ReloadLocalIndexStatusAsync();
+    }
+
+    private async void ScanLocalIndex_Click(
+        object sender,
+        RoutedEventArgs args) =>
+        await RunLocalIndexImportAsync(scanOnly: true);
+
+    private async void ImportAllLocalHistory_Click(
+        object sender,
+        RoutedEventArgs args) =>
+        await RunLocalIndexImportAsync(scanOnly: false);
+
+    private async Task RunLocalIndexImportAsync(bool scanOnly)
+    {
+        if (_window is null || !RequireLocalIndexRoot()) return;
+        BeginLocalIndexOperation();
+        try
+        {
+            var report = await new NativeHistoryImportService(
+                _window.Conversations).ImportAllAsync();
+            await ReloadConversationsAsync();
+            await ReloadLocalIndexStatusAsync();
+            var details = string.Join(
+                LocalizationService.Get("ListSeparator"),
+                report.Imported.Select(value => $"{value.Key} {value.Value}"));
+            Show(
+                LocalizationService.Format(
+                    scanOnly
+                        ? "LocalIndexScanCompleted"
+                        : "NativeHistoryImportCompleted",
+                    details),
+                report.Warnings.Count == 0
+                    ? InfoBarSeverity.Success
+                    : InfoBarSeverity.Warning);
+        }
+        catch (Exception exception)
+        {
+            Show(
+                LocalizationService.Format(
+                    "LocalIndexOperationFailed",
+                    exception.Message),
+                InfoBarSeverity.Error);
+        }
+        finally
+        {
+            EndLocalIndexOperation();
+        }
+    }
+
+    private async void MergeLocalIndexAlias_Click(
+        object sender,
+        RoutedEventArgs args)
+    {
+        if (_window is null || !RequireLocalIndexRoot()) return;
+        var field = new TextBox
+        {
+            Header = LocalizationService.Get("LocalIndexAliasPath"),
+            PlaceholderText = @"D:\old\repository\path",
+            MinWidth = 520,
+        };
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = LocalizationService.Get("LocalIndexMergeAliasTitle"),
+            Content = field,
+            PrimaryButtonText = LocalizationService.Get("Merge"),
+            CloseButtonText = LocalizationService.Get("Cancel"),
+            DefaultButton = ContentDialogButton.Primary,
+        };
+        if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
+        var alias = field.Text.Trim();
+        if (alias.Length == 0) return;
+
+        BeginLocalIndexOperation();
+        try
+        {
+            await new RepositoryGovernanceService(_window.Database)
+                .MergeAliasAsync(LocalIndexRepoRootBox.Text.Trim(), alias);
+            await ReloadLocalIndexStatusAsync();
+            Show(
+                LocalizationService.Get("LocalIndexAliasMerged"),
+                InfoBarSeverity.Success);
+        }
+        catch (Exception exception)
+        {
+            Show(
+                LocalizationService.Format(
+                    "LocalIndexOperationFailed",
+                    exception.Message),
+                InfoBarSeverity.Error);
+        }
+        finally
+        {
+            EndLocalIndexOperation();
+        }
+    }
+
+    private async void RebuildLocalIndexWiki_Click(
+        object sender,
+        RoutedEventArgs args)
+    {
+        if (_window is null || !RequireLocalIndexRoot()) return;
+        BeginLocalIndexOperation();
+        try
+        {
+            var governance = new RepositoryGovernanceService(_window.Database);
+            var pages = await new KnowledgeProjectionService(
+                _window.Database,
+                governance).RebuildWikiAsync(LocalIndexRepoRootBox.Text.Trim());
+            await ReloadAllAsync();
+            Show(
+                LocalizationService.Format("LocalIndexWikiRebuilt", pages.Count),
+                InfoBarSeverity.Success);
+        }
+        catch (Exception exception)
+        {
+            Show(
+                LocalizationService.Format(
+                    "LocalIndexOperationFailed",
+                    exception.Message),
+                InfoBarSeverity.Error);
+        }
+        finally
+        {
+            EndLocalIndexOperation();
+        }
+    }
+
+    private async void RebuildLocalSearchIndex_Click(
+        object sender,
+        RoutedEventArgs args)
+    {
+        if (_window is null || !RequireLocalIndexRoot()) return;
+        BeginLocalIndexOperation();
+        try
+        {
+            var governance = new RepositoryGovernanceService(_window.Database);
+            var result = await new KnowledgeProjectionService(
+                _window.Database,
+                governance).RebuildSearchIndexAsync(
+                    LocalIndexRepoRootBox.Text.Trim());
+            await ReloadLocalIndexStatusAsync();
+            Show(
+                LocalizationService.Format(
+                    "LocalIndexSearchRebuilt",
+                    result.DocumentCount,
+                    result.EmbeddingCount),
+                InfoBarSeverity.Success);
+        }
+        catch (Exception exception)
+        {
+            Show(
+                LocalizationService.Format(
+                    "LocalIndexOperationFailed",
+                    exception.Message),
+                InfoBarSeverity.Error);
+        }
+        finally
+        {
+            EndLocalIndexOperation();
+        }
+    }
+
+    private bool RequireLocalIndexRoot()
+    {
+        if (!string.IsNullOrWhiteSpace(LocalIndexRepoRootBox.Text)) return true;
+        Show(
+            LocalizationService.Get("LocalIndexRepositoryRequired"),
+            InfoBarSeverity.Warning);
+        return false;
+    }
+
+    private void BeginLocalIndexOperation()
+    {
+        LocalIndexProgress.IsActive = true;
+        LocalIndexProgress.Visibility = Visibility.Visible;
+    }
+
+    private void EndLocalIndexOperation()
+    {
+        LocalIndexProgress.IsActive = false;
+        LocalIndexProgress.Visibility = Visibility.Collapsed;
     }
 
     private async Task ReloadConversationsAsync()
@@ -268,7 +510,12 @@ public sealed partial class HistoryPage : Page
             out var selectedSort)
             ? selectedSort
             : ConversationSortMode.UpdatedDescending;
-        ConversationList.SelectedItems.Clear();
+        if (ConversationList.SelectionMode != ListViewSelectionMode.None)
+        {
+            // SelectedItems is a read-only vector while selection is off;
+            // clearing it throws a stowed COMException.
+            ConversationList.SelectedItems.Clear();
+        }
         var items = ConversationListProjectionService.Apply(
             _allConversations,
             SelectedSourceAgent(),
@@ -388,7 +635,10 @@ public sealed partial class HistoryPage : Page
 
     private void ExitBulkSelection()
     {
-        ConversationList.SelectedItems.Clear();
+        if (ConversationList.SelectionMode != ListViewSelectionMode.None)
+        {
+            ConversationList.SelectedItems.Clear();
+        }
         ConversationList.SelectionMode = ListViewSelectionMode.None;
         ConversationList.IsItemClickEnabled = true;
         _bulkSelectionMode = false;

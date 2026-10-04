@@ -41,8 +41,8 @@ public sealed class AgentCatalog
         new("claude", "Claude Code", ["claude"], [".claude"], true),
         new("codex", "Codex", ["codex"], [".codex"], true),
         new("gemini", "Gemini CLI", ["gemini"], [".gemini"], true),
-        new("antigravity", "Google Antigravity", ["antigravity", "agy"], [".gemini\\antigravity-cli"], true),
-        new("opencode", "OpenCode", ["opencode"], [".config\\opencode"], true),
+        new("antigravity", "Google Antigravity", ["antigravity", "agy"], [".gemini\\antigravity-cli", ".gemini\\antigravity"], true),
+        new("opencode", "OpenCode", ["opencode"], [".config\\opencode", ".local\\share\\opencode", "AppData\\Local\\opencode", "AppData\\Roaming\\opencode"], true),
         new("hermes", "Hermes", ["hermes"], [".hermes"], true),
         new("zcode", "ZCode", ["zcode"], [".zcode"], true),
         new("kimi", "Kimi Code", ["kimi", "kimi-code"], [".kimi-code"], true),
@@ -212,38 +212,87 @@ public sealed class AgentCatalog
         var pathDirectories = _pathDirectoriesOverride ?? ReadPathDirectories();
         var installationRoots = _installationRootsOverride
             ?? ReadInstallationRoots();
+        var executableMatchesByName = FindExecutableMatches(pathDirectories);
         return All.Select((agent, index) =>
             {
-                var detected = agent.RelativePaths.Any(relative =>
-                        installationRoots.Any(root =>
-                            File.Exists(Path.Combine(root, NormalizeRelativePath(relative)))
-                            || Directory.Exists(Path.Combine(root, NormalizeRelativePath(relative)))))
-                    || agent.Executables.Any(executable =>
-                        pathDirectories.Any(directory =>
-                            ExecutableExists(directory, executable)));
-                return (agent, index, detected);
+                var relativeMatches = agent.RelativePaths
+                    .SelectMany(relative => installationRoots.Select(root =>
+                        Path.Combine(root, NormalizeRelativePath(relative))))
+                    .Where(path => File.Exists(path) || Directory.Exists(path));
+                var executableMatches = agent.Executables
+                    .SelectMany(executable =>
+                        executableMatchesByName.GetValueOrDefault(executable)
+                        ?? []);
+                var matches = relativeMatches
+                    .Concat(executableMatches)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .Take(4)
+                    .ToArray();
+                return (agent, index, matches);
             })
-            .OrderByDescending(value => value.detected)
+            .OrderByDescending(value => value.matches.Length > 0)
             .ThenBy(value => value.index)
-            .Select(value => new AgentIntegrationStatus(
-                value.agent.Id,
-                value.agent.Label,
-                value.detected,
-                value.agent.SupportsAutomaticIntegration,
-                false,
-                value.detected
-                    ? AgentIntegrationState.Detected
-                    : AgentIntegrationState.Missing,
-                value.detected
-                    ? "已检测到本机安装；尚未启用 AI Memory 集成。"
-                    : "本机未安装，默认不启用。"))
+            .Select(value =>
+            {
+                var detected = value.matches.Length > 0;
+                return new AgentIntegrationStatus(
+                    value.agent.Id,
+                    value.agent.Label,
+                    detected,
+                    value.agent.SupportsAutomaticIntegration,
+                    false,
+                    detected
+                        ? AgentIntegrationState.Detected
+                        : AgentIntegrationState.Missing,
+                    detected
+                        ? "已检测到本机安装；尚未启用 AI Memory 集成。"
+                        : "本机未安装，默认不启用。")
+                {
+                    DetectionPaths = value.matches,
+                };
+            })
             .ToArray();
     }
 
-    private static IReadOnlyList<string> ReadPathDirectories() =>
-        (Environment.GetEnvironmentVariable("PATH") ?? "")
-            .Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries)
+    private IReadOnlyList<string> ReadPathDirectories()
+    {
+        var localAppData = Environment.GetFolderPath(
+            Environment.SpecialFolder.LocalApplicationData);
+        var roamingAppData = Environment.GetFolderPath(
+            Environment.SpecialFolder.ApplicationData);
+        var pathValues = new[]
+        {
+            Environment.GetEnvironmentVariable("PATH"),
+            Environment.GetEnvironmentVariable(
+                "PATH",
+                EnvironmentVariableTarget.User),
+            Environment.GetEnvironmentVariable(
+                "PATH",
+                EnvironmentVariableTarget.Machine),
+        };
+        var knownUserBins = new[]
+        {
+            Path.Combine(roamingAppData, "npm"),
+            Path.Combine(localAppData, "Microsoft", "WindowsApps"),
+            Path.Combine(localAppData, "Programs", "OpenAI", "Codex", "bin"),
+            Path.Combine(_home, ".local", "bin"),
+            Path.Combine(_home, ".cargo", "bin"),
+            Path.Combine(_home, ".bun", "bin"),
+            Path.Combine(_home, ".dotnet", "tools"),
+            Path.Combine(_home, ".kimi-code", "bin"),
+        };
+        return pathValues
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .SelectMany(value => value!.Split(
+                Path.PathSeparator,
+                StringSplitOptions.RemoveEmptyEntries))
+            .Concat(knownUserBins)
+            .Select(value => Environment.ExpandEnvironmentVariables(
+                value.Trim().Trim('"')))
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
+    }
 
     private IReadOnlyList<string> ReadInstallationRoots()
     {
@@ -254,6 +303,8 @@ public sealed class AgentCatalog
             Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
             Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFiles),
             Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFilesX86),
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
         };
         return roots
             .Where(value => !string.IsNullOrWhiteSpace(value))
@@ -265,15 +316,79 @@ public sealed class AgentCatalog
         relative.Replace('\\', Path.DirectorySeparatorChar)
             .Replace('/', Path.DirectorySeparatorChar);
 
-    private static bool ExecutableExists(string directory, string executable)
+    private static IReadOnlyDictionary<string, IReadOnlyList<string>>
+        FindExecutableMatches(IReadOnlyList<string> directories)
     {
-        if (File.Exists(Path.Combine(directory, executable))) return true;
-        if (Path.HasExtension(executable)) return false;
         var extensions = (Environment.GetEnvironmentVariable("PATHEXT")
                 ?? ".COM;.EXE;.BAT;.CMD")
             .Split(';', StringSplitOptions.RemoveEmptyEntries);
-        return extensions.Any(extension =>
-            File.Exists(Path.Combine(directory, executable + extension.ToLowerInvariant()))
-            || File.Exists(Path.Combine(directory, executable + extension.ToUpperInvariant())));
+        var extensionCandidates = extensions
+            .Concat([".EXE", ".COM", ".CMD", ".BAT", ".PS1"])
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        var executableNames = All
+            .SelectMany(agent => agent.Executables)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        var candidates = new Dictionary<string, List<string>>(
+            StringComparer.OrdinalIgnoreCase);
+        foreach (var executable in executableNames)
+        {
+            var fileNames = Path.HasExtension(executable)
+                ? [Path.GetFileName(executable)]
+                : extensionCandidates
+                    .Select(extension => executable + extension)
+                    .Append(executable);
+            foreach (var fileName in fileNames)
+            {
+                if (!candidates.TryGetValue(fileName, out var owners))
+                {
+                    owners = [];
+                    candidates[fileName] = owners;
+                }
+                owners.Add(executable);
+            }
+        }
+
+        var matches = executableNames.ToDictionary(
+            executable => executable,
+            _ => new List<string>(),
+            StringComparer.OrdinalIgnoreCase);
+        foreach (var directory in directories.Distinct(
+                     StringComparer.OrdinalIgnoreCase))
+        {
+            try
+            {
+                if (!Directory.Exists(directory)) continue;
+                foreach (var path in Directory.EnumerateFiles(
+                             directory,
+                             "*",
+                             SearchOption.TopDirectoryOnly))
+                {
+                    if (!candidates.TryGetValue(
+                            Path.GetFileName(path),
+                            out var owners))
+                    {
+                        continue;
+                    }
+                    foreach (var owner in owners)
+                    {
+                        matches[owner].Add(path);
+                    }
+                }
+            }
+            catch (Exception exception) when (exception is IOException
+                                               or UnauthorizedAccessException)
+            {
+                // A stale or protected PATH entry must not block the Settings
+                // page or hide tools found in the remaining directories.
+            }
+        }
+        return matches.ToDictionary(
+            pair => pair.Key,
+            pair => (IReadOnlyList<string>)pair.Value
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray(),
+            StringComparer.OrdinalIgnoreCase);
     }
 }

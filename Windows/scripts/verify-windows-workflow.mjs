@@ -40,7 +40,7 @@ const workflowRequirements = [
   ["unsigned MSIX", "GenerateAppxPackageOnBuild=true"],
   ["unsigned package mode", "AppxPackageSigningEnabled=false"],
   ["generated package manifest", "AppxManifest.xml"],
-  ["package registration", "Add-AppxPackage -Path $manifest.FullName -Register -DisableDevelopmentMode"],
+  ["package registration", "Add-AppxPackage -Path $manifest.FullName -Register"],
   ["package identity", "-AppUserModelId $appUserModelId"],
   ["manifest identity guard", "Identity\\s+Name=\"com\\.aimemory\\.windows\""],
   ["manifest token guard", "still contains unresolved build tokens"],

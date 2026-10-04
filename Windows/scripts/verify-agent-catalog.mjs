@@ -50,7 +50,7 @@ for (const line of enumBody.split("\n")) {
 }
 
 const detectionBody = swift.match(
-  /static let all: \[DetectionOnlyAgent\] = \[([\s\S]*?)\n\s*\]\n\}/,
+  /static let all: \[DetectionOnlyAgent\] = \[([\s\S]*?)\r?\n\s*\]\r?\n\}/,
 )?.[1];
 if (!detectionBody) throw new Error("Swift detection-only catalog was not found.");
 const detectionIds = [...detectionBody.matchAll(/id:\s*"([^"]+)"/g)]
@@ -97,7 +97,8 @@ if (macOnly.length || windowsOnly.length || swiftIds.length !== windowsIds.lengt
 const workflow = fs.readFileSync(workflowPath, "utf8");
 for (const required of [
   "AppxManifest.xml",
-  "Add-AppxPackage -Path $manifest.FullName -Register -DisableDevelopmentMode",
+  "ExtractToDirectory($msix.FullName, $layout)",
+  "Add-AppxPackage -Path $manifest.FullName -Register",
   "-AppUserModelId $appUserModelId",
   "smoke-desktop.ps1",
 ]) {
@@ -124,7 +125,8 @@ if (!parity.includes(`\"${catalogCount} products`)) {
 }
 const windowsReadme = fs.readFileSync(windowsReadmePath, "utf8");
 for (const required of [
-  "Add-AppxPackage -Path $manifest.FullName -Register -DisableDevelopmentMode",
+  "ExtractToDirectory($msix.FullName, $layout)",
+  "Add-AppxPackage -Path (Join-Path $layout \"AppxManifest.xml\") -Register",
   "-AppUserModelId \"$($package.PackageFamilyName)!App\"",
 ]) {
   if (!windowsReadme.includes(required)) {

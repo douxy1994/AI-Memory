@@ -67,7 +67,7 @@ assert(
 const windowsToolNames = [
   ...source
     .slice(source.indexOf("private static readonly object[] ToolDefinitions"))
-    .matchAll(/\n\s*Tool\(\n\s*"([^"]+)"/g),
+    .matchAll(/\r?\n\s*Tool\(\r?\n\s*"([^"]+)"/g),
 ].map((match) => match[1]);
 const swiftToolNames = [
   ...swiftSource.matchAll(/Self\.tool\("([^"]+)"/g),
@@ -83,10 +83,10 @@ assert(
   "macOS MCP must expose detect_agent_integrations through the native catalog",
 );
 assert(
-  /"detect_agent_integrations"\s*=>\s*new\s*\{[\s\S]*integrations\s*=\s*new AgentCatalog\(\)\.Detect\(\)/.test(
+  /"detect_agent_integrations"\s*=>\s*new\s*\{[\s\S]*integrations\s*=\s*new AgentIntegrationManager\([\s\S]*\)\s*\.Detect\(\)/.test(
     source,
   ),
-  "Windows MCP must return the same integrations object shape",
+  "Windows MCP must return detected and installed integration state",
 );
 
 console.log(

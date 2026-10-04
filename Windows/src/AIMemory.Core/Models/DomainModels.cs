@@ -58,6 +58,7 @@ public sealed record AgentIntegrationStatus(
     AgentIntegrationState State,
     string Detail)
 {
+    public IReadOnlyList<string> DetectionPaths { get; init; } = [];
     public string ActionLabel => IsIntegrated ? "关闭" : "启用";
     public bool CanToggle => IsDetected && IsIntegrationAvailable;
 }

@@ -17,6 +17,7 @@ public enum ConversationArrangeMode
 {
     ByProject,
     Timeline,
+    ChatsFirst,
 }
 
 public sealed record ConversationProjectFilter(
