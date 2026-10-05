@@ -36,12 +36,12 @@ public sealed partial class App : Application
             System.Diagnostics.Debug.WriteLine(eventArgs.Exception);
         };
 
-        // Application.Start normally raises OnLaunched after constructing the
-        // App.  Starting the shell from the constructor as well keeps direct
-        // unpackaged launches deterministic on Windows runner sessions where
-        // the activation callback can be delayed until after the dispatcher
-        // has already entered its message loop.
-        StartLaunch();
+        // Keep the direct-launch fallback, but never create/activate a XAML
+        // window inside Application.Start's application-construction callback.
+        // A fresh profile can finish all startup work synchronously, before
+        // WinUI has completed constructing the application.
+        Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread()
+            .TryEnqueue(StartLaunch);
     }
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)

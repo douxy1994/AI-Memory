@@ -630,6 +630,7 @@ public sealed partial class MainWindow : Window
         AppWindow sender,
         AppWindowClosingEventArgs args)
     {
+        StartupDiagnostics.Write("window.closing.requested");
         if (_isExiting || _notificationArea is null) return;
         args.Cancel = true;
         // Leave the native closing callback before changing window visibility.
