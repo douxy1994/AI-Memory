@@ -159,7 +159,7 @@ jobs:
           # This registry entry exists only on the ephemeral hosted runner.
           $dumpDirectory = Join-Path $env:RUNNER_TEMP 'AIMemory-crashes'
           New-Item -ItemType Directory -Path $dumpDirectory -Force | Out-Null
-          $dumpKey = 'HKCU:\Software\Microsoft\Windows\Windows Error Reporting\LocalDumps\AIMemory.Windows.exe'
+          $dumpKey = 'HKLM:\Software\Microsoft\Windows\Windows Error Reporting\LocalDumps\AIMemory.Windows.exe'
           New-Item -Path $dumpKey -Force | Out-Null
           New-ItemProperty -Path $dumpKey -Name DumpFolder -Value $dumpDirectory -PropertyType ExpandString -Force | Out-Null
           New-ItemProperty -Path $dumpKey -Name DumpType -Value 2 -PropertyType DWord -Force | Out-Null
@@ -236,6 +236,25 @@ jobs:
             Where-Object { $_.Message -match 'AIMemory|Microsoft.UI.Xaml' } |
             Format-List TimeCreated, ProviderName, Id, Message |
             Out-File (Join-Path $env:RUNNER_TEMP 'AIMemory-events.log')
+      - name: Analyze native Windows crash
+        if: failure()
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $dump = Get-ChildItem (Join-Path $env:RUNNER_TEMP 'AIMemory-crashes') -Filter *.dmp -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $dump) { return }
+          $debugger = "${env:ProgramFiles(x86)}\Windows Kits\10\Debuggers\x64\cdb.exe"
+          if (-not (Test-Path -LiteralPath $debugger)) {
+            $setup = Join-Path $env:RUNNER_TEMP 'winsdksetup.exe'
+            Invoke-WebRequest 'https://go.microsoft.com/fwlink/?linkid=2173743' -OutFile $setup
+            $signature = Get-AuthenticodeSignature -LiteralPath $setup
+            if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notmatch 'Microsoft Corporation') {
+              throw 'Windows SDK installer signature validation failed.'
+            }
+            $install = Start-Process -FilePath $setup -ArgumentList '/features', 'OptionId.WindowsDesktopDebuggers', '/q' -WindowStyle Hidden -PassThru -Wait
+            if ($install.ExitCode -notin 0, 3010) { throw "Debugger setup failed: $($install.ExitCode)" }
+          }
+          & $debugger -y "srv*$env:RUNNER_TEMP\symbols*https://msdl.microsoft.com/download/symbols" -z $dump.FullName -c '.lines; !analyze -v; .ecxr; kP; q' > (Join-Path $env:RUNNER_TEMP 'AIMemory-native-analysis.log') 2>&1
       - name: Upload Windows startup diagnostics
         if: always()
         uses: actions/upload-artifact@v4
@@ -245,6 +264,7 @@ jobs:
           path: |
             ${{ runner.temp }}/AIMemory-startup.log
             ${{ runner.temp }}/AIMemory-events.log
+            ${{ runner.temp }}/AIMemory-native-analysis.log
             ${{ runner.temp }}/AIMemory-crashes/*.dmp
       - name: Upload Windows build artifacts
         if: always()
