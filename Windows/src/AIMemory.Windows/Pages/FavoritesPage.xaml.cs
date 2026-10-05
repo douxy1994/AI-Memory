@@ -112,7 +112,7 @@ public sealed partial class FavoritesPage : Page
         }
         var conversation = (await _window.Conversations.ListAsync(
                 sourceAgent: row.Value.SourceAgent,
-                limit: 5_000))
+                limit: 5_000, includeTemporary: true))
             .FirstOrDefault(value => value.Id == row.Value.Id);
         if (conversation is null)
         {

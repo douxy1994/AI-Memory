@@ -5,7 +5,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 # AI Memory 0.1.5
 
-本次为 macOS 修复版本，解决候选规则批准后反馈滞后、重复生成规则，以及系统临时工作目录混入历史列表的问题。相对 GitHub 上的 v0.1.3，本版本还包含此前准备于 v0.1.4 的主窗口恢复修复。
+本次为 macOS 与 Windows 对齐修复版本，解决候选规则批准后反馈滞后、重复生成规则，以及系统临时工作目录混入历史列表的问题。相对 GitHub 上的 v0.1.3，本版本还包含此前准备于 v0.1.4 的主窗口恢复修复。
 
 ## 候选规则审批
 
@@ -42,4 +42,13 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 ## Windows
 
-本次不发布新的 Windows 安装包，以上审批与目录过滤修复针对 macOS。Windows 11 x64 安装包继续使用 [v0.1.3 Release](https://github.com/douxy1994/AI-Memory/releases/tag/v0.1.3)。
+Windows 客户端同步升级至 0.1.5（包版本 0.1.5.0），在此 release 中提供 `AI-Memory-0.1.5-Windows-x64-Setup.exe` 和 `.sha256`，保留上方 macOS DMG。
+
+- 候选审批按 ID 防重，独立连接并发和重复批准只关联同一条规则；重复请求明确返回已有结果。
+- 成功提交后移除候选并先显示反馈，后台仅刷新审批集合及仓库计数；刷新失败明确提示已写入。
+- 默认列表、搜索、项目分组、MCP 项目历史及自动导入过滤 Windows 实际临时目录和同步的 POSIX 临时路径；匹配大小写及目录边界，保留正常项目的 tmp 子目录及 Gemini 缓存中的合法历史。
+- 不删除既有临时历史和重复规则；显式读取、恢复、迁移和同步继续保留原始数据。
+- 133 项 Windows 核心测试、x64/ARM64 Release 构建及 MCP 协议检查通过。ARM64 本轮提供构建验证，下载的 EXE 安装程序为 x64。
+- Windows 安装程序未进行商业代码签名。升级前建议保留旧安装包和数据库备份。
+
+macOS tag 保持原提交；Windows 安装包从 Windows 最终提交构建，来源提交在 GitHub release 中单独注明。

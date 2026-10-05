@@ -20,6 +20,8 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+      - name: Select Xcode with macOS 26 SDK
+        run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
       - name: Test SwiftUI and AppKit app
         run: |
           xcodebuild \
@@ -141,9 +143,8 @@ jobs:
             -p:GenerateAppxPackageOnBuild=true `
             -p:AppxPackageSigningEnabled=false
           $package = Get-ChildItem `
-            Windows/src/AIMemory.Windows/bin `
-            -Recurse -Filter *.msix |
-            Where-Object FullName -Match '\\x64\\' |
+            Windows/src/AIMemory.Windows/AppPackages `
+            -Recurse -Filter AIMemory.Windows_0.1.5.0_x64.msix |
             Sort-Object LastWriteTime -Descending |
             Select-Object -First 1
           if (-not $package) {
@@ -153,6 +154,14 @@ jobs:
       - name: Register WinUI package for desktop smoke
         shell: pwsh
         run: |
+          # Capture the native crash as well as managed startup diagnostics.
+          # This registry entry exists only on the ephemeral hosted runner.
+          $dumpDirectory = Join-Path $env:RUNNER_TEMP 'AIMemory-crashes'
+          New-Item -ItemType Directory -Path $dumpDirectory -Force | Out-Null
+          $dumpKey = 'HKLM:\Software\Microsoft\Windows\Windows Error Reporting\LocalDumps\AIMemory.Windows.exe'
+          New-Item -Path $dumpKey -Force | Out-Null
+          New-ItemProperty -Path $dumpKey -Name DumpFolder -Value $dumpDirectory -PropertyType ExpandString -Force | Out-Null
+          New-ItemProperty -Path $dumpKey -Name DumpType -Value 2 -PropertyType DWord -Force | Out-Null
           # A raw WinUI executable has no package identity and can remain
           # alive without creating a visible AppWindow. Register a package
           # layout instead, then launch through AppsFolder just as a Windows
@@ -162,9 +171,8 @@ jobs:
           # deployment reject unsigned loose layouts, so expand the unsigned
           # MSIX and register its final root manifest.
           $msix = Get-ChildItem `
-            Windows/src/AIMemory.Windows/bin `
-            -Recurse -Filter *.msix |
-            Where-Object FullName -Match '\\x64\\' |
+            Windows/src/AIMemory.Windows/AppPackages `
+            -Recurse -Filter AIMemory.Windows_0.1.5.0_x64.msix |
             Sort-Object LastWriteTime -Descending |
             Select-Object -First 1
           if (-not $msix) {
@@ -222,13 +230,40 @@ jobs:
           if (Test-Path -LiteralPath $source -PathType Leaf) {
             Copy-Item -LiteralPath $source -Destination $destination -Force
           }
+          Get-WinEvent -FilterHashtable @{ LogName = 'Application'; StartTime = (Get-Date).AddMinutes(-20) } -ErrorAction SilentlyContinue |
+            Where-Object { $_.Message -match 'AIMemory|Microsoft.UI.Xaml' } |
+            Format-List TimeCreated, ProviderName, Id, Message |
+            Out-File (Join-Path $env:RUNNER_TEMP 'AIMemory-events.log')
+      - name: Analyze native Windows crash
+        if: failure()
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $dump = Get-ChildItem (Join-Path $env:RUNNER_TEMP 'AIMemory-crashes') -Filter *.dmp -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $dump) { return }
+          $debugger = "${env:ProgramFiles(x86)}\Windows Kits\10\Debuggers\x64\cdb.exe"
+          if (-not (Test-Path -LiteralPath $debugger)) {
+            $setup = Join-Path $env:RUNNER_TEMP 'winsdksetup.exe'
+            Invoke-WebRequest 'https://go.microsoft.com/fwlink/?linkid=2173743' -OutFile $setup
+            $signature = Get-AuthenticodeSignature -LiteralPath $setup
+            if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notmatch 'Microsoft Corporation') {
+              throw 'Windows SDK installer signature validation failed.'
+            }
+            $install = Start-Process -FilePath $setup -ArgumentList '/features', 'OptionId.WindowsDesktopDebuggers', '/q' -WindowStyle Hidden -PassThru -Wait
+            if ($install.ExitCode -notin 0, 3010) { throw "Debugger setup failed: $($install.ExitCode)" }
+          }
+          & $debugger -y "srv*$env:RUNNER_TEMP\symbols*https://msdl.microsoft.com/download/symbols" -z $dump.FullName -c '.lines; !analyze -v; .ecxr; kP; q' > (Join-Path $env:RUNNER_TEMP 'AIMemory-native-analysis.log') 2>&1
       - name: Upload Windows startup diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: windows-startup-diagnostics
           if-no-files-found: ignore
-          path: ${{ runner.temp }}/AIMemory-startup.log
+          path: |
+            ${{ runner.temp }}/AIMemory-startup.log
+            ${{ runner.temp }}/AIMemory-events.log
+            ${{ runner.temp }}/AIMemory-native-analysis.log
+            ${{ runner.temp }}/AIMemory-crashes/*.dmp
       - name: Upload Windows build artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -236,8 +271,9 @@ jobs:
           name: windows-build-artifacts
           if-no-files-found: ignore
           path: |
-            release/0.1.3/*.exe
-            release/0.1.3/*.sha256
+            release/0.1.5/*.exe
+            release/0.1.5/*.sha256
             Windows/src/AIMemory.Windows/bin/**/*.msix
+            Windows/src/AIMemory.Windows/AppPackages/**/*.msix
             Windows/src/AIMemory.Windows/bin/**/Helpers/aimemory-mcp.exe
             Windows/src/AIMemory.Windows/bin/**/AIMemorySourceRevision.txt

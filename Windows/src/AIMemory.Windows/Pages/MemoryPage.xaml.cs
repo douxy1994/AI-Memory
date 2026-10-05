@@ -23,6 +23,75 @@ public sealed partial class MemoryPage : Page
     private IReadOnlyList<MemoryCandidateRecord> _pendingCandidates = [];
     private IReadOnlyList<CheckpointRecord> _checkpoints = [];
     private bool _loadingRepositories;
+    private readonly HashSet<string> _reviewingCandidateIds = new(StringComparer.Ordinal);
+    private readonly HashSet<string> _committedCandidateIds = new(StringComparer.Ordinal);
+    private long _loadGeneration;
+    private long _reviewGeneration;
+    private long _repositoryGeneration;
+    private bool _batchReviewing;
+
+    private void UpdateCandidateRows()
+    {
+        CandidateList.ItemsSource = _pendingCandidates
+            .Where(value => !_committedCandidateIds.Contains(value.Id))
+            .Select(value => new CandidateRow(value, !_batchReviewing && !_reviewingCandidateIds.Contains(value.Id)))
+            .ToArray();
+        RejectAllCandidatesButton.IsEnabled = !_batchReviewing
+            && _reviewingCandidateIds.Count == 0 && _pendingCandidates.Count > 0;
+    }
+
+    private bool BeginCandidateReview(string id)
+    {
+        if (_batchReviewing || _committedCandidateIds.Contains(id) || !_reviewingCandidateIds.Add(id)) return false;
+        UpdateCandidateRows();
+        return true;
+    }
+
+    private void EndCandidateReview(string id)
+    {
+        _reviewingCandidateIds.Remove(id);
+        UpdateCandidateRows();
+    }
+
+    private async Task CandidateReviewCommittedAsync(IEnumerable<string> ids, string message)
+    {
+        foreach (var id in ids) _committedCandidateIds.Add(id);
+        ++_reviewGeneration; // Invalidate reads started before the transaction committed.
+        _pendingCandidates = _pendingCandidates.Where(value => !_committedCandidateIds.Contains(value.Id)).ToArray();
+        UpdateCandidateRows();
+        Show(message, InfoBarSeverity.Success);
+        try
+        {
+            await Task.WhenAll(ReloadCandidateReviewAsync(), ReloadRepositoryOptionsAsync());
+        }
+        catch (Exception exception)
+        {
+            Show(LocalizationService.Format("CandidateCommittedRefreshFailed", exception.Message), InfoBarSeverity.Warning);
+        }
+    }
+
+    private async Task ReloadCandidateReviewAsync()
+    {
+        if (_memory is null) return;
+        var generation = ++_reviewGeneration;
+        var repoId = SelectedRepositoryId();
+        var candidates = Task.Run(() => _memory.ListCandidatesAsync());
+        var approved = Task.Run(() => _memory.ListApprovedAsync());
+        await Task.WhenAll(candidates, approved);
+        if (generation != _reviewGeneration || repoId != SelectedRepositoryId()) return;
+        _pendingCandidates = (await candidates).Where(value => !_committedCandidateIds.Contains(value.Id)
+            && (repoId is null || value.RepoId == repoId)).ToArray();
+        UpdateCandidateRows();
+        ApprovedList.ItemsSource = (await approved).Where(value => repoId is null || value.RepoId == repoId).ToArray();
+    }
+
+    protected override void OnNavigatedFrom(NavigationEventArgs args)
+    {
+        ++_loadGeneration;
+        ++_reviewGeneration;
+        ++_repositoryGeneration;
+        base.OnNavigatedFrom(args);
+    }
 
     public MemoryPage() => InitializeComponent();
 
@@ -35,8 +104,20 @@ public sealed partial class MemoryPage : Page
         _knowledge = new KnowledgeProjectionService(
             _window.Database,
             _governance);
-        await ReloadRepositoryOptionsAsync();
-        await ReloadAsync();
+        await TryReloadAsync(reloadRepositories: true);
+    }
+
+    private async Task TryReloadAsync(bool reloadRepositories = false)
+    {
+        try
+        {
+            if (reloadRepositories) await ReloadRepositoryOptionsAsync();
+            await ReloadAsync();
+        }
+        catch (Exception exception)
+        {
+            Show(LocalizationService.Format("MemoryRefreshFailed", exception.Message), InfoBarSeverity.Error);
+        }
     }
 
     private async Task ReloadAsync()
@@ -48,29 +129,16 @@ public sealed partial class MemoryPage : Page
         {
             return;
         }
-        var candidatesTask = _memory.ListCandidatesAsync();
-        var approvedTask = _memory.ListApprovedAsync();
+        var generation = ++_loadGeneration;
+        var selectedRepoId = SelectedRepositoryId();
+        var reviewTask = ReloadCandidateReviewAsync();
         var checkpointsTask = _recovery.ListCheckpointsAsync();
         var handoffsTask = _recovery.ListHandoffsAsync();
         await Task.WhenAll(
-            candidatesTask,
-            approvedTask,
+            reviewTask,
             checkpointsTask,
             handoffsTask);
-        var selectedRepoId = SelectedRepositoryId();
-        _pendingCandidates = (await candidatesTask)
-            .Where(value => selectedRepoId is null
-                || value.RepoId == selectedRepoId)
-            .ToArray();
-        CandidateList.ItemsSource = _pendingCandidates
-            .Select(value => new CandidateRow(value))
-            .ToArray();
-        RejectAllCandidatesButton.IsEnabled =
-            _pendingCandidates.Count > 0;
-        ApprovedList.ItemsSource = (await approvedTask)
-            .Where(value => selectedRepoId is null
-                || value.RepoId == selectedRepoId)
-            .ToArray();
+        if (generation != _loadGeneration || selectedRepoId != SelectedRepositoryId()) return;
         _checkpoints = (await checkpointsTask)
             .Where(value => selectedRepoId is null
                 || value.RepoId == selectedRepoId)
@@ -97,6 +165,7 @@ public sealed partial class MemoryPage : Page
                 .SelectMany(value => value)
                 .OrderByDescending(value => value.CreatedAt)
                 .ToArray();
+        if (generation != _loadGeneration || selectedRepoId != SelectedRepositoryId()) return;
         ConflictList.ItemsSource = conflicts;
         NoConflictsText.Visibility = conflicts.Length == 0
             ? Visibility.Visible
@@ -108,7 +177,10 @@ public sealed partial class MemoryPage : Page
         if (_governance is null) return;
         var selectedId =
             (RepositoryBox.SelectedItem as RepositoryOption)?.Id;
-        _repositories = await _governance.ListRepositoriesAsync();
+        var generation = ++_repositoryGeneration;
+        var repositories = await Task.Run(() => _governance.ListRepositoriesAsync());
+        if (generation != _repositoryGeneration || selectedId != SelectedRepositoryId()) return;
+        _repositories = repositories;
         var options = new[]
             {
                 new RepositoryOption(
@@ -143,14 +215,17 @@ public sealed partial class MemoryPage : Page
     {
         if (!_loadingRepositories)
         {
-            await ReloadAsync();
+            ++_repositoryGeneration;
+            _pendingCandidates = [];
+            UpdateCandidateRows();
+            ApprovedList.ItemsSource = null;
+            await TryReloadAsync();
         }
     }
 
     private async void Refresh_Click(object sender, RoutedEventArgs args)
     {
-        await ReloadRepositoryOptionsAsync();
-        await ReloadAsync();
+        await TryReloadAsync(reloadRepositories: true);
     }
 
     private async void ApproveCandidate_Click(object sender, RoutedEventArgs args)
@@ -160,45 +235,47 @@ public sealed partial class MemoryPage : Page
         {
             return;
         }
-        var title = new TextBox
-        {
-            Header = LocalizationService.Get("Title"),
-            Text = candidate.Summary,
-        };
-        var value = new TextBox
-        {
-            Header = LocalizationService.Get("RuleContent"),
-            Text = candidate.Value,
-            AcceptsReturn = true,
-            TextWrapping = TextWrapping.Wrap,
-            MinHeight = 100,
-        };
-        var hint = new TextBox
-        {
-            Header = LocalizationService.Get("UsageHint"),
-        };
-        var content = new StackPanel { Spacing = 12 };
-        content.Children.Add(title);
-        content.Children.Add(value);
-        content.Children.Add(hint);
-        var dialog = new ContentDialog
-        {
-            XamlRoot = XamlRoot,
-            Title = LocalizationService.Get("ApproveCandidateRule"),
-            Content = content,
-            PrimaryButtonText = LocalizationService.Get("Approve"),
-            CloseButtonText = LocalizationService.Get("Cancel"),
-            DefaultButton = ContentDialogButton.Primary,
-        };
-        if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
+        if (!BeginCandidateReview(candidate.Id)) return;
         try
         {
-            await _memory.ApproveCandidateAsync(
-                candidate.Id, title.Text, value.Text, hint.Text);
-            await ReloadAsync();
-            Show(
-                LocalizationService.Get("CandidateApproved"),
-                InfoBarSeverity.Success);
+            var title = new TextBox
+            {
+                Header = LocalizationService.Get("Title"),
+                Text = candidate.Summary,
+            };
+            var value = new TextBox
+            {
+                Header = LocalizationService.Get("RuleContent"),
+                Text = candidate.Value,
+                AcceptsReturn = true,
+                TextWrapping = TextWrapping.Wrap,
+                MinHeight = 100,
+            };
+            var hint = new TextBox
+            {
+                Header = LocalizationService.Get("UsageHint"),
+            };
+            var content = new StackPanel { Spacing = 12 };
+            content.Children.Add(title);
+            content.Children.Add(value);
+            content.Children.Add(hint);
+            var dialog = new ContentDialog
+            {
+                XamlRoot = XamlRoot,
+                Title = LocalizationService.Get("ApproveCandidateRule"),
+                Content = content,
+                PrimaryButtonText = LocalizationService.Get("Approve"),
+                CloseButtonText = LocalizationService.Get("Cancel"),
+                DefaultButton = ContentDialogButton.Primary,
+            };
+            if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
+            var editedTitle = title.Text;
+            var editedValue = value.Text;
+            var editedHint = hint.Text;
+            var result = await Task.Run(() => _memory.ApproveCandidateAsync(
+                candidate.Id, editedTitle, editedValue, editedHint));
+            await CandidateReviewCommittedAsync([candidate.Id],
+                LocalizationService.Get(result.Created ? "CandidateApproved" : "CandidateAlreadyApproved"));
         }
         catch (Exception exception)
         {
@@ -207,6 +284,10 @@ public sealed partial class MemoryPage : Page
                     "ApprovalFailed",
                     exception.Message),
                 InfoBarSeverity.Error);
+        }
+        finally
+        {
+            EndCandidateReview(candidate.Id);
         }
     }
 
@@ -227,7 +308,7 @@ public sealed partial class MemoryPage : Page
 
         var candidates = HistoryProjectionService.ConversationIdCandidates(
             reference);
-        var conversations = await _window.Conversations.ListAsync(limit: 5_000);
+        var conversations = await _window.Conversations.ListAsync(limit: 5_000, includeTemporary: true);
         var conversation = conversations.FirstOrDefault(value =>
             candidates.Contains(value.Id, StringComparer.Ordinal)
             || candidates.Contains(
@@ -261,65 +342,56 @@ public sealed partial class MemoryPage : Page
         object sender,
         RoutedEventArgs args)
     {
-        if (_memory is null || _pendingCandidates.Count == 0) return;
-        var dialog = new ContentDialog
-        {
-            XamlRoot = XamlRoot,
-            Title = LocalizationService.Get("RejectAllCandidatesTitle"),
-            Content = LocalizationService.Format(
-                "RejectAllCandidatesDescription",
-                _pendingCandidates.Count),
-            PrimaryButtonText =
-                LocalizationService.Get("RejectAllCandidatesAction"),
-            CloseButtonText = LocalizationService.Get("Cancel"),
-            DefaultButton = ContentDialogButton.Close,
-        };
-        if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
+        if (_memory is null || _pendingCandidates.Count == 0 || _batchReviewing || _reviewingCandidateIds.Count > 0) return;
+        var candidates = _pendingCandidates.ToArray();
+        var repoId = SelectedRepositoryId();
+        _batchReviewing = true;
+        foreach (var candidate in candidates) _reviewingCandidateIds.Add(candidate.Id);
+        UpdateCandidateRows();
         try
         {
-            var count = await _memory.ReviewAllPendingAsync(
-                "reject",
-                SelectedRepositoryId());
-            await ReloadAsync();
-            Show(
-                LocalizationService.Format(
-                    "CandidatesRejectedCount",
-                    count),
-                InfoBarSeverity.Success);
+            var dialog = new ContentDialog
+            {
+                XamlRoot = XamlRoot,
+                Title = LocalizationService.Get("RejectAllCandidatesTitle"),
+                Content = LocalizationService.Format("RejectAllCandidatesDescription", candidates.Length),
+                PrimaryButtonText = LocalizationService.Get("RejectAllCandidatesAction"),
+                CloseButtonText = LocalizationService.Get("Cancel"),
+                DefaultButton = ContentDialogButton.Close,
+            };
+            if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
+            var count = await Task.Run(() => _memory.ReviewAllPendingAsync("reject", repoId));
+            await CandidateReviewCommittedAsync(candidates.Select(value => value.Id),
+                LocalizationService.Format("CandidatesRejectedCount", count));
         }
         catch (Exception exception)
         {
-            Show(
-                LocalizationService.Format(
-                    "CandidateUpdateFailed",
-                    exception.Message),
-                InfoBarSeverity.Error);
+            Show(LocalizationService.Format("CandidateUpdateFailed", exception.Message), InfoBarSeverity.Error);
+        }
+        finally
+        {
+            _batchReviewing = false;
+            foreach (var candidate in candidates) _reviewingCandidateIds.Remove(candidate.Id);
+            UpdateCandidateRows();
         }
     }
 
-    private async Task ReviewCandidateAsync(
-        object sender,
-        string action,
-        string success)
+    private async Task ReviewCandidateAsync(object sender, string action, string success)
     {
-        if (_memory is null
-            || sender is not Button { Tag: MemoryCandidateRecord candidate })
-        {
-            return;
-        }
+        if (_memory is null || sender is not Button { Tag: MemoryCandidateRecord candidate }
+            || !BeginCandidateReview(candidate.Id)) return;
         try
         {
-            await _memory.ReviewCandidateAsync(candidate.Id, action);
-            await ReloadAsync();
-            Show(success, InfoBarSeverity.Success);
+            await Task.Run(() => _memory.ReviewCandidateAsync(candidate.Id, action));
+            await CandidateReviewCommittedAsync([candidate.Id], success);
         }
         catch (Exception exception)
         {
-            Show(
-                LocalizationService.Format(
-                    "CandidateUpdateFailed",
-                    exception.Message),
-                InfoBarSeverity.Error);
+            Show(LocalizationService.Format("CandidateUpdateFailed", exception.Message), InfoBarSeverity.Error);
+        }
+        finally
+        {
+            EndCandidateReview(candidate.Id);
         }
     }
 
@@ -601,7 +673,7 @@ public sealed partial class MemoryPage : Page
                 checkpoint.SourceAgent);
         var conversation = (await _window.Conversations.ListAsync(
                 sourceAgent: checkpoint.SourceAgent,
-                limit: 5_000))
+                limit: 5_000, includeTemporary: true))
             .FirstOrDefault(value => candidateIds.Contains(
                 value.Id,
                 StringComparer.Ordinal));
@@ -719,14 +791,16 @@ public sealed record RepositoryOption(
 
 public sealed class CandidateRow
 {
-    public CandidateRow(MemoryCandidateRecord value)
+    public CandidateRow(MemoryCandidateRecord value, bool canReview = true)
     {
         ValueRecord = value;
+        CanReview = canReview;
     }
 
     public MemoryCandidateRecord ValueRecord { get; }
+    public bool CanReview { get; }
     public string Kind => ValueRecord.Kind;
-    public string Status => ValueRecord.Status;
+    public string Status => CanReview ? ValueRecord.Status : LocalizationService.Get("CandidateProcessing");
     public string Summary => ValueRecord.Summary;
     public string Value => ValueRecord.Value;
     public string WhyItMatters => ValueRecord.WhyItMatters;

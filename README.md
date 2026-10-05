@@ -8,7 +8,7 @@
   本地优先的 AI 对话历史、项目记忆、检查点、交接与跨设备同步工作台。
 
   [![macOS](https://img.shields.io/badge/macOS-15%2B-111111?logo=apple&logoColor=white)](#macos)
-  [![Windows](https://img.shields.io/badge/Windows_11-v0.1.3-0078D4?logo=windows11&logoColor=white)](#windows-11)
+  [![Windows](https://img.shields.io/badge/Windows_11-v0.1.5-0078D4?logo=windows11&logoColor=white)](#windows-11)
   [![Swift](https://img.shields.io/badge/Swift_6-SwiftUI_%2B_AppKit-F05138?logo=swift&logoColor=white)](./docs/ARCHITECTURE.md)
   [![WinUI](https://img.shields.io/badge/C%23-WinUI_3-512BD4?logo=dotnet&logoColor=white)](./Windows/README.md)
   [![License: AGPL v3.0](https://img.shields.io/badge/License-AGPL--v3.0-blue.svg)](./LICENSE)
@@ -111,7 +111,7 @@ flowchart LR
     <td width="50%" align="center">
       <img src="./docs/images/platform-windows.svg" width="100%" alt="AI Memory for Windows 11">
       <h3 id="windows-11">Windows 11</h3>
-      <p><strong>原生版本 · v0.1.3</strong></p>
+      <p><strong>原生版本 · v0.1.5</strong></p>
       <p>C# · WinUI 3 · Windows App SDK · EXE 安装程序</p>
       <p>已完成原生工作台、Agent/CLI 自动导入与集成、迁移、增量同步、备份恢复、MCP、Mica、通知区域和单实例体验。</p>
     </td>
@@ -121,9 +121,9 @@ flowchart LR
 ### 下载
 
 - **macOS 14+（Apple silicon 与 Intel）**：[下载 AI Memory 0.1.5](https://github.com/douxy1994/AI-Memory/releases/download/v0.1.5/AI-Memory-0.1.5-macOS-universal.dmg)
-- **Windows 11 x64**：[下载 AI Memory 0.1.3 EXE 安装程序](https://github.com/douxy1994/AI-Memory/releases/download/v0.1.3/AI-Memory-0.1.3-Windows-x64-Setup.exe)。
+- **Windows 11 x64**：[下载 AI Memory 0.1.5 EXE 安装程序](https://github.com/douxy1994/AI-Memory/releases/download/v0.1.5/AI-Memory-0.1.5-Windows-x64-Setup.exe)。
 
-macOS 当前构建使用项目固定的本地代码签名身份，尚未使用 Apple Developer ID 公证。首次打开时如果 macOS 拦截，请在“系统设置 → 隐私与安全性”中确认打开。DMG 与 SHA-256 校验文件见 [macOS v0.1.5 Release 页面](https://github.com/douxy1994/AI-Memory/releases/tag/v0.1.5)。Windows 安装程序与 SHA-256 见 [Windows v0.1.3 Release 页面](https://github.com/douxy1994/AI-Memory/releases/tag/v0.1.3)。
+macOS 当前构建使用项目固定的本地代码签名身份，尚未使用 Apple Developer ID 公证。首次打开时如果 macOS 拦截，请在“系统设置 → 隐私与安全性”中确认打开。DMG 与 SHA-256 校验文件见 [macOS v0.1.5 Release 页面](https://github.com/douxy1994/AI-Memory/releases/tag/v0.1.5)。Windows 安装程序与 SHA-256 见 [Windows v0.1.5 Release 页面](https://github.com/douxy1994/AI-Memory/releases/tag/v0.1.5)。
 
 ## 数据与隐私
 

@@ -102,6 +102,7 @@ public sealed class MemoryQueryService(AIMemoryDatabase database)
     {
         await using var connection = database.OpenConnection();
         var safeLimit = Math.Clamp(limit, 1, 50);
+        TemporaryProjectPolicy.RegisterQueryFunction(connection);
         var command = connection.CreateCommand();
         command.CommandText = """
             SELECT c.conversation_id,c.source_agent,COALESCE(c.summary,''),
@@ -112,7 +113,8 @@ public sealed class MemoryQueryService(AIMemoryDatabase database)
               SELECT message_id FROM messages
               WHERE conversation_id=c.conversation_id
               ORDER BY timestamp DESC,rowid DESC LIMIT 1)
-            WHERE (r.repo_root=$root OR EXISTS(
+            WHERE NOT is_temporary_project(r.repo_root)
+              AND (r.repo_root=$root OR EXISTS(
               SELECT 1 FROM repo_aliases a
               WHERE a.repo_id=r.repo_id AND a.alias_root=$root))
               AND ($query='' OR c.summary LIKE '%' || $query || '%'

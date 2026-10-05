@@ -55,7 +55,8 @@ public sealed class LocalFolderSyncService(ConversationRepository conversations)
         var local = new Dictionary<SyncKey, LocalPayload>();
         foreach (var summary in await conversations.ListAsync(
                      limit: 5_000,
-                     cancellationToken: cancellationToken))
+                     cancellationToken: cancellationToken,
+                     includeTemporary: true))
         {
             cancellationToken.ThrowIfCancellationRequested();
             var detail = await conversations.ExportAsync(

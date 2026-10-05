@@ -492,7 +492,7 @@ public sealed partial class WorkbenchPage : Page
         catch
         {
             return typeof(WorkbenchPage).Assembly.GetName().Version?
-                .ToString(3) ?? "0.1.3";
+                .ToString(3) ?? "0.1.5";
         }
     }
 }

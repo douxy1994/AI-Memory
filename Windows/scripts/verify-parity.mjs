@@ -291,17 +291,20 @@ const versionFiles = [
   "Windows/src/AIMemory.Windows/AIMemory.Windows.csproj",
   "Windows/src/AIMemory.Windows/Package.appxmanifest",
   "Windows/src/AIMemory.Mcp/Program.cs",
+  "Windows/installer/AIMemory.Setup.csproj",
+  "Windows/installer/Program.cs",
+  "Windows/scripts/build-installer.ps1",
 ];
 const versionSource = versionFiles.map((relative) =>
   fs.readFileSync(path.join(root, relative), "utf8")
 ).join("\n");
-for (const marker of ["0.1.3", "0.1.3.0"]) {
+for (const marker of ["0.1.5", "0.1.5.0"]) {
   if (!versionSource.includes(marker)) {
     throw new Error(`Windows version marker is missing: ${marker}`);
   }
 }
-if (/0\.1\.(0|1|2)(?:\.0)?/.test(versionSource)) {
-  throw new Error("A stale pre-0.1.3 Windows product version remains.");
+if (/0\.1\.[0-4](?:\.0)?\b/.test(versionSource)) {
+  throw new Error("A stale pre-0.1.5 Windows product version remains.");
 }
 
 const expectedPending = new Set([]);

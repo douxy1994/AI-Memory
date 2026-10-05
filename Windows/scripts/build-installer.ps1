@@ -13,6 +13,14 @@ param(
 
 $ErrorActionPreference = "Stop"
 $PSNativeCommandUseErrorActionPreference = $true
+# Agent/CI shells can omit this variable; the MSIX resource indexer requires it.
+if (-not $env:PROCESSOR_ARCHITECTURE) {
+    $env:PROCESSOR_ARCHITECTURE = switch ([Runtime.InteropServices.RuntimeInformation]::OSArchitecture) {
+        'X64' { 'AMD64' }
+        'Arm64' { 'ARM64' }
+        default { 'x86' }
+    }
+}
 $root = Split-Path -Parent $PSScriptRoot | Split-Path -Parent
 Push-Location $root
 try {
@@ -22,19 +30,35 @@ try {
         --no-restore `
         -p:Platform=$Platform `
         -p:GenerateAppxPackageOnBuild=true `
+        -p:AppxSymbolPackageEnabled=false `
         -p:AppxPackageSigningEnabled=false
 
     $msix = Get-ChildItem `
-        (Join-Path $root "Windows/src/AIMemory.Windows/bin/$Platform/$Configuration") `
-        -Recurse -Filter "AIMemory.Windows_0.1.3.0_x64.msix" |
+        (Join-Path $root "Windows/src/AIMemory.Windows/AppPackages") `
+        -Recurse -Filter "AIMemory.Windows_0.1.5.0_x64.msix" |
         Sort-Object LastWriteTime -Descending |
         Select-Object -First 1
     if (-not $msix) {
         throw "Final x64 MSIX payload was not generated."
     }
+    # The installer deploys the main payload, not language resource packages.
+    # Missing WinUI MUI files crash on systems whose UI language was split out.
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $payload = [IO.Compression.ZipFile]::OpenRead($msix.FullName)
+    try {
+        foreach ($language in @('zh-CN', 'en-US')) {
+            foreach ($resource in @('Microsoft.ui.xaml.dll.mui', 'Microsoft.UI.Xaml.Phone.dll.mui')) {
+                if (-not ($payload.Entries.FullName -icontains "$language/$resource")) {
+                    throw "MSIX payload is missing WinUI resource: $language/$resource"
+                }
+            }
+        }
+    } finally {
+        $payload.Dispose()
+    }
 
     $output = if ([string]::IsNullOrWhiteSpace($OutputDirectory)) {
-        Join-Path $root "release/0.1.3"
+        Join-Path $root "release/0.1.5"
     } else {
         [IO.Path]::GetFullPath($OutputDirectory)
     }
@@ -50,15 +74,15 @@ try {
         -p:IncludeNativeLibrariesForSelfExtract=true `
         -p:DebugType=None
 
-    $setup = Join-Path $publishDirectory "AI-Memory-0.1.3-Windows-x64-Setup.exe"
+    $setup = Join-Path $publishDirectory "AI-Memory-0.1.5-Windows-x64-Setup.exe"
     if (-not (Test-Path -LiteralPath $setup -PathType Leaf)) {
         throw "Setup executable was not generated."
     }
-    $asset = Join-Path $output "AI-Memory-0.1.3-Windows-x64-Setup.exe"
+    $asset = Join-Path $output "AI-Memory-0.1.5-Windows-x64-Setup.exe"
     Copy-Item -LiteralPath $setup -Destination $asset -Force
     $hash = (Get-FileHash -LiteralPath $asset -Algorithm SHA256).Hash.ToLowerInvariant()
-    Set-Content -LiteralPath (Join-Path $output "AI-Memory-0.1.3-Windows-x64-Setup.exe.sha256") `
-        -Value "$hash  AI-Memory-0.1.3-Windows-x64-Setup.exe" `
+    Set-Content -LiteralPath (Join-Path $output "AI-Memory-0.1.5-Windows-x64-Setup.exe.sha256") `
+        -Value "$hash  AI-Memory-0.1.5-Windows-x64-Setup.exe" `
         -Encoding ascii
     Write-Host "Setup: $asset"
     Write-Host "SHA256: $hash"

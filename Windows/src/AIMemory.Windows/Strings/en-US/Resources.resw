@@ -690,4 +690,8 @@
   <data name="AboutRefreshDiagnosticsButton.Content" xml:space="preserve"><value>Refresh Diagnostics</value></data>
   <data name="AboutCopyDiagnosticsButton.Content" xml:space="preserve"><value>Copy Diagnostics</value></data>
   <data name="AboutOpenDataFolderButton.Content" xml:space="preserve"><value>Open Data Folder</value></data>
+  <data name="CandidateAlreadyApproved" xml:space="preserve"><value>This candidate was already approved; no new rule was created.</value></data>
+  <data name="CandidateCommittedRefreshFailed" xml:space="preserve"><value>Review was saved, but refreshing failed: {0}. Refresh the list; do not approve again.</value></data>
+  <data name="CandidateProcessing" xml:space="preserve"><value>Processing…</value></data>
+  <data name="MemoryRefreshFailed" xml:space="preserve"><value>Failed to refresh memory: {0}</value></data>
 </root>

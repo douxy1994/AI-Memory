@@ -33,15 +33,17 @@ public sealed partial class App : Application
                 .Replace("\n", " | ");
             Services.StartupDiagnostics.Write(
                 "app.unhandled " + detail);
+            Services.StartupDiagnostics.Write("app.unhandled.message " + eventArgs.Message);
+            Services.StartupDiagnostics.Write("app.unhandled.stack " + Environment.StackTrace.Replace("\r\n", " | "));
             System.Diagnostics.Debug.WriteLine(eventArgs.Exception);
         };
 
-        // Application.Start normally raises OnLaunched after constructing the
-        // App.  Starting the shell from the constructor as well keeps direct
-        // unpackaged launches deterministic on Windows runner sessions where
-        // the activation callback can be delayed until after the dispatcher
-        // has already entered its message loop.
-        StartLaunch();
+        // Keep the direct-launch fallback, but never create/activate a XAML
+        // window inside Application.Start's application-construction callback.
+        // A fresh profile can finish all startup work synchronously, before
+        // WinUI has completed constructing the application.
+        Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread()
+            .TryEnqueue(StartLaunch);
     }
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
@@ -92,13 +94,14 @@ public sealed partial class App : Application
                 _window.BringToFront();
                 StartupDiagnostics.Write("activation.replayed");
             }
-            _window.ConfigureAutomaticBackup(settings);
-            _ = _window.SynchronizeInstalledAgentHistoryAfterLaunchAsync();
-            // Do compatibility migration after the first window is visible.  A
-            // stale ChatMem profile or credential provider must not delay the
-            // Windows shell, single-instance activation, or the workbench.
-            _ = ImportChatMemWebDavAfterLaunchAsync(settingsStore);
-            _ = CheckForUpdatesAtLaunchAsync();
+            if (DataPaths.TestProfileDirectory is null)
+            {
+                _window.ConfigureAutomaticBackup(settings);
+                _ = _window.SynchronizeInstalledAgentHistoryAfterLaunchAsync();
+                // Compatibility migration must not delay the visible shell.
+                _ = ImportChatMemWebDavAfterLaunchAsync(settingsStore);
+                _ = CheckForUpdatesAtLaunchAsync();
+            }
             StartupDiagnostics.Write("launch.complete");
         }
         catch (Exception exception)
@@ -288,7 +291,7 @@ public sealed partial class App : Application
                 return;
             }
             var version = typeof(App).Assembly.GetName().Version?
-                .ToString(3) ?? "0.1.3";
+                .ToString(3) ?? "0.1.5";
             var result = await new UpdateService().CheckAsync(
                 settings.UpdateFeedUrl,
                 version);

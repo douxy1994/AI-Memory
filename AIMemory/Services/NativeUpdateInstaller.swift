@@ -197,6 +197,7 @@ final class NativeUpdateInstaller: NSObject, @unchecked Sendable {
     /// Relaunches after this process exits. The previous bundle stays beside the
     /// replacement until the new process survives a short health window; if the
     /// new build fails to start, the helper restores and reopens the old one.
+    @MainActor
     func relaunch(appURL: URL, rollbackURL: URL?) throws {
         let helper = Process()
         helper.executableURL = URL(fileURLWithPath: "/bin/sh")

@@ -49,6 +49,14 @@ public sealed class NativeHistoryImportService
         _catalog = catalog ?? new AgentCatalog(home: _home);
     }
 
+    private async Task<bool> ImportProjectAsync(
+        WebDavConversationDetail detail, CancellationToken cancellationToken)
+    {
+        if (TemporaryProjectPolicy.IsTemporaryProject(detail.ProjectDir)) return false;
+        await _repository.UpsertAsync(detail, cancellationToken);
+        return true;
+    }
+
     public async Task<NativeHistoryImportReport> ImportAllAsync(
         CancellationToken cancellationToken = default)
     {
@@ -168,8 +176,7 @@ public sealed class NativeHistoryImportService
             {
                 var detail = await ParseCodexAsync(entry, cancellationToken);
                 if (detail.Messages.Count == 0) continue;
-                await _repository.UpsertAsync(detail, cancellationToken);
-                count++;
+                if (await ImportProjectAsync(detail, cancellationToken)) count++;
             }
             catch (JsonException)
             {
@@ -288,8 +295,7 @@ public sealed class NativeHistoryImportService
             {
                 var detail = await ParseClaudeAsync(path, cancellationToken);
                 if (detail.Messages.Count == 0) continue;
-                await _repository.UpsertAsync(detail, cancellationToken);
-                count++;
+                if (await ImportProjectAsync(detail, cancellationToken)) count++;
             }
             catch (JsonException)
             {
@@ -451,13 +457,12 @@ public sealed class NativeHistoryImportService
                     ?? messages.FirstOrDefault(value => value.Role == "user")?.Content;
                 var fileChanges = ReadFileChanges(
                     data, "fileChanges", updated);
-                await _repository.UpsertAsync(
+                if (await ImportProjectAsync(
                     new WebDavConversationDetail(
                         id, "gemini", project, created, updated,
                         Truncate(title, 100), path, $"gemini --resume {id}",
                         messages, fileChanges),
-                    cancellationToken);
-                count++;
+                    cancellationToken)) count++;
             }
             catch (JsonException)
             {
@@ -594,14 +599,13 @@ public sealed class NativeHistoryImportService
                     []));
             }
             if (parsed.Count == 0) continue;
-            await _repository.UpsertAsync(
+            if (await ImportProjectAsync(
                 new WebDavConversationDetail(
                     session.Id, "hermes", session.Cwd,
                     EpochToIso(session.Started), EpochToIso(session.Ended),
                     Truncate(UsefulTitle(session.Title), 100),
                     databasePath, $"hermes resume {session.Id}", parsed, []),
-                cancellationToken);
-            count++;
+                cancellationToken)) count++;
         }
         return count;
     }
@@ -771,15 +775,14 @@ public sealed class NativeHistoryImportService
             }
             if (messages.Count == 0) continue;
             var id = Path.GetFileName(session);
-            await _repository.UpsertAsync(
+            if (await ImportProjectAsync(
                 new WebDavConversationDetail(
                     id, "kimi", project, created, updated,
                     Truncate(UsefulTitle(title)
                         ?? messages.FirstOrDefault(value => value.Role == "user")?.Content, 100),
                     File.Exists(statePath) ? statePath : session,
                     $"kimi --session {id}", messages, fileChanges),
-                cancellationToken);
-            count++;
+                cancellationToken)) count++;
         }
         return count;
     }
@@ -797,6 +800,7 @@ public sealed class NativeHistoryImportService
             if (!File.Exists(transcript)) continue;
             cancellationToken.ThrowIfCancellationRequested();
             var messages = new List<WebDavMessage>();
+            var project = "";
             var first = File.GetCreationTimeUtc(transcript).ToString("O");
             var last = File.GetLastWriteTimeUtc(transcript).ToString("O");
             var sequence = 0;
@@ -808,6 +812,7 @@ public sealed class NativeHistoryImportService
                 {
                     using var document = JsonDocument.Parse(line);
                     var root = document.RootElement;
+                    project = GetString(root, "cwd") ?? GetString(root, "workspacePath") ?? project;
                     var source = GetString(root, "source") ?? "";
                     var role = source switch
                     {
@@ -848,14 +853,13 @@ public sealed class NativeHistoryImportService
             }
             if (messages.Count == 0) continue;
             var id = Path.GetFileName(session);
-            await _repository.UpsertAsync(
+            if (await ImportProjectAsync(
                 new WebDavConversationDetail(
-                    id, "antigravity", session, first, last,
+                    id, "antigravity", project, first, last,
                     Truncate(messages.FirstOrDefault(
                         value => value.Role == "user")?.Content, 100),
                     transcript, null, messages, []),
-                cancellationToken);
-            count++;
+                cancellationToken)) count++;
         }
         return count;
     }
@@ -916,15 +920,14 @@ public sealed class NativeHistoryImportService
             if (messages.Count == 0) continue;
             var fileChanges = await ReadOpenCodeFileChangesAsync(
                 connection, id, cancellationToken);
-            await _repository.UpsertAsync(
+            if (await ImportProjectAsync(
                 new WebDavConversationDetail(
                     id, "opencode", row.Project, created, updated,
                     Truncate(UsefulTitle(row.Title)
                         ?? messages.FirstOrDefault(value => value.Role == "user")?.Content, 100),
                     databasePath, $"opencode --session {id}",
                     messages, fileChanges),
-                cancellationToken);
-            count++;
+                cancellationToken)) count++;
         }
         return count;
     }
@@ -1125,15 +1128,14 @@ public sealed class NativeHistoryImportService
                 if (messages.Count == 0) continue;
                 var title = meta.ValueKind == JsonValueKind.Object
                     ? GetString(meta, "title") : null;
-                await _repository.UpsertAsync(
+                if (await ImportProjectAsync(
                     new WebDavConversationDetail(
                         id, "zcode", project, created, updated,
                         Truncate(UsefulTitle(title)
                             ?? messages.FirstOrDefault(
                                 value => value.Role == "user")?.Content, 100),
                         path, null, messages, []),
-                    cancellationToken);
-                count++;
+                    cancellationToken)) count++;
             }
             catch (JsonException)
             {

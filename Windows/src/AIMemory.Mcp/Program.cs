@@ -25,15 +25,19 @@ public static class Program
         WriteIndented = false,
     };
 
-    public static async Task Main()
+    public static async Task Main(string[] args)
     {
+        if (args.Length == 2 && args[0] == "--test-profile")
+            DataPaths.UseTestProfile(args[1]);
         DataPaths.EnsureDirectories();
         var database = new AIMemoryDatabase();
         await database.InitializeAsync();
         var query = new MemoryQueryService(database);
         var mcpContext = new McpProjectContextService(database);
         var conversations = new ConversationRepository(database);
-        var history = new NativeHistoryImportService(conversations);
+        var history = new NativeHistoryImportService(conversations,
+            DataPaths.TestProfileDirectory is { } profile
+                ? Path.Combine(profile, "source-home") : null);
         var diagnostics = new DiagnosticsService(database);
         var governance = new RepositoryGovernanceService(database);
         var continuation = new ContinuationToolService(
@@ -98,7 +102,7 @@ public static class Program
             {
                 protocolVersion = "2025-03-26",
                 capabilities = new { tools = new { } },
-                serverInfo = new { name = "aimemory", version = "0.1.3" },
+                serverInfo = new { name = "aimemory", version = "0.1.5" },
             });
         }
         if (method == "tools/list")
@@ -259,7 +263,7 @@ public static class Program
     {
         var root = Required(arguments, "repo_root");
         var context = await query.GetProjectContextAsync(root, "", 3);
-        var report = await diagnostics.CollectAsync("0.1.3");
+        var report = await diagnostics.CollectAsync("0.1.5");
         return new
         {
             repo_root = root,

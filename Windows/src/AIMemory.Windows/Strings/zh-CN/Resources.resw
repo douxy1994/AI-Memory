@@ -690,4 +690,8 @@
   <data name="AboutRefreshDiagnosticsButton.Content" xml:space="preserve"><value>刷新诊断</value></data>
   <data name="AboutCopyDiagnosticsButton.Content" xml:space="preserve"><value>复制诊断</value></data>
   <data name="AboutOpenDataFolderButton.Content" xml:space="preserve"><value>打开数据目录</value></data>
+  <data name="CandidateAlreadyApproved" xml:space="preserve"><value>此候选已批准，未重复新建规则。</value></data>
+  <data name="CandidateCommittedRefreshFailed" xml:space="preserve"><value>审批已写入，但列表刷新失败：{0}。请刷新列表，无需重复批准。</value></data>
+  <data name="CandidateProcessing" xml:space="preserve"><value>处理中…</value></data>
+  <data name="MemoryRefreshFailed" xml:space="preserve"><value>刷新记忆失败：{0}</value></data>
 </root>

@@ -78,7 +78,8 @@ public sealed class WebDavService(
             LocalConversationPayload>();
         foreach (var summary in await conversations.ListAsync(
                      limit: 5_000,
-                     cancellationToken: cancellationToken))
+                     cancellationToken: cancellationToken,
+                     includeTemporary: true))
         {
             var detail = await conversations.ExportAsync(
                 summary.Id, cancellationToken);
