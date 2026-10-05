@@ -104,8 +104,20 @@ public sealed partial class MemoryPage : Page
         _knowledge = new KnowledgeProjectionService(
             _window.Database,
             _governance);
-        await ReloadRepositoryOptionsAsync();
-        await ReloadAsync();
+        await TryReloadAsync(reloadRepositories: true);
+    }
+
+    private async Task TryReloadAsync(bool reloadRepositories = false)
+    {
+        try
+        {
+            if (reloadRepositories) await ReloadRepositoryOptionsAsync();
+            await ReloadAsync();
+        }
+        catch (Exception exception)
+        {
+            Show(LocalizationService.Format("MemoryRefreshFailed", exception.Message), InfoBarSeverity.Error);
+        }
     }
 
     private async Task ReloadAsync()
@@ -207,14 +219,13 @@ public sealed partial class MemoryPage : Page
             _pendingCandidates = [];
             UpdateCandidateRows();
             ApprovedList.ItemsSource = null;
-            await ReloadAsync();
+            await TryReloadAsync();
         }
     }
 
     private async void Refresh_Click(object sender, RoutedEventArgs args)
     {
-        await ReloadRepositoryOptionsAsync();
-        await ReloadAsync();
+        await TryReloadAsync(reloadRepositories: true);
     }
 
     private async void ApproveCandidate_Click(object sender, RoutedEventArgs args)
@@ -297,7 +308,7 @@ public sealed partial class MemoryPage : Page
 
         var candidates = HistoryProjectionService.ConversationIdCandidates(
             reference);
-        var conversations = await _window.Conversations.ListAsync(limit: 5_000);
+        var conversations = await _window.Conversations.ListAsync(limit: 5_000, includeTemporary: true);
         var conversation = conversations.FirstOrDefault(value =>
             candidates.Contains(value.Id, StringComparer.Ordinal)
             || candidates.Contains(
@@ -662,7 +673,7 @@ public sealed partial class MemoryPage : Page
                 checkpoint.SourceAgent);
         var conversation = (await _window.Conversations.ListAsync(
                 sourceAgent: checkpoint.SourceAgent,
-                limit: 5_000))
+                limit: 5_000, includeTemporary: true))
             .FirstOrDefault(value => candidateIds.Contains(
                 value.Id,
                 StringComparer.Ordinal));

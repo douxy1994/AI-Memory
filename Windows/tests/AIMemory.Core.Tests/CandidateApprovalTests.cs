@@ -99,6 +99,16 @@ public sealed class CandidateApprovalTests : IDisposable
     }
 
     [Fact]
+    public async Task ApprovedCandidateRejectAndEmptyEditHaveExplicitErrors()
+    {
+        var service = new MemoryGovernanceService(await CreateAsync());
+        await service.ApproveCandidateAsync("candidate", "Title", "Value", "");
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.ReviewCandidateAsync("candidate", "reject"));
+        await Assert.ThrowsAsync<ArgumentException>(() => service.ApproveCandidateAsync("candidate", "", "Value", ""));
+        Assert.Single(await service.ListApprovedAsync());
+    }
+
+    [Fact]
     public async Task ApprovalWaitsForIndependentWriterAndThenCommits()
     {
         var database = await CreateAsync();

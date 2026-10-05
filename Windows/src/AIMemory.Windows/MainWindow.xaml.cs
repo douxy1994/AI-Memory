@@ -632,7 +632,14 @@ public sealed partial class MainWindow : Window
     {
         if (_isExiting || _notificationArea is null) return;
         args.Cancel = true;
-        sender.Hide();
+        // Leave the native closing callback before changing window visibility.
+        // WinUI can otherwise reenter XAML while processing WM_CLOSE.
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            if (_isExiting) return;
+            sender.Hide();
+            StartupDiagnostics.Write("window.hidden-to-tray");
+        });
     }
 
     private void ExitApplication()

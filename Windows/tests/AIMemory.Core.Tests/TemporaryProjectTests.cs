@@ -77,6 +77,7 @@ public sealed class TemporaryProjectTests : IDisposable
         Assert.Single(ConversationListProjectionService.GroupByProject(all));
         Assert.Single(ConversationListProjectionService.Apply(all, null, null, null, ConversationSortMode.UpdatedDescending));
         Assert.Empty(await new MemoryQueryService(database).SearchAsync(_root, "question", 10));
+        Assert.Empty((await new MemoryQueryService(database).GetProjectContextAsync(_root, "", 3)).RelevantHistory);
         Assert.Empty((await new McpProjectContextService(database).GetProjectContextAsync(_root, "question", "test", 10)).RelevantHistory);
         Assert.Single(await new MemoryQueryService(database).SearchAsync(@"C:\Projects\AIMemory\tmp", "question", 10));
 

@@ -843,14 +843,14 @@ public sealed partial class HistoryPage : Page
                 sourceAgent);
         var items = await _window.Conversations.ListAsync(
             sourceAgent: sourceAgent,
-            limit: 5_000);
+            limit: 5_000, includeTemporary: true);
         var conversation = items.FirstOrDefault(
             value => candidateIds.Contains(
                 value.Id,
                 StringComparer.Ordinal));
         if (conversation is null && sourceAgent is not null)
         {
-            conversation = (await _window.Conversations.ListAsync(limit: 5_000))
+            conversation = (await _window.Conversations.ListAsync(limit: 5_000, includeTemporary: true))
                 .FirstOrDefault(value => candidateIds.Contains(
                     value.Id,
                     StringComparer.Ordinal));

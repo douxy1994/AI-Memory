@@ -184,6 +184,8 @@ public sealed class MemoryGovernanceService(AIMemoryDatabase database)
         string usageHint,
         CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(value))
+            throw new ArgumentException("标题和值不能为空。");
         await using var connection = database.OpenConnection();
         // Acquire the write reservation before reading status, also across processes.
         await using var transaction = connection.BeginTransaction(deferred: false);
@@ -202,8 +204,6 @@ public sealed class MemoryGovernanceService(AIMemoryDatabase database)
         }
         var repoId = reader.GetString(0);
         var kind = reader.GetString(1);
-        var fallbackTitle = reader.GetString(2);
-        var fallbackValue = reader.GetString(3);
         var status = reader.GetString(4);
         await reader.CloseAsync();
 
@@ -224,8 +224,6 @@ public sealed class MemoryGovernanceService(AIMemoryDatabase database)
         }
         if (status is not ("pending" or "pending_review"))
             throw new InvalidOperationException($"候选当前状态为 {status}，不能批准。");
-        if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(value))
-            throw new ArgumentException("标题和值不能为空。");
 
         var now = DateTimeOffset.UtcNow.ToString("O");
         var memoryId = Guid.NewGuid().ToString();
@@ -246,10 +244,10 @@ public sealed class MemoryGovernanceService(AIMemoryDatabase database)
         insert.Parameters.AddWithValue("$kind", kind);
         insert.Parameters.AddWithValue(
             "$title",
-            string.IsNullOrWhiteSpace(title) ? fallbackTitle : title.Trim());
+            title.Trim());
         insert.Parameters.AddWithValue(
             "$value",
-            string.IsNullOrWhiteSpace(value) ? fallbackValue : value.Trim());
+            value.Trim());
         insert.Parameters.AddWithValue("$hint", usageHint.Trim());
         insert.Parameters.AddWithValue("$candidate", candidateId);
         insert.Parameters.AddWithValue("$now", now);
@@ -281,6 +279,11 @@ public sealed class MemoryGovernanceService(AIMemoryDatabase database)
         command.Parameters.AddWithValue("$id", candidateId);
         if (await command.ExecuteNonQueryAsync(cancellationToken) == 0)
         {
+            var read = connection.CreateCommand();
+            read.CommandText = "SELECT status FROM memory_candidates WHERE candidate_id=$id;";
+            read.Parameters.AddWithValue("$id", candidateId);
+            if (await read.ExecuteScalarAsync(cancellationToken) is string existingStatus)
+                throw new InvalidOperationException($"候选当前状态为 {existingStatus}，不能执行此操作。");
             throw new KeyNotFoundException($"找不到待审候选 {candidateId}。");
         }
     }
