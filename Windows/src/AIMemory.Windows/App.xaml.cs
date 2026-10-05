@@ -33,6 +33,8 @@ public sealed partial class App : Application
                 .Replace("\n", " | ");
             Services.StartupDiagnostics.Write(
                 "app.unhandled " + detail);
+            Services.StartupDiagnostics.Write("app.unhandled.message " + eventArgs.Message);
+            Services.StartupDiagnostics.Write("app.unhandled.stack " + Environment.StackTrace.Replace("\r\n", " | "));
             System.Diagnostics.Debug.WriteLine(eventArgs.Exception);
         };
 

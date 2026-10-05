@@ -155,6 +155,14 @@ jobs:
       - name: Register WinUI package for desktop smoke
         shell: pwsh
         run: |
+          # Capture the native crash as well as managed startup diagnostics.
+          # This registry entry exists only on the ephemeral hosted runner.
+          $dumpDirectory = Join-Path $env:RUNNER_TEMP 'AIMemory-crashes'
+          New-Item -ItemType Directory -Path $dumpDirectory -Force | Out-Null
+          $dumpKey = 'HKCU:\Software\Microsoft\Windows\Windows Error Reporting\LocalDumps\AIMemory.Windows.exe'
+          New-Item -Path $dumpKey -Force | Out-Null
+          New-ItemProperty -Path $dumpKey -Name DumpFolder -Value $dumpDirectory -PropertyType ExpandString -Force | Out-Null
+          New-ItemProperty -Path $dumpKey -Name DumpType -Value 2 -PropertyType DWord -Force | Out-Null
           # A raw WinUI executable has no package identity and can remain
           # alive without creating a visible AppWindow. Register a package
           # layout instead, then launch through AppsFolder just as a Windows
@@ -224,13 +232,20 @@ jobs:
           if (Test-Path -LiteralPath $source -PathType Leaf) {
             Copy-Item -LiteralPath $source -Destination $destination -Force
           }
+          Get-WinEvent -FilterHashtable @{ LogName = 'Application'; StartTime = (Get-Date).AddMinutes(-20) } -ErrorAction SilentlyContinue |
+            Where-Object { $_.Message -match 'AIMemory|Microsoft.UI.Xaml' } |
+            Format-List TimeCreated, ProviderName, Id, Message |
+            Out-File (Join-Path $env:RUNNER_TEMP 'AIMemory-events.log')
       - name: Upload Windows startup diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: windows-startup-diagnostics
           if-no-files-found: ignore
-          path: ${{ runner.temp }}/AIMemory-startup.log
+          path: |
+            ${{ runner.temp }}/AIMemory-startup.log
+            ${{ runner.temp }}/AIMemory-events.log
+            ${{ runner.temp }}/AIMemory-crashes/*.dmp
       - name: Upload Windows build artifacts
         if: always()
         uses: actions/upload-artifact@v4
