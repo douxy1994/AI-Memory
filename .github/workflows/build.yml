@@ -172,9 +172,8 @@ jobs:
           # deployment reject unsigned loose layouts, so expand the unsigned
           # MSIX and register its final root manifest.
           $msix = Get-ChildItem `
-            Windows/src/AIMemory.Windows/bin `
-            -Recurse -Filter *.msix |
-            Where-Object FullName -Match '\\x64\\' |
+            Windows/src/AIMemory.Windows/AppPackages `
+            -Recurse -Filter AIMemory.Windows_0.1.5.0_x64.msix |
             Sort-Object LastWriteTime -Descending |
             Select-Object -First 1
           if (-not $msix) {
@@ -276,5 +275,6 @@ jobs:
             release/0.1.5/*.exe
             release/0.1.5/*.sha256
             Windows/src/AIMemory.Windows/bin/**/*.msix
+            Windows/src/AIMemory.Windows/AppPackages/**/*.msix
             Windows/src/AIMemory.Windows/bin/**/Helpers/aimemory-mcp.exe
             Windows/src/AIMemory.Windows/bin/**/AIMemorySourceRevision.txt

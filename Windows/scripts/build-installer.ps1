@@ -34,12 +34,27 @@ try {
         -p:AppxPackageSigningEnabled=false
 
     $msix = Get-ChildItem `
-        (Join-Path $root "Windows/src/AIMemory.Windows/bin/$Platform/$Configuration") `
+        (Join-Path $root "Windows/src/AIMemory.Windows/AppPackages") `
         -Recurse -Filter "AIMemory.Windows_0.1.5.0_x64.msix" |
         Sort-Object LastWriteTime -Descending |
         Select-Object -First 1
     if (-not $msix) {
         throw "Final x64 MSIX payload was not generated."
+    }
+    # The installer deploys the main payload, not language resource packages.
+    # Missing WinUI MUI files crash on systems whose UI language was split out.
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $payload = [IO.Compression.ZipFile]::OpenRead($msix.FullName)
+    try {
+        foreach ($language in @('zh-CN', 'en-US')) {
+            foreach ($resource in @('Microsoft.ui.xaml.dll.mui', 'Microsoft.UI.Xaml.Phone.dll.mui')) {
+                if (-not ($payload.Entries.FullName -icontains "$language/$resource")) {
+                    throw "MSIX payload is missing WinUI resource: $language/$resource"
+                }
+            }
+        }
+    } finally {
+        $payload.Dispose()
     }
 
     $output = if ([string]::IsNullOrWhiteSpace($OutputDirectory)) {

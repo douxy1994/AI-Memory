@@ -142,9 +142,8 @@ AppxManifest.xml 仍含构建命名空间且缺少 Assets，而 `-DisableDevelop
 
 ```powershell
 $msix = Get-ChildItem `
-  .\Windows\src\AIMemory.Windows\bin `
-  -Recurse -Filter *.msix |
-  Where-Object FullName -Match '\\x64\\' |
+  .\Windows\src\AIMemory.Windows\AppPackages `
+  -Recurse -Filter AIMemory.Windows_0.1.5.0_x64.msix |
   Sort-Object LastWriteTime -Descending |
   Select-Object -First 1
 $layout = Join-Path $env:TEMP "AIMemory-msix-layout"
